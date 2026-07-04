@@ -1,6 +1,8 @@
 package com.nettools.app.ui
 
 import android.annotation.SuppressLint
+import android.content.Intent
+import android.net.Uri
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -26,8 +29,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import android.content.Context
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -44,6 +49,7 @@ fun RouterScreen(vm: NetViewModel, modifier: Modifier = Modifier) {
     val detecting by vm.routerDetecting.collectAsState()
     val target by vm.routerTarget.collectAsState()
     val clipboard = LocalClipboardManager.current
+    val context = LocalContext.current
 
     val gateway = wifi.gateway
     var url by remember(gateway) { mutableStateOf(gateway?.let { "http://$it" } ?: "http://192.168.1.1") }
@@ -88,6 +94,19 @@ fun RouterScreen(vm: NetViewModel, modifier: Modifier = Modifier) {
                 InfoRow("Admin", router.adminUrl)
             }
             Spacer(Modifier.height(8.dp))
+            Text(
+                "Wrong or blank? Set it manually:",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            )
+            Spacer(Modifier.height(4.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                FamilyChip("Archer", "archer", router.family) { vm.setRouterFamily("archer") }
+                FamilyChip("Deco", "deco", router.family) { vm.setRouterFamily("deco") }
+                FamilyChip("TL-…", "legacy", router.family) { vm.setRouterFamily("legacy") }
+                FamilyChip("Other", "generic", router.family) { vm.setRouterFamily("generic") }
+            }
+            Spacer(Modifier.height(8.dp))
             OutlinedButton(onClick = { vm.detectRouter() }) { Text("Re-detect") }
         }
 
@@ -122,6 +141,12 @@ fun RouterScreen(vm: NetViewModel, modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
             )
+            if (router.family == "deco") {
+                Spacer(Modifier.height(8.dp))
+                Button(onClick = { openDecoApp(context) }, modifier = Modifier.fillMaxWidth()) {
+                    Text("Open Deco app")
+                }
+            }
         }
 
         Spacer(Modifier.height(10.dp))
@@ -202,4 +227,30 @@ private fun normalize(input: String): String {
     val trimmed = input.trim()
     return if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) trimmed
     else "http://$trimmed"
+}
+
+@Composable
+private fun FamilyChip(label: String, value: String, current: String, onClick: () -> Unit) {
+    FilterChip(selected = current == value, onClick = onClick, label = { Text(label) })
+}
+
+/** Launch the TP-Link Deco app if installed, otherwise open its Play Store page. */
+private fun openDecoApp(context: Context) {
+    val pkg = "com.tplink.tether" // TP-Link Tether / Deco
+    val launch = context.packageManager.getLaunchIntentForPackage(pkg)
+    if (launch != null) {
+        context.startActivity(launch)
+    } else {
+        runCatching {
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=$pkg"))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        }.onFailure {
+            context.startActivity(
+                Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=$pkg"))
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            )
+        }
+    }
 }

@@ -80,7 +80,9 @@ class NetViewModel(app: Application) : AndroidViewModel(app) {
     fun detectRouter() {
         if (_routerDetecting.value) return
         val status = _wifi.value
-        val gatewayMac = _devices.value.firstOrNull { it.isGateway }?.mac
+        // The AP's BSSID is the router's Wi-Fi MAC — the most reliable vendor hint,
+        // since /proc/net/arp is often unreadable on Android 10+.
+        val gatewayMac = _devices.value.firstOrNull { it.isGateway }?.mac ?: status.bssid
         _routerDetecting.value = true
         viewModelScope.launch {
             val info = RouterDetector.detect(getApplication(), status.gateway, gatewayMac)
@@ -92,6 +94,18 @@ class NetViewModel(app: Application) : AndroidViewModel(app) {
                 else -> "Could not identify the router model."
             }
         }
+    }
+
+    /** Manually pick the router family when auto-detect can't (e.g. app-managed Deco mesh). */
+    fun setRouterFamily(family: String, model: String? = null) {
+        val current = _router.value
+        val vendor = if (family == "generic") current.vendor else "TP-Link"
+        _router.value = current.copy(
+            vendor = vendor,
+            model = model ?: current.model,
+            family = family,
+            detected = true,
+        )
     }
 
     /** Ask the Router tab to open with this device queued for a block/throttle action. */
