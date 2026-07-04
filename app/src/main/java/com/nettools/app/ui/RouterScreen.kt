@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -30,9 +31,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import android.content.Context
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -84,7 +88,7 @@ fun RouterScreen(vm: NetViewModel, modifier: Modifier = Modifier) {
             if (detecting) {
                 Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                     CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.height(18.dp))
-                    Spacer(Modifier.height(0.dp))
+                    Spacer(Modifier.width(8.dp))
                     Text("  Identifying…")
                 }
             } else {
@@ -147,6 +151,11 @@ fun RouterScreen(vm: NetViewModel, modifier: Modifier = Modifier) {
                     Text("Open Deco app")
                 }
             }
+        }
+
+        if (router.family == "deco" || router.family == "generic") {
+            Spacer(Modifier.height(10.dp))
+            DecoControlCard(vm, gateway)
         }
 
         Spacer(Modifier.height(10.dp))
@@ -232,6 +241,87 @@ private fun normalize(input: String): String {
 @Composable
 private fun FamilyChip(label: String, value: String, current: String, onClick: () -> Unit) {
     FilterChip(selected = current == value, onClick = onClick, label = { Text(label) })
+}
+
+@Composable
+private fun DecoControlCard(vm: NetViewModel, gateway: String?) {
+    val connected by vm.decoConnected.collectAsState()
+    val busy by vm.decoBusy.collectAsState()
+    val devices by vm.decoDevices.collectAsState()
+    var host by remember(gateway) { mutableStateOf(gateway ?: "192.168.68.1") }
+    var password by remember { mutableStateOf("") }
+
+    SectionCard(title = "Deco direct control (experimental)") {
+        Text(
+            "Log in with your Deco admin password to block or throttle devices from " +
+                "inside this app — no Deco app needed. Uses the Deco's local encrypted API.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
+        )
+        Spacer(Modifier.height(8.dp))
+        if (!connected) {
+            OutlinedTextField(
+                value = host,
+                onValueChange = { host = it },
+                label = { Text("Deco IP") },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(6.dp))
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                label = { Text("Deco admin password") },
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(8.dp))
+            Button(
+                onClick = { vm.decoConnect(host.trim(), password) },
+                enabled = !busy && password.isNotBlank(),
+                modifier = Modifier.fillMaxWidth(),
+            ) { Text(if (busy) "Connecting…" else "Connect") }
+        } else {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Connected", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+                Spacer(Modifier.weight(1f))
+                OutlinedButton(onClick = { vm.decoRefresh() }, enabled = !busy) { Text("Refresh") }
+                Spacer(Modifier.width(8.dp))
+                OutlinedButton(onClick = { vm.decoDisconnect() }) { Text("Log out") }
+            }
+            Spacer(Modifier.height(8.dp))
+            if (busy && devices.isEmpty()) {
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            devices.forEach { d ->
+                Row(
+                    Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(d.name, fontWeight = FontWeight.Medium)
+                        Text(
+                            "${d.ip}  •  ${d.mac}" + if (d.blocked) "  •  BLOCKED" else "",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        )
+                    }
+                    OutlinedButton(
+                        onClick = { vm.decoThrottle(d, 512, 256) },
+                        enabled = !busy,
+                    ) { Text("Lag") }
+                    Spacer(Modifier.width(8.dp))
+                    Button(
+                        onClick = { vm.decoSetBlocked(d, !d.blocked) },
+                        enabled = !busy,
+                    ) { Text(if (d.blocked) "Unblock" else "Block") }
+                }
+            }
+        }
+    }
 }
 
 /** Launch the TP-Link Deco app if installed, otherwise open its Play Store page. */

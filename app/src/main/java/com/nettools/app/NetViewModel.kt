@@ -9,6 +9,7 @@ import com.nettools.app.data.PingSample
 import com.nettools.app.data.RouterInfo
 import com.nettools.app.data.SpeedResult
 import com.nettools.app.data.WifiStatus
+import com.nettools.app.net.DecoClient
 import com.nettools.app.net.KnownDeviceStore
 import com.nettools.app.net.NetworkScanner
 import com.nettools.app.net.Pinger
@@ -71,7 +72,81 @@ class NetViewModel(app: Application) : AndroidViewModel(app) {
     private val _routerTarget = MutableStateFlow<RouterTarget?>(null)
     val routerTarget: StateFlow<RouterTarget?> = _routerTarget.asStateFlow()
 
+    // ---- Deco direct control ----
+    private var decoClient: DecoClient? = null
+
+    private val _decoConnected = MutableStateFlow(false)
+    val decoConnected: StateFlow<Boolean> = _decoConnected.asStateFlow()
+
+    private val _decoBusy = MutableStateFlow(false)
+    val decoBusy: StateFlow<Boolean> = _decoBusy.asStateFlow()
+
+    private val _decoDevices = MutableStateFlow<List<DecoClient.DecoDevice>>(emptyList())
+    val decoDevices: StateFlow<List<DecoClient.DecoDevice>> = _decoDevices.asStateFlow()
+
     private var pingJob: Job? = null
+
+    fun decoConnect(host: String, password: String) {
+        if (_decoBusy.value) return
+        _decoBusy.value = true
+        viewModelScope.launch {
+            val client = DecoClient(host)
+            val result = client.login(password)
+            if (result.isSuccess) {
+                decoClient = client
+                _decoConnected.value = true
+                _message.value = "Connected to Deco. Loading clients…"
+                decoRefresh()
+            } else {
+                _decoConnected.value = false
+                _message.value = "Deco login failed: ${result.exceptionOrNull()?.message}"
+            }
+            _decoBusy.value = false
+        }
+    }
+
+    fun decoRefresh() {
+        val client = decoClient ?: return
+        _decoBusy.value = true
+        viewModelScope.launch {
+            val result = client.listClients()
+            _decoDevices.value = result.getOrDefault(emptyList())
+            _decoBusy.value = false
+            if (result.isFailure) _message.value = "Couldn't read clients: ${result.exceptionOrNull()?.message}"
+        }
+    }
+
+    fun decoSetBlocked(device: DecoClient.DecoDevice, blocked: Boolean) {
+        val client = decoClient ?: return
+        _decoBusy.value = true
+        viewModelScope.launch {
+            val result = client.setBlocked(device.mac, device.name, blocked)
+            _decoBusy.value = false
+            _message.value = if (result.isSuccess) {
+                (if (blocked) "Blocked " else "Unblocked ") + device.name
+            } else {
+                "Block failed: ${result.exceptionOrNull()?.message}"
+            }
+            decoRefresh()
+        }
+    }
+
+    fun decoThrottle(device: DecoClient.DecoDevice, downKbps: Int, upKbps: Int) {
+        val client = decoClient ?: return
+        _decoBusy.value = true
+        viewModelScope.launch {
+            val result = client.setThrottle(device.mac, downKbps, upKbps)
+            _decoBusy.value = false
+            _message.value = if (result.isSuccess) "Throttled ${device.name} to ${downKbps}kbps"
+            else "Throttle failed: ${result.exceptionOrNull()?.message}"
+        }
+    }
+
+    fun decoDisconnect() {
+        decoClient = null
+        _decoConnected.value = false
+        _decoDevices.value = emptyList()
+    }
 
     fun refreshWifi() {
         _wifi.value = WifiInfoProvider.read(getApplication())

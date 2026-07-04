@@ -40,6 +40,16 @@ opens its admin page with tailored instructions:
 - **Throttle** → the router's QoS / Bandwidth Control caps that device's speed,
   which is a real, repeatable way to "lag" a device for testing.
 
+### Deco direct control (experimental)
+
+For TP-Link **Deco** mesh (which is app-managed and has no real web panel), the
+Router tab has a **Deco direct control** card: enter your Deco's IP and **admin
+password** and NetTools logs into the Deco's local encrypted API (the same
+RSA+AES handshake the Deco app uses) to list clients and **Block / Unblock /
+Lag** them from inside this app — no Deco app hand-off. Because Deco firmware
+varies, the block/throttle command is best-effort and the app keeps the device's
+raw reply for troubleshooting; connection + client listing are the stable core.
+
 Because these run through the router you administer, they only affect *your*
 network. NetTools deliberately does **not** ship ARP-spoofing or 802.11 deauth
 "cut" attacks: those forge packets against every device on whatever network
