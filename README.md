@@ -22,20 +22,29 @@ and more. Built with Kotlin + Jetpack Compose and packaged by GitHub Actions.
 8. **Latency / ping monitor** — live latency graph to any host or your router,
    with min/avg/max/last stats.
 9. **Wake-on-LAN** — send a magic packet to power on your own machines.
-10. **Router controls** — an in-app browser to your router's admin page, plus
-    quick address hints, so you can block a device, set MAC filters, or cap a
-    device's bandwidth (QoS) using the controls the router already provides.
+10. **Router controls with auto-detection** — the app fingerprints your gateway
+    (MAC OUI + HTTP probe of the admin page) to identify the vendor and model —
+    e.g. a TP-Link Archer / TL-… / Deco — then gives you **Block** and
+    **Throttle** buttons per device that jump straight to the right admin screen
+    with model-specific steps and the target MAC ready to paste, all inside an
+    in-app browser.
 
-## Managing / blocking devices
+## Blocking & throttling devices
 
-Kicking a device off the network or throttling ("lagging") it for testing is
-done through the **Router controls** tab: log into your own router and use its
-block-list / QoS features. Those controls run on the hardware you own and apply
-to the network you administer — which is both the reliable way to do it and the
-right one. NetTools deliberately does not ship ARP-spoofing "cut" attacks:
-those forge packets against every device on whatever network you're attached to
-(including ones you don't own), need root, and are the reason such apps get
-pulled from the Play Store.
+Tap any device in the scanner and choose **Block** or **Throttle**. NetTools
+detects your router (TP-Link is recognised down to the firmware family) and
+opens its admin page with tailored instructions:
+
+- **Block** → the router's Access Control / MAC filter drops the device from the
+  network (this is the legitimate "kick it off" — enforced by the router you own).
+- **Throttle** → the router's QoS / Bandwidth Control caps that device's speed,
+  which is a real, repeatable way to "lag" a device for testing.
+
+Because these run through the router you administer, they only affect *your*
+network. NetTools deliberately does **not** ship ARP-spoofing or 802.11 deauth
+"cut" attacks: those forge packets against every device on whatever network
+you're attached to (including ones you don't own), need root / injection-capable
+hardware, and are the reason such apps get pulled from the Play Store.
 
 ## Building
 

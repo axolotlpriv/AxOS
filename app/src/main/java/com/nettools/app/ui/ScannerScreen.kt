@@ -109,6 +109,8 @@ fun ScannerScreen(vm: NetViewModel, modifier: Modifier = Modifier) {
             onScanPorts = { vm.scanPorts(device) },
             onTrust = { vm.markKnown(device); selected = null },
             onWake = { device.mac?.let { vm.sendWol(it) } },
+            onBlock = { vm.manageOnRouter(device, NetViewModel.RouterAction.BLOCK); selected = null },
+            onThrottle = { vm.manageOnRouter(device, NetViewModel.RouterAction.THROTTLE); selected = null },
             // keep the dialog's device in sync as ports come back
             live = devices.firstOrNull { it.ip == device.ip } ?: device,
         )
@@ -178,6 +180,8 @@ private fun DeviceDialog(
     onScanPorts: () -> Unit,
     onTrust: () -> Unit,
     onWake: () -> Unit,
+    onBlock: () -> Unit,
+    onThrottle: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -216,6 +220,19 @@ private fun DeviceDialog(
                     Spacer(Modifier.height(6.dp))
                     OutlinedButton(onClick = onWake, modifier = Modifier.fillMaxWidth()) {
                         Text("Wake-on-LAN")
+                    }
+                }
+                if (!device.isSelf) {
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "Manage on router",
+                        fontWeight = FontWeight.SemiBold,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Button(onClick = onBlock, modifier = Modifier.weight(1f)) { Text("Block") }
+                        Button(onClick = onThrottle, modifier = Modifier.weight(1f)) { Text("Throttle") }
                     }
                 }
             }

@@ -53,3 +53,15 @@ data class PingSample(
     val timestamp: Long,
     val latencyMs: Long?, // null = timeout / unreachable
 )
+
+/** Result of fingerprinting the gateway/router. */
+data class RouterInfo(
+    val vendor: String? = null,
+    val model: String? = null,
+    val family: String = "generic", // archer | legacy | deco | tplink | generic
+    val server: String? = null,
+    val adminUrl: String? = null,
+    val detected: Boolean = false,
+) {
+    val isTpLink: Boolean get() = vendor?.contains("TP-Link", ignoreCase = true) == true
+}

@@ -6,12 +6,14 @@ import androidx.lifecycle.viewModelScope
 import com.nettools.app.data.AccessPoint
 import com.nettools.app.data.NetDevice
 import com.nettools.app.data.PingSample
+import com.nettools.app.data.RouterInfo
 import com.nettools.app.data.SpeedResult
 import com.nettools.app.data.WifiStatus
 import com.nettools.app.net.KnownDeviceStore
 import com.nettools.app.net.NetworkScanner
 import com.nettools.app.net.Pinger
 import com.nettools.app.net.PortScanner
+import com.nettools.app.net.RouterDetector
 import com.nettools.app.net.SpeedTest
 import com.nettools.app.net.WakeOnLan
 import com.nettools.app.net.WifiInfoProvider
@@ -59,11 +61,50 @@ class NetViewModel(app: Application) : AndroidViewModel(app) {
     private val _message = MutableStateFlow<String?>(null)
     val message: StateFlow<String?> = _message.asStateFlow()
 
+    private val _router = MutableStateFlow(RouterInfo())
+    val router: StateFlow<RouterInfo> = _router.asStateFlow()
+
+    private val _routerDetecting = MutableStateFlow(false)
+    val routerDetecting: StateFlow<Boolean> = _routerDetecting.asStateFlow()
+
+    // When set, the Router tab should open and pre-fill this device for block/throttle.
+    private val _routerTarget = MutableStateFlow<RouterTarget?>(null)
+    val routerTarget: StateFlow<RouterTarget?> = _routerTarget.asStateFlow()
+
     private var pingJob: Job? = null
 
     fun refreshWifi() {
         _wifi.value = WifiInfoProvider.read(getApplication())
     }
+
+    fun detectRouter() {
+        if (_routerDetecting.value) return
+        val status = _wifi.value
+        val gatewayMac = _devices.value.firstOrNull { it.isGateway }?.mac
+        _routerDetecting.value = true
+        viewModelScope.launch {
+            val info = RouterDetector.detect(getApplication(), status.gateway, gatewayMac)
+            _router.value = info
+            _routerDetecting.value = false
+            _message.value = when {
+                info.model != null -> "Detected ${info.vendor ?: "router"} ${info.model}"
+                info.vendor != null -> "Detected ${info.vendor} router"
+                else -> "Could not identify the router model."
+            }
+        }
+    }
+
+    /** Ask the Router tab to open with this device queued for a block/throttle action. */
+    fun manageOnRouter(device: NetDevice, action: RouterAction) {
+        _routerTarget.value = RouterTarget(device.ip, device.mac, action)
+    }
+
+    fun consumeRouterTarget() {
+        _routerTarget.value = null
+    }
+
+    data class RouterTarget(val ip: String, val mac: String?, val action: RouterAction)
+    enum class RouterAction { BLOCK, THROTTLE }
 
     fun rescan() {
         if (_scanning.value) return

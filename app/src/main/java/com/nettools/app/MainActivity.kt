@@ -91,6 +91,11 @@ private fun AppRoot() {
         }
     }
 
+    val routerTarget by vm.routerTarget.collectAsState()
+    LaunchedEffect(routerTarget) {
+        if (routerTarget != null) tab = Tab.Router
+    }
+
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         bottomBar = {
