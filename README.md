@@ -27,7 +27,7 @@ Your files and settings are saved in the browser (IndexedDB and localStorage), s
 
 ## Personalization
 
-AxOS ships with a soft plum-and-pink **AxOS Default** theme and an axolotl logo. The old blue look is available as the **Classic Blue** theme.
+AxOS ships with a soft plum-and-pink **AxOS Default** theme. The AxOS logo is three rounded squares and a tilted diamond, and it takes on your accent color everywhere it appears, including the browser-tab icon. The old blue look is available as the **Classic Blue** theme.
 
 **Settings → Personalization** has:
 - 11 one-click themes (Midnight Neon, Sakura, Retro Terminal, Ocean Glass and more)
