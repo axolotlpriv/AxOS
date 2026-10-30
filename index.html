@@ -16,13 +16,13 @@
   --mono: "Cascadia Code","JetBrains Mono","Fira Code",ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
   --scale:1;
   --radius:10px; --radius-sm:6px; --radius-lg:14px;
-  --tb-h:48px;
+  --tb-h:48px; --tb-space:var(--tb-h); --glass-a:.72; --blur:30px; --spd:1; --icon-r:.26;
   --ease: cubic-bezier(.2,.8,.2,1);
   --dur:.18s;
 }
 :root,[data-theme=dark]{
   --text:#f3f3f6; --text-2:#b4b4c0; --text-3:#80808e;
-  --glass:rgba(30,30,36,.72); --glass-2:rgba(44,44,52,.82);
+  --glass:rgba(30,30,36,var(--glass-a)); --glass-2:rgba(44,44,52,calc(var(--glass-a) + .1));
   --surface:#1c1c21; --surface-2:#24242a; --surface-3:#2d2d35; --surface-4:#383842;
   --hover:rgba(255,255,255,.07); --active:rgba(255,255,255,.11);
   --border:rgba(255,255,255,.09); --border-2:rgba(255,255,255,.16);
@@ -35,7 +35,7 @@
 }
 [data-theme=light]{
   --text:#1b1b22; --text-2:#55556a; --text-3:#8a8a9a;
-  --glass:rgba(246,246,250,.78); --glass-2:rgba(255,255,255,.86);
+  --glass:rgba(246,246,250,var(--glass-a)); --glass-2:rgba(255,255,255,calc(var(--glass-a) + .1));
   --surface:#f6f6f9; --surface-2:#ffffff; --surface-3:#ececf2; --surface-4:#e0e0e8;
   --hover:rgba(0,0,0,.05); --active:rgba(0,0,0,.09);
   --border:rgba(0,0,0,.09); --border-2:rgba(0,0,0,.16);
@@ -111,7 +111,7 @@ input[type=range]::-moz-range-thumb{ width:12px; height:12px; border-radius:50%;
 @keyframes indet{ from{ transform:translateX(-100%); } to{ transform:translateX(300%); } }
 
 /* ---------- app icons ---------- */
-.appicon{ --s:40px; width:var(--s); height:var(--s); flex:none; display:inline-grid; place-items:center; border-radius:calc(var(--s) * .26); color:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 2px 6px rgba(0,0,0,.25); position:relative; overflow:hidden; }
+.appicon{ --s:40px; width:var(--s); height:var(--s); flex:none; display:inline-grid; place-items:center; border-radius:calc(var(--s) * var(--icon-r)); color:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 2px 6px rgba(0,0,0,.25); position:relative; overflow:hidden; }
 .appicon::before{ content:""; position:absolute; inset:0; background:linear-gradient(180deg,rgba(255,255,255,.18),transparent 55%); }
 .appicon svg{ width:56%; height:56%; position:relative; stroke:#fff; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
 .appicon img{ width:78%; height:78%; object-fit:contain; position:relative; image-rendering:auto; }
@@ -148,6 +148,10 @@ input[type=range]::-moz-range-thumb{ width:12px; height:12px; border-radius:50%;
 #lock .clock{ position:absolute; left:0; right:0; top:13%; text-align:center; transition:transform .45s var(--ease),opacity .35s; text-shadow:0 2px 20px rgba(0,0,0,.35); }
 #lock .clock .t{ font-size:min(19vw,112px); font-weight:600; letter-spacing:-2px; line-height:1; }
 #lock .clock .d{ font-size:21px; margin-top:12px; font-weight:500; opacity:.95; }
+#lock.lc-left .clock{ text-align:left; left:7vw; top:auto; bottom:14%; }
+#lock.lc-minimal .clock .t{ font-weight:200; font-size:min(14vw,84px); letter-spacing:4px; }
+#lock.lc-minimal .clock .d{ font-size:15px; letter-spacing:3px; text-transform:uppercase; opacity:.8; }
+#lock.lc-hidden .clock{ display:none; }
 #lock.auth .clock{ transform:translateY(-60px); opacity:0; pointer-events:none; }
 #lock .hint{ position:absolute; bottom:44px; left:0; right:0; text-align:center; font-size:13px; opacity:.8; animation:float 2.4s ease-in-out infinite; }
 #lock.auth .hint{ opacity:0; }
@@ -175,8 +179,8 @@ input[type=range]::-moz-range-thumb{ width:12px; height:12px; border-radius:50%;
 @keyframes shake{ 20%,60%{ transform:translateX(-8px) } 40%,80%{ transform:translateX(8px) } }
 
 #oobe{ display:grid; place-items:center; color:var(--text); }
-#oobe .wall-bg{ filter:blur(40px) brightness(.7); transform:scale(1.15); }
-#oobe .panel{ position:relative; width:min(760px,94vw); min-height:min(480px,90vh); display:grid; grid-template-columns:1fr 1.25fr; border-radius:16px; overflow:hidden; background:var(--glass-2); backdrop-filter:blur(30px) saturate(1.4); -webkit-backdrop-filter:blur(30px) saturate(1.4); box-shadow:var(--shadow); border:1px solid var(--border); }
+#oobe .wall-bg{ filter:blur(calc(var(--blur) + 10px)) brightness(.7); transform:scale(1.15); }
+#oobe .panel{ position:relative; width:min(760px,94vw); min-height:min(480px,90vh); display:grid; grid-template-columns:1fr 1.25fr; border-radius:16px; overflow:hidden; background:var(--glass-2); backdrop-filter:blur(var(--blur)) saturate(1.4); -webkit-backdrop-filter:blur(var(--blur)) saturate(1.4); box-shadow:var(--shadow); border:1px solid var(--border); }
 #oobe .side{ padding:40px 34px; background:linear-gradient(160deg,rgba(var(--accent-rgb),.35),rgba(139,92,246,.25)); display:flex; flex-direction:column; justify-content:space-between; }
 #oobe .side h1{ font-size:30px; margin:18px 0 8px; font-weight:650; }
 #oobe .side p{ color:var(--text-2); line-height:1.55; margin:0; }
@@ -203,7 +207,7 @@ input[type=range]::-moz-range-thumb{ width:12px; height:12px; border-radius:50%;
    ===================================================================== */
 #desktop{ position:fixed; inset:0; overflow:hidden; }
 #wallpaper{ position:absolute; inset:0; background-size:cover; background-position:center; transition:background .6s; }
-#icons{ position:absolute; inset:0 0 var(--tb-h) 0; }
+#icons{ position:absolute; inset:0 0 var(--tb-space) 0; }
 .dicon{ --s:calc(46px * var(--icon-scale,1)); position:absolute; width:calc(var(--s) + 42px); padding:6px 3px 5px; border-radius:6px; display:flex; flex-direction:column; align-items:center; gap:5px; color:#fff; text-align:center; border:1px solid transparent; }
 .dicon .lbl{ font-size:12.5px; line-height:1.25; text-shadow:0 1px 3px rgba(0,0,0,.8),0 0 8px rgba(0,0,0,.4); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-word; max-width:100%; }
 .dicon:hover{ background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.12); }
@@ -215,7 +219,7 @@ input[type=range]::-moz-range-thumb{ width:12px; height:12px; border-radius:50%;
 .dicon .appicon,.dicon .fileicon{ --s:calc(46px * var(--icon-scale,1)); }
 .rename-input{ width:100%; font-size:12.5px; text-align:center; border:1px solid var(--accent); background:var(--input); color:var(--text); border-radius:3px; padding:1px 3px; outline:none; resize:none; font-family:inherit; }
 #selrect{ position:absolute; border:1px solid rgba(var(--accent-rgb),.9); background:rgba(var(--accent-rgb),.2); z-index:3; pointer-events:none; display:none; }
-#windows{ position:absolute; inset:0 0 var(--tb-h) 0; pointer-events:none; }
+#windows{ position:absolute; inset:0 0 var(--tb-space) 0; pointer-events:none; }
 #windows > *{ pointer-events:auto; }
 #snap-preview{ position:absolute; z-index:1; pointer-events:none; border-radius:12px; background:rgba(var(--accent-rgb),.16); border:1px solid rgba(var(--accent-rgb),.5); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); opacity:0; transition:all .18s var(--ease); }
 #snap-preview.on{ opacity:1; }
@@ -225,15 +229,15 @@ input[type=range]::-moz-range-thumb{ width:12px; height:12px; border-radius:50%;
 /* =====================================================================
    Windows
    ===================================================================== */
-.win{ position:absolute; display:flex; flex-direction:column; min-width:280px; min-height:160px; background:var(--win-bg); border-radius:var(--radius); border:1px solid var(--border-2); box-shadow:var(--shadow); overflow:visible; transition:box-shadow .2s; }
+.win{ position:absolute; display:flex; flex-direction:column; min-width:280px; min-height:160px; background:var(--win-bg); border-radius:var(--radius); border:1px solid var(--border-2); box-shadow:var(--win-shadow,var(--shadow)); overflow:visible; transition:box-shadow .2s; }
 .win.inactive{ box-shadow:0 8px 28px rgba(0,0,0,.28); }
 .win > .frame{ position:absolute; inset:0; border-radius:inherit; overflow:hidden; display:flex; flex-direction:column; }
 .win.max{ border-radius:0; border-color:transparent; }
 .win.snapped{ border-radius:0; }
 .win.anim{ transition:left .22s var(--ease),top .22s var(--ease),width .22s var(--ease),height .22s var(--ease),transform .22s var(--ease),opacity .22s,border-radius .22s; }
-.win.opening{ animation:winIn .22s var(--ease); }
+.win.opening{ animation:winIn calc(.22s * var(--spd)) var(--ease); }
 @keyframes winIn{ from{ opacity:0; transform:scale(.94) translateY(8px); } }
-.win.closing{ animation:winOut .16s ease-in forwards; pointer-events:none; }
+.win.closing{ animation:winOut calc(.16s * var(--spd)) ease-in forwards; pointer-events:none; }
 @keyframes winOut{ to{ opacity:0; transform:scale(.94); } }
 .win.minimized{ opacity:0; pointer-events:none; transform:translateY(40%) scale(.6); }
 .win .tbar{ height:38px; flex:none; display:flex; align-items:center; background:var(--win-tb); gap:4px; padding-left:10px; position:relative; }
@@ -284,7 +288,7 @@ body.wm-drag.rz-ns{ cursor:ns-resize; } body.wm-drag.rz-ew{ cursor:ew-resize; } 
 /* =====================================================================
    Taskbar
    ===================================================================== */
-#taskbar{ position:fixed; left:0; right:0; bottom:0; height:var(--tb-h); z-index:5000; display:flex; align-items:center; padding:0 6px; background:var(--glass); backdrop-filter:blur(30px) saturate(1.6); -webkit-backdrop-filter:blur(30px) saturate(1.6); border-top:1px solid var(--border); }
+#taskbar{ position:fixed; left:0; right:0; bottom:0; height:var(--tb-h); z-index:5000; display:flex; align-items:center; padding:0 6px; background:var(--glass); backdrop-filter:blur(var(--blur)) saturate(1.6); -webkit-backdrop-filter:blur(var(--blur)) saturate(1.6); border-top:1px solid var(--border); }
 #taskbar .tb-center{ position:absolute; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:3px; height:100%; transition:left .3s var(--ease),transform .3s var(--ease); max-width:calc(100% - 420px); }
 #taskbar.left .tb-center{ left:6px; transform:none; }
 .tb-btn{ position:relative; height:40px; min-width:40px; padding:0 8px; border-radius:6px; border:0; background:transparent; display:grid; place-items:center; color:var(--text); transition:background .15s; flex:none; }
@@ -309,7 +313,7 @@ body.wm-drag.rz-ns{ cursor:ns-resize; } body.wm-drag.rz-ew{ cursor:ew-resize; } 
 .tb-clock{ display:flex; flex-direction:column; align-items:flex-end; font-size:12px; line-height:1.35; }
 #show-desktop{ width:8px; height:100%; border:0; border-left:1px solid var(--border-2); background:transparent; margin-left:6px; }
 #show-desktop:hover{ background:var(--hover); }
-.tb-preview{ position:fixed; z-index:5200; bottom:calc(var(--tb-h) + 8px); background:var(--glass-2); backdrop-filter:blur(30px); -webkit-backdrop-filter:blur(30px); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow); padding:6px; display:flex; gap:6px; animation:popIn .14s var(--ease); }
+.tb-preview{ position:fixed; z-index:5200; bottom:calc(var(--tb-space) + 8px); background:var(--glass-2); backdrop-filter:blur(var(--blur)); -webkit-backdrop-filter:blur(var(--blur)); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow); padding:6px; display:flex; gap:6px; animation:popIn .14s var(--ease); }
 .tb-preview .pv{ width:200px; border-radius:7px; padding:6px; }
 .tb-preview .pv:hover{ background:var(--hover); }
 .tb-preview .pv .h{ display:flex; align-items:center; gap:7px; font-size:12px; margin-bottom:6px; }
@@ -324,9 +328,9 @@ body.wm-drag.rz-ns{ cursor:ns-resize; } body.wm-drag.rz-ew{ cursor:ew-resize; } 
 /* =====================================================================
    Flyouts (start, calendar, quick settings)
    ===================================================================== */
-.flyout{ position:fixed; z-index:5100; bottom:calc(var(--tb-h) + 10px); background:var(--glass-2); backdrop-filter:blur(40px) saturate(1.6); -webkit-backdrop-filter:blur(40px) saturate(1.6); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow); opacity:0; transform:translateY(16px); pointer-events:none; transition:opacity .18s,transform .22s var(--ease); }
+.flyout{ position:fixed; z-index:5100; bottom:calc(var(--tb-space) + 10px); background:var(--glass-2); backdrop-filter:blur(calc(var(--blur) + 10px)) saturate(1.6); -webkit-backdrop-filter:blur(calc(var(--blur) + 10px)) saturate(1.6); border:1px solid var(--border); border-radius:var(--radius-lg); box-shadow:var(--shadow); opacity:0; transform:translateY(16px); pointer-events:none; transition:opacity .18s,transform .22s var(--ease); }
 .flyout.open{ opacity:1; transform:none; pointer-events:auto; }
-#startmenu{ left:50%; margin-left:-320px; width:640px; height:min(680px,calc(100vh - var(--tb-h) - 24px)); display:flex; flex-direction:column; overflow:hidden; }
+#startmenu{ left:50%; margin-left:-320px; width:640px; height:min(680px,calc(100vh - var(--tb-space) - 24px)); display:flex; flex-direction:column; overflow:hidden; }
 #taskbar.left ~ #startmenu{ left:10px; margin-left:0; }
 #startmenu .sm-search{ padding:22px 28px 6px; }
 #startmenu .sm-search .box{ display:flex; align-items:center; gap:10px; height:38px; padding:0 14px; border-radius:20px; background:var(--input); border:1px solid var(--border-2); border-bottom:2px solid var(--accent); }
@@ -358,7 +362,7 @@ body.wm-drag.rz-ns{ cursor:ns-resize; } body.wm-drag.rz-ew{ cursor:ew-resize; } 
 .search-results .best{ display:flex; flex-direction:column; align-items:center; gap:10px; padding:24px; border-radius:10px; background:var(--hover); text-align:center; }
 .search-results .best .appicon,.search-results .best .fileicon{ --s:64px; }
 
-#calendar-fly{ right:10px; width:340px; overflow:hidden; display:flex; flex-direction:column; max-height:calc(100vh - var(--tb-h) - 24px); }
+#calendar-fly{ right:10px; width:340px; overflow:hidden; display:flex; flex-direction:column; max-height:calc(100vh - var(--tb-space) - 24px); }
 .notif-center{ max-height:330px; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:8px; }
 .notif-center .hd{ display:flex; justify-content:space-between; align-items:center; font-weight:600; padding:0 4px 4px; }
 .cal{ padding:14px 16px 16px; border-top:1px solid var(--border); }
@@ -384,8 +388,8 @@ body.wm-drag.rz-ns{ cursor:ns-resize; } body.wm-drag.rz-ew{ cursor:ew-resize; } 
 /* =====================================================================
    Notifications / toasts
    ===================================================================== */
-#toasts{ position:fixed; right:12px; bottom:calc(var(--tb-h) + 12px); z-index:9100; display:flex; flex-direction:column-reverse; gap:10px; width:360px; pointer-events:none; }
-.toast{ pointer-events:auto; display:flex; gap:12px; padding:14px; border-radius:12px; background:var(--glass-2); backdrop-filter:blur(30px) saturate(1.5); -webkit-backdrop-filter:blur(30px) saturate(1.5); border:1px solid var(--border); box-shadow:var(--shadow); animation:toastIn .3s var(--ease); position:relative; }
+#toasts{ position:fixed; right:12px; bottom:calc(var(--tb-space) + 12px); z-index:9100; display:flex; flex-direction:column-reverse; gap:10px; width:360px; pointer-events:none; }
+.toast{ pointer-events:auto; display:flex; gap:12px; padding:14px; border-radius:12px; background:var(--glass-2); backdrop-filter:blur(var(--blur)) saturate(1.5); -webkit-backdrop-filter:blur(var(--blur)) saturate(1.5); border:1px solid var(--border); box-shadow:var(--shadow); animation:toastIn .3s var(--ease); position:relative; }
 .toast.out{ animation:toastOut .25s ease-in forwards; }
 @keyframes toastIn{ from{ opacity:0; transform:translateX(60px); } }
 @keyframes toastOut{ to{ opacity:0; transform:translateX(60px); } }
@@ -404,7 +408,7 @@ body.wm-drag.rz-ns{ cursor:ns-resize; } body.wm-drag.rz-ew{ cursor:ew-resize; } 
 /* =====================================================================
    Context menus / dialogs
    ===================================================================== */
-.ctx{ position:fixed; z-index:9600; min-width:220px; max-width:320px; padding:5px; border-radius:10px; background:var(--glass-2); backdrop-filter:blur(30px) saturate(1.5); -webkit-backdrop-filter:blur(30px) saturate(1.5); border:1px solid var(--border); box-shadow:var(--shadow); animation:popIn .12s var(--ease); font-size:13px; }
+.ctx{ position:fixed; z-index:9600; min-width:220px; max-width:320px; padding:5px; border-radius:10px; background:var(--glass-2); backdrop-filter:blur(var(--blur)) saturate(1.5); -webkit-backdrop-filter:blur(var(--blur)) saturate(1.5); border:1px solid var(--border); box-shadow:var(--shadow); animation:popIn .12s var(--ease); font-size:13px; }
 @keyframes popIn{ from{ opacity:0; transform:scale(.96) translateY(-4px); } }
 .ctx .mi{ display:flex; align-items:center; gap:10px; height:32px; padding:0 10px; border-radius:6px; white-space:nowrap; position:relative; }
 .ctx .mi:hover,.ctx .mi.hl{ background:var(--hover); }
@@ -432,12 +436,12 @@ body.wm-drag.rz-ns{ cursor:ns-resize; } body.wm-drag.rz-ew{ cursor:ew-resize; } 
 
 /* Run dialog / switcher / task view */
 #switcher{ position:fixed; inset:0; z-index:9200; display:grid; place-items:center; pointer-events:none; }
-#switcher .box{ display:flex; gap:10px; padding:14px; border-radius:14px; background:var(--glass-2); backdrop-filter:blur(40px); -webkit-backdrop-filter:blur(40px); border:1px solid var(--border); box-shadow:var(--shadow); max-width:90vw; overflow:hidden; }
+#switcher .box{ display:flex; gap:10px; padding:14px; border-radius:14px; background:var(--glass-2); backdrop-filter:blur(calc(var(--blur) + 10px)); -webkit-backdrop-filter:blur(calc(var(--blur) + 10px)); border:1px solid var(--border); box-shadow:var(--shadow); max-width:90vw; overflow:hidden; }
 #switcher .it{ width:150px; padding:10px; border-radius:10px; border:2px solid transparent; display:flex; flex-direction:column; align-items:center; gap:8px; font-size:12px; }
 #switcher .it.on{ border-color:var(--accent); background:var(--hover); }
 #switcher .it .appicon{ --s:48px; }
 #switcher .it span{ max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-#taskview{ position:absolute; inset:0 0 var(--tb-h) 0; z-index:99; background:rgba(0,0,0,.35); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); opacity:0; pointer-events:none; transition:opacity .2s; }
+#taskview{ position:absolute; inset:0 0 var(--tb-space) 0; z-index:99; background:rgba(0,0,0,.35); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); opacity:0; pointer-events:none; transition:opacity .2s; }
 #taskview.open{ opacity:1; pointer-events:auto; }
 #taskview .tv-empty{ position:absolute; inset:0; display:grid; place-items:center; color:#fff; font-size:16px; opacity:.85; }
 #taskview .tv-label{ position:absolute; display:flex; align-items:center; gap:8px; color:#fff; font-size:12.5px; text-shadow:0 1px 4px #000; pointer-events:none; }
@@ -730,6 +734,106 @@ body.taskview-on .win.minimized{ opacity:1; pointer-events:auto; }
 .bsod{ position:fixed; inset:0; z-index:9950; background:#0067c0; color:#fff; padding:12vh 12vw; font-size:20px; }
 .bsod h1{ font-size:110px; font-weight:300; margin:0 0 20px; }
 
+
+/* =====================================================================
+   Personalization
+   ===================================================================== */
+.tb-btn .appicon{ --s:calc(var(--tb-h) * .54); }
+.tb-btn{ height:calc(var(--tb-h) - 8px); min-width:calc(var(--tb-h) - 8px); }
+body.tb-dock #taskbar{ left:50%; right:auto; bottom:8px; transform:translateX(-50%); width:max-content; max-width:calc(100% - 16px); border:1px solid var(--border-2); border-radius:18px; box-shadow:var(--shadow); padding:0 8px; gap:4px; }
+body.tb-dock #taskbar .tb-center{ position:static; transform:none; max-width:none; }
+body.tb-dock #taskbar .tb-right{ margin-left:10px; }
+body.tb-dock #show-desktop{ display:none; }
+body.tb-dock #startmenu{ left:50%; margin-left:-320px; }
+body.tb-accent .win:not(.inactive) .tbar{ background:var(--accent); color:#fff; }
+body.tb-accent .win:not(.inactive) .tbar .tctl button{ color:#fff; }
+body.btn-mac .win .tbar .tctl{ order:-1; align-self:center; gap:8px; padding:0 4px 0 2px; height:auto; }
+body.btn-mac .win .tbar{ padding-left:12px; }
+body.btn-mac .win .tbar .tctl button{ width:13px; height:13px; border-radius:50%; padding:0; }
+body.btn-mac .win .tbar .tctl button svg{ width:9px; height:9px; stroke-width:2.6; opacity:0; color:rgba(0,0,0,.6); }
+body.btn-mac .win .tbar .tctl:hover button svg{ opacity:1; }
+body.btn-mac .win .tbar .tctl .x{ background:#ff5f57; order:-3; } body.btn-mac .win .tbar .tctl .mn{ background:#febc2e; order:-2; } body.btn-mac .win .tbar .tctl .mx{ background:#28c840; order:-1; }
+body.btn-mac .win .tbar .tctl .x:hover{ background:#ff5f57; color:inherit; }
+body.btn-mac .win.inactive .tbar .tctl button{ background:var(--surface-4); }
+body.btn-mac .win .tbar .ttl{ text-align:center; padding-right:60px; }
+body.anim-fade .win.opening{ animation-name:winFade; } body.anim-slide .win.opening{ animation-name:winSlide; } body.anim-none .win.opening,body.anim-none .win.closing{ animation:none; }
+body.anim-pop .win.opening{ animation-name:winPop; animation-timing-function:cubic-bezier(.3,1.6,.5,1); }
+@keyframes winFade{ from{ opacity:0; } } @keyframes winSlide{ from{ opacity:0; transform:translateY(40px); } } @keyframes winPop{ from{ opacity:0; transform:scale(.7); } }
+body.icons-flat .appicon{ box-shadow:none; } body.icons-flat .appicon::before{ display:none; }
+body.icons-glass .appicon:not(.raw){ background:rgba(255,255,255,.16)!important; border:1px solid rgba(255,255,255,.3); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); }
+body.icons-glass .appicon:not(.raw) svg{ stroke:var(--accent); filter:drop-shadow(0 0 4px rgba(var(--accent-rgb),.6)); }
+body.icons-mono .appicon:not(.raw){ background:var(--surface-4)!important; box-shadow:none; } body.icons-mono .appicon:not(.raw)::before{ display:none; } body.icons-mono .appicon:not(.raw) svg{ stroke:var(--text); filter:none; }
+body.icons-outline .appicon:not(.raw){ background:transparent!important; box-shadow:inset 0 0 0 2px var(--accent); } body.icons-outline .appicon:not(.raw)::before{ display:none; } body.icons-outline .appicon:not(.raw) svg{ stroke:var(--accent); filter:none; }
+body[data-cursor] *:not(input):not(textarea):not(.rz):not([contenteditable]):not(.term):not(canvas){ cursor:var(--cur)!important; }
+body[data-cursor]{ cursor:var(--cur); }
+#live-wp{ position:absolute; inset:0; width:100%; height:100%; display:block; }
+#widgets{ position:absolute; inset:0 0 var(--tb-space) 0; pointer-events:none; }
+.widget{ position:absolute; pointer-events:auto; width:230px; border-radius:16px; background:var(--glass); backdrop-filter:blur(var(--blur)) saturate(1.4); -webkit-backdrop-filter:blur(var(--blur)) saturate(1.4); border:1px solid var(--border); box-shadow:var(--shadow-sm); padding:14px 16px; color:var(--text); animation:popIn .25s var(--ease); touch-action:none; }
+.widget .wh{ display:flex; align-items:center; gap:6px; font-size:11px; text-transform:uppercase; letter-spacing:.6px; color:var(--text-3); margin-bottom:6px; }
+.widget .wh .x{ margin-left:auto; width:20px; height:20px; border:0; border-radius:5px; background:transparent; color:var(--text-3); display:grid; place-items:center; opacity:0; }
+.widget:hover .wh .x{ opacity:1; } .widget .wh .x:hover{ background:var(--hover); }
+.widget.dragging{ opacity:.85; box-shadow:var(--shadow); }
+.widget textarea{ width:100%; min-height:110px; border:0; background:transparent; resize:none; outline:none; color:inherit; font:13px/1.5 var(--font); }
+.screensaver{ position:fixed; inset:0; z-index:9850; background:#000; cursor:none; animation:fadeIn .8s; }
+.screensaver canvas{ width:100%; height:100%; display:block; }
+.preset-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:10px; }
+.preset{ border:2px solid var(--border); border-radius:10px; overflow:hidden; background:var(--surface-3); text-align:left; padding:0; }
+.preset.on{ border-color:var(--accent); }
+.preset .pv{ height:84px; background-size:cover; position:relative; }
+.preset .pv i{ position:absolute; left:12px; right:30px; bottom:0; height:46px; border-radius:6px 6px 0 0; }
+.preset .pv b{ position:absolute; left:12px; bottom:52px; width:22px; height:6px; border-radius:3px; }
+.preset span{ display:block; padding:8px 10px; font-size:12.5px; }
+.emoji-grid{ display:grid; grid-template-columns:repeat(auto-fill,44px); gap:6px; }
+.emoji-grid button{ width:44px; height:44px; border-radius:50%; border:2px solid transparent; font-size:22px; background:var(--surface-3); }
+.emoji-grid button:hover{ border-color:var(--accent); }
+/* ---- AxPlay ---- */
+.axp{ display:flex; flex-direction:column; height:100%; background:#14171c; color:#dfe3ea; }
+.axp .top{ display:flex; align-items:center; gap:4px; padding:6px 12px; background:#0f1216; border-bottom:1px solid #222831; }
+.axp .top .tab{ border:0; background:transparent; color:#9aa3b2; font-weight:600; letter-spacing:.5px; font-size:13px; padding:8px 12px; border-radius:6px; }
+.axp .top .tab:hover{ color:#fff; } .axp .top .tab.on{ color:#fff; background:rgba(var(--accent-rgb),.18); }
+.axp .body{ flex:1; display:flex; min-height:0; }
+.axp .lib{ width:250px; background:#181c22; border-right:1px solid #222831; display:flex; flex-direction:column; flex:none; }
+.axp .lib .f{ padding:8px; display:flex; flex-direction:column; gap:6px; border-bottom:1px solid #222831; }
+.axp .lib .f input{ background:#0f1216; border-color:#2a313b; color:#dfe3ea; }
+.axp .lib .list{ flex:1; overflow:auto; padding:4px; }
+.axp .lib .g{ display:flex; align-items:center; gap:8px; height:30px; padding:0 8px; border-radius:5px; font-size:12.5px; color:#b9c0cc; }
+.axp .lib .g:hover{ background:#232933; color:#fff; } .axp .lib .g.on{ background:rgba(var(--accent-rgb),.25); color:#fff; }
+.axp .lib .g .appicon,.axp .lib .g .fileicon{ --s:18px; }
+.axp .lib .g .dot{ width:6px; height:6px; border-radius:50%; background:#3ecf8e; margin-left:auto; flex:none; }
+.axp .lib .g.notinst{ opacity:.55; }
+.axp .main{ flex:1; overflow:auto; position:relative; }
+.axp .hero{ height:230px; position:relative; display:flex; align-items:flex-end; padding:24px 28px; overflow:hidden; }
+.axp .hero::after{ content:""; position:absolute; inset:0; background:linear-gradient(180deg,transparent 30%,#14171c); }
+.axp .hero .in{ position:relative; z-index:1; display:flex; align-items:flex-end; gap:18px; }
+.axp .hero .in .appicon,.axp .hero .in .fileicon{ --s:88px; box-shadow:0 10px 30px rgba(0,0,0,.5); }
+.axp .hero h1{ margin:0; font-size:30px; font-weight:700; color:#fff; text-shadow:0 2px 12px rgba(0,0,0,.5); }
+.axp .bar{ display:flex; align-items:center; gap:22px; padding:14px 28px; background:#1b2028; border-bottom:1px solid #222831; flex-wrap:wrap; }
+.axp .play{ height:44px; padding:0 28px; border:0; border-radius:6px; font-size:15px; font-weight:700; letter-spacing:.5px; color:#fff; background:linear-gradient(90deg,#3ecf8e,#22a06b); display:flex; align-items:center; gap:10px; }
+.axp .play:hover{ filter:brightness(1.12); } .axp .play.inst{ background:linear-gradient(90deg,var(--accent),var(--accent-2)); } .axp .play.run{ background:#2563eb; }
+.axp .stat .k{ font-size:10.5px; text-transform:uppercase; letter-spacing:.6px; color:#7d8696; } .axp .stat .v{ font-size:13px; color:#dfe3ea; margin-top:2px; }
+.axp .sect{ padding:18px 28px; }
+.axp .card2{ background:#1b2028; border:1px solid #262d38; border-radius:8px; padding:14px 16px; }
+.axp .badge{ display:inline-flex; align-items:center; gap:6px; font-size:11.5px; padding:3px 9px; border-radius:12px; background:#262d38; color:#c6ccd6; }
+.axp .badge.lx{ background:rgba(245,158,11,.18); color:#fbbf24; } .axp .badge.wn{ background:rgba(59,130,246,.2); color:#93c5fd; } .axp .badge.web{ background:rgba(16,185,129,.18); color:#6ee7b7; }
+.axp .shelf{ display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:14px; }
+.axp .cap{ border-radius:8px; overflow:hidden; background:#1b2028; border:1px solid #262d38; transition:transform .15s,box-shadow .15s; }
+.axp .cap:hover{ transform:translateY(-3px) scale(1.02); box-shadow:0 12px 30px rgba(0,0,0,.5); }
+.axp .cap .art{ aspect-ratio:3/4; display:grid; place-items:center; position:relative; }
+.axp .cap .art .appicon,.axp .cap .art .fileicon{ --s:72px; }
+.axp .cap .art .nm{ position:absolute; left:10px; right:10px; bottom:10px; font-weight:700; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.7); font-size:14px; }
+.axp .cap .meta{ padding:8px 10px; font-size:11.5px; color:#8d96a6; display:flex; justify-content:space-between; }
+.axp select.input,.axp .input{ background:#0f1216; border-color:#2a313b; color:#dfe3ea; }
+.axp .btn{ background:#262d38; border-color:#333b47; color:#dfe3ea; } .axp .btn:hover{ background:#2f3743; } .axp .btn.primary{ background:var(--accent); color:#fff; border-color:transparent; }
+.axp .dl{ display:flex; align-items:center; gap:14px; padding:12px 14px; border-radius:8px; background:#1b2028; margin-bottom:8px; }
+.bp{ position:absolute; inset:0; z-index:10; background:radial-gradient(1200px 600px at 50% -20%,rgba(var(--accent-rgb),.35),transparent),#0b0d11; color:#fff; display:flex; flex-direction:column; }
+.bp .row1{ display:flex; gap:22px; padding:40px 60px; overflow:hidden; flex:1; align-items:center; }
+.bp .tile{ flex:none; width:220px; aspect-ratio:3/4; border-radius:12px; display:grid; place-items:center; position:relative; transition:transform .2s,box-shadow .2s; opacity:.6; }
+.bp .tile .appicon,.bp .tile .fileicon{ --s:96px; }
+.bp .tile.on{ transform:scale(1.12); opacity:1; box-shadow:0 0 0 4px #fff,0 20px 60px rgba(0,0,0,.6); }
+.bp .tile .nm{ position:absolute; bottom:12px; left:12px; right:12px; font-weight:700; font-size:16px; text-shadow:0 2px 8px #000; }
+.bp .foot{ display:flex; gap:24px; padding:16px 60px; background:rgba(0,0,0,.4); font-size:13px; color:#aaa; align-items:center; }
+.bp .foot b{ display:inline-grid; place-items:center; width:22px; height:22px; border-radius:50%; background:#fff; color:#000; font-size:11px; margin-right:6px; }
+
 @media (max-width:760px){
   #startmenu{ left:6px; right:6px; margin-left:0; width:auto; }
   .sm-grid{ grid-template-columns:repeat(4,1fr); }
@@ -746,6 +850,7 @@ body.taskview-on .win.minimized{ opacity:1; pointer-events:auto; }
 <div id="desktop">
   <div id="wallpaper"></div>
   <div id="icons"></div>
+  <div id="widgets"></div>
   <div id="selrect"></div>
   <div id="snap-preview"></div>
   <div id="taskview"></div>
@@ -759,6 +864,8 @@ body.taskview-on .win.minimized{ opacity:1; pointer-events:auto; }
 <div id="modal-layer"></div>
 <div id="dimmer"></div>
 <div id="nightlight"></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><filter id="cb-protan"><feColorMatrix type="matrix" values="0.567 0.433 0 0 0 0.558 0.442 0 0 0 0 0.242 0.758 0 0 0 0 0 1 0"/></filter><filter id="cb-deutan"><feColorMatrix type="matrix" values="0.625 0.375 0 0 0 0.7 0.3 0 0 0 0 0.3 0.7 0 0 0 0 0 1 0"/></filter><filter id="cb-tritan"><feColorMatrix type="matrix" values="0.95 0.05 0 0 0 0 0.433 0.567 0 0 0 0.475 0.525 0 0 0 0 0 1 0"/></filter></defs></svg>
+<style id="custom-css"></style>
 <input type="file" id="host-file" multiple class="hidden">
 <script>
 "use strict";
@@ -970,6 +1077,8 @@ const Sound = {
   setVol() { if (this.master) this.master.gain.value = Settings.get("muted") ? 0 : Settings.get("volume") / 100; },
   tone(freq, start, dur, type = "sine", vol = .2) {
     const c = this.ctx; const o = c.createOscillator(), g = c.createGain();
+    const sc = Settings.get("soundScheme");
+    if (sc === "soft") { type = "sine"; vol *= .55; dur *= 1.3; } else if (sc === "retro") { type = "square"; vol *= .45; dur *= .7; } else if (sc === "glass") { type = "triangle"; freq *= 2; dur *= 1.6; } else if (sc === "deep") { type = "sine"; freq /= 2; vol *= 1.2; }
     o.type = type; o.frequency.value = freq; o.connect(g); g.connect(this.master);
     const t = c.currentTime + start; g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + .02); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
     o.start(t); o.stop(t + dur + .05);
@@ -1006,6 +1115,10 @@ const DEFAULT_SETTINGS = {
   terminal: { theme: "default", fontSize: 13.5 },
   weatherCity: "",
   iconPos: {},
+  radius: 10, titlebarAccent: false, buttonStyle: "win", winShadow: 60, winAnim: "zoom", animSpeed: 1,
+  taskbarSize: "m", taskbarStyle: "full", glassOpacity: 72, blur: 30, font: "system", iconShape: "squircle", iconStyle: "gradient",
+  cursor: "default", soundScheme: "default", widgets: [], screensaver: "none", screensaverTimeout: 5, screensaverLock: false,
+  lockWallpaper: "same", lockClock: "center", customCSS: "", colorFilter: "none", showRecommended: true, slideshowDir: "", slideshowInterval: 10, preset: "",
 };
 const Settings = {
   data: null,
@@ -1028,9 +1141,26 @@ const WALLPAPERS = {
   slate: "linear-gradient(135deg,#3a4252 0%,#1f242e 100%)",
   candy: "conic-gradient(from 200deg at 60% 40%,#ff7eb3,#ff758c,#ffb199,#7afcff,#a18cd1,#ff7eb3)",
   mono: "radial-gradient(circle at 50% 40%,#3b3b44 0%,#111114 70%)",
+  sakura: "radial-gradient(circle at 20% 20%,#ffd1e8 0%,transparent 40%),radial-gradient(circle at 80% 70%,#ffb3d1 0%,transparent 45%),linear-gradient(160deg,#fff0f6,#f9c5dd)",
+  lagoon: "linear-gradient(135deg,#43e97b 0%,#38f9d7 50%,#1fa2ff 100%)",
+  ember: "radial-gradient(ellipse at 50% 110%,#ff6a00 0%,#ee0979 40%,#2b0a3d 80%)",
+  nebula: "radial-gradient(circle at 30% 30%,#ff00cc55 0%,transparent 35%),radial-gradient(circle at 70% 60%,#3333ff66 0%,transparent 40%),radial-gradient(circle at 50% 50%,#1b1035,#05030d)",
+  mint: "linear-gradient(160deg,#d4fc79 0%,#96e6a1 100%)",
+  dusk: "linear-gradient(180deg,#2c3e50 0%,#4a3f6b 45%,#c96b7a 80%,#f2a07b 100%)",
+  arctic: "linear-gradient(180deg,#e0f2fe 0%,#bae6fd 40%,#7dd3fc 70%,#38bdf8 100%)",
+  grape: "linear-gradient(135deg,#41295a 0%,#2f0743 100%)",
+  citrus: "linear-gradient(135deg,#f6d365 0%,#fda085 100%)",
+  carbon: "repeating-linear-gradient(45deg,#1a1a1f 0 10px,#202027 10px 20px)",
+  blueprint: "linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px) 0 0/28px 28px,linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px) 0 0/28px 28px,#123a6b",
+  peach: "radial-gradient(circle at 70% 30%,#ffe3d3 0%,transparent 50%),linear-gradient(160deg,#ffc3a0,#ffafbd)",
 };
+const LIVE_WALLPAPERS = { aurora: ["Aurora flow", "aurora"], stars: ["Starfield", "midnight"], bubbles: ["Bubbles", "ocean"], rain: ["Rainy window", "slate"], matrix: ["Digital rain", "mono"], waves: ["Waves", "ocean"], fireflies: ["Fireflies", "forest"], lava: ["Lava lamp", "ember"] };
+const DYNAMIC_SKY = [[0, "linear-gradient(180deg,#0b1026,#1b2550 60%,#2d2a5a)"], [5, "linear-gradient(180deg,#2b3a67,#c06c84 60%,#f8b195)"], [8, "linear-gradient(180deg,#56ccf2,#a7e3ff 60%,#e0f7ff)"], [12, "linear-gradient(180deg,#2f80ed,#56ccf2 60%,#bde9ff)"], [17, "linear-gradient(180deg,#355c7d,#c06c84 55%,#f67280 80%,#f8b195)"], [20, "linear-gradient(180deg,#141e30,#243b55)"]];
 function wallpaperCSS(id = Settings.get("wallpaper")) {
   if (id === "custom" && Settings.get("customWallpaper")) return `center/cover no-repeat url("${Settings.get("customWallpaper")}")`;
+  if (id && id.startsWith("live:")) return WALLPAPERS[(LIVE_WALLPAPERS[id.slice(5)] || [])[1]] || WALLPAPERS.midnight;
+  if (id === "dynamic") { const hr = new Date().getHours(); let g = DYNAMIC_SKY[0][1]; for (const [hh, c] of DYNAMIC_SKY) if (hr >= hh) g = c; return g; }
+  if (id === "slideshow") return (typeof Slideshow !== "undefined" && Slideshow.current) ? `center/cover no-repeat url("${Slideshow.current}")` : WALLPAPERS.aurora;
   return WALLPAPERS[id] || WALLPAPERS.aurora;
 }
 
@@ -1648,9 +1778,11 @@ function applyTheme() {
   $("#icons").classList.toggle("hidden", !s.desktopIcons);
   $("#taskbar").classList.toggle("left", s.taskbarAlign === "left");
   Sound.setVol();
+  if (typeof applyPersonalization === "function") applyPersonalization();
 }
 darkMQ.addEventListener?.("change", applyTheme);
-Bus.on("setting", (k) => { if (["theme", "accent", "scale", "iconScale", "transparency", "animations", "highContrast", "wallpaper", "customWallpaper", "nightLight", "nightStrength", "brightness", "desktopIcons", "taskbarAlign", "volume", "muted"].includes(k)) applyTheme(); });
+const THEME_KEYS = new Set(["theme", "accent", "scale", "iconScale", "transparency", "animations", "highContrast", "wallpaper", "customWallpaper", "nightLight", "nightStrength", "brightness", "desktopIcons", "taskbarAlign", "volume", "muted", "radius", "titlebarAccent", "buttonStyle", "winShadow", "winAnim", "animSpeed", "taskbarSize", "taskbarStyle", "glassOpacity", "blur", "font", "iconShape", "iconStyle", "cursor", "customCSS", "colorFilter", "slideshowDir", "slideshowInterval"]);
+Bus.on("setting", (k) => { if (THEME_KEYS.has(k)) applyTheme(); });
 
 const AXOS_LOGO = `<svg viewBox="0 0 64 64"><defs><linearGradient id="axlg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6aa8ff"/><stop offset="1" stop-color="#9b5cff"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#axlg)"/><path d="M18 46 30 16h4l12 30h-6l-3-8H27l-3 8zm11-13h6l-3-9z" fill="#fff"/></svg>`;
 const START_LOGO = `<svg class="startlogo" viewBox="0 0 24 24"><defs><linearGradient id="stlg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent-2)"/></linearGradient></defs><rect x="2" y="2" width="9.3" height="9.3" rx="2.4" fill="url(#stlg)"/><rect x="12.7" y="2" width="9.3" height="9.3" rx="2.4" fill="url(#stlg)" opacity=".85"/><rect x="2" y="12.7" width="9.3" height="9.3" rx="2.4" fill="url(#stlg)" opacity=".85"/><rect x="12.7" y="12.7" width="9.3" height="9.3" rx="2.4" fill="url(#stlg)" opacity=".7"/></svg>`;
@@ -1737,7 +1869,8 @@ const Lock = {
   show(opts = {}) {
     if (this.el) return;
     Menu.closeAll(); Shell.closeFlyouts();
-    const el = this.el = h(`<div id="lock" class="fullscreen-layer"><div class="wall-bg" style="background:${wallpaperCSS()}"></div>
+    const lw = Settings.get("lockWallpaper"); const lc = Settings.get("lockClock");
+    const el = this.el = h(`<div id="lock" class="fullscreen-layer lc-${lc}"><div class="wall-bg" style="background:${wallpaperCSS(lw && lw !== "same" ? lw : undefined)}"></div>
       <div class="clock"><div class="t"></div><div class="d"></div></div>
       <div class="hint">Click or press any key to sign in</div>
       <div class="status"><span class="lk-net"></span><span class="lk-bat"></span></div>
@@ -1995,6 +2128,9 @@ const Desktop = {
       { label: "Open in File Explorer", icon: "folder", action: () => launch("explorer", { path: this.dir }) },
       "-",
       { label: "Display settings", icon: "monitor", action: () => launch("settings", { page: "display" }) },
+      { label: "Add widget", icon: "sliders", sub: Widgets.menu() },
+      { label: "Change wallpaper", icon: "image", sub: [...Object.entries(LIVE_WALLPAPERS).slice(0, 4).map(([k, [n]]) => ({ label: n + " (live)", checked: Settings.get("wallpaper") === "live:" + k, action: () => Settings.set("wallpaper", "live:" + k) })), "-", ...["aurora", "bloom", "ocean", "sakura", "nebula", "dusk"].map(k => ({ label: k[0].toUpperCase() + k.slice(1), checked: Settings.get("wallpaper") === k, action: () => Settings.set("wallpaper", k) })), "-", { label: "More backgrounds…", action: () => launch("settings", { page: "p-background" }) }] },
+      { label: "Themes", icon: "wand", sub: Object.entries(THEME_PRESETS).map(([k, t]) => ({ label: t.name, checked: Settings.get("preset") === k, action: () => applyPreset(k) })) },
       { label: "Personalize", icon: "palette", action: () => launch("settings", { page: "personalization" }) },
     ]);
   },
@@ -2195,7 +2331,7 @@ const Taskbar = {
 const SETTINGS_PAGES = [
   ["system", "System", "monitor"], ["display", "Display", "brightness"], ["sound", "Sound", "volume"], ["notifications", "Notifications", "bell"], ["storage", "Storage", "drive"],
   ["personalization", "Personalization", "palette"], ["taskbar", "Taskbar & Start", "apps"], ["apps", "Apps", "grid"], ["accounts", "Accounts", "user"], ["time", "Time & language", "clock"],
-  ["network", "Network & Browser", "globe"], ["compat", "Compatibility (AxCompat)", "chip"], ["accessibility", "Accessibility", "accessibility"], ["privacy", "Privacy & security", "shield"], ["update", "AxOS Update", "update"], ["about", "About", "info"],
+  ["network", "Network & Browser", "globe"], ["p-background", "Background & live wallpapers", "image"], ["p-colors", "Colors & accent", "palette"], ["p-windows", "Window style", "layers"], ["p-icons", "Icons, fonts & cursor", "grid"], ["p-widgets", "Desktop widgets", "sliders"], ["p-saver", "Screen saver", "moon"], ["p-lock", "Lock screen", "lock"], ["p-sounds", "Sound scheme", "music"], ["compat", "Compatibility (AxCompat)", "chip"], ["accessibility", "Accessibility", "accessibility"], ["privacy", "Privacy & security", "shield"], ["update", "AxOS Update", "update"], ["about", "About", "info"],
 ];
 const Start = {
   showAll: false,
@@ -2225,9 +2361,9 @@ const Start = {
       b.innerHTML = html + "</div>"; $(".back", b).onclick = () => { this.showAll = false; this.body(""); };
     } else {
       const pins = Settings.get("startPinned").filter(isInstalled).concat(Settings.get("installed").filter(a => isInstalled(a) && !Settings.get("startPinned").includes(a)));
-      const rec = Recents.get().files.filter(p => FS.exists(p)).slice(0, 6);
+      const rec = Settings.get("showRecommended") ? Recents.get().files.filter(p => FS.exists(p)).slice(0, 6) : null;
       b.innerHTML = `<div class="sec-h"><span>Pinned</span><button class="btn sm all">All apps ${ic("chevR")}</button></div><div class="sm-grid">${pins.map(id => `<button class="sm-app" data-app="${id}">${appIconHTML(id)}<span>${esc(Apps[id].name)}</span></button>`).join("")}</div>
-        <div class="sec-h" style="margin-top:22px"><span>Recommended</span></div>${rec.length ? `<div class="sm-rec">${rec.map(p => `<div class="it" data-path="${esc(p)}">${fileIconHTML(FS.basename(p), FS.node(p), p)}<div style="min-width:0"><div class="t ellipsis">${esc(FS.basename(p).replace(/\.lnk$/, ""))}</div><div class="s">${timeAgo(FS.node(p).mtime)}</div></div></div>`).join("")}</div>` : `<div class="dim" style="padding:10px 8px;font-size:12.5px">Files you open recently will show up here.</div>`}`;
+        ${rec ? `<div class="sec-h" style="margin-top:22px"><span>Recommended</span></div>` : ""}${!rec ? "" : rec.length ? `<div class="sm-rec">${rec.map(p => `<div class="it" data-path="${esc(p)}">${fileIconHTML(FS.basename(p), FS.node(p), p)}<div style="min-width:0"><div class="t ellipsis">${esc(FS.basename(p).replace(/\.lnk$/, ""))}</div><div class="s">${timeAgo(FS.node(p).mtime)}</div></div></div>`).join("")}</div>` : `<div class="dim" style="padding:10px 8px;font-size:12.5px">Files you open recently will show up here.</div>`}`;
       $(".all", b).onclick = () => { this.showAll = true; this.body(""); };
     }
     $$("[data-app]", b).forEach(el => { el.onclick = () => { Shell.closeFlyouts(); launch(el.dataset.app); }; el.oncontextmenu = e => { e.preventDefault(); e.stopPropagation(); this.appMenu(el.dataset.app, e); }; });
@@ -3349,7 +3485,7 @@ registerApp("settings", {
     const nav = $(".nav", B), P = $(".page", B);
     const NAV = [["system", "System", "monitor"], ["personalization", "Personalization", "palette"], ["taskbar", "Taskbar & Start", "apps"], ["apps", "Apps", "grid"], ["accounts", "Accounts", "user"], ["time", "Time & language", "clock"], ["network", "Network & Browser", "globe"], ["compat", "AxCompat", "chip"], ["accessibility", "Accessibility", "accessibility"], ["privacy", "Privacy & security", "shield"], ["update", "AxOS Update", "update"]];
     const who = () => { $(".who", B).innerHTML = `${avatarHTML(56)}<div class="tx" style="min-width:0"><div style="font-weight:600" class="ellipsis">${esc(Settings.get("username"))}</div><div class="dim" style="font-size:12px">Local account</div></div>`; $(".who", B).onclick = () => go("accounts"); };
-    const renderNav = () => { nav.innerHTML = NAV.map(([id, n, i]) => `<div class="navitem${id === page || (id === "system" && ["display", "sound", "notifications", "storage", "about", "power"].includes(page)) ? " on" : ""}" data-id="${id}">${ic(i)}<span>${n}</span></div>`).join(""); $$(".navitem", nav).forEach(n => n.onclick = () => go(n.dataset.id)); };
+    const renderNav = () => { nav.innerHTML = NAV.map(([id, n, i]) => `<div class="navitem${id === page || (id === "system" && ["display", "sound", "notifications", "storage", "about", "power"].includes(page)) || (id === "personalization" && page.startsWith("p-")) ? " on" : ""}" data-id="${id}">${ic(i)}<span>${n}</span></div>`).join(""); $$(".navitem", nav).forEach(n => n.onclick = () => go(n.dataset.id)); };
     const go = p => { page = p; render(); P.scrollTop = 0; };
     win.goPage = go;
     const S = k => Settings.get(k);
@@ -3374,10 +3510,31 @@ registerApp("settings", {
         const spec = [["Device name", S("hostname")], ["Processor", `${navigator.hardwareConcurrency || "?"} logical processors`], ["Installed RAM", navigator.deviceMemory ? navigator.deviceMemory + " GB (reported)" : "Not reported by browser"], ["System type", `AxOS on ${br} · host ${os}`], ["Screen", `${screen.width}×${screen.height} @ ${devicePixelRatio}x`], ["Language", navigator.language]];
         const ax = [["Edition", "AxOS Home"], ["Version", AXOS_VERSION], ["OS build", AXOS_BUILD], ["Installed on", fmtDate(+(localStorage.getItem("axos.installed") || Date.now()), false)], ["Experience", "AxOS Feature Experience Pack"]];
         return `${crumbs(["System", "system"], ["About"])}<div class="st-hero"><div style="width:72px;height:72px">${AXOS_LOGO}</div><div class="grow"><div style="font-size:20px;font-weight:600">${esc(S("hostname"))}</div><div class="muted">AxOS ${AXOS_VERSION}</div></div><button class="btn rename">Rename this PC</button></div><h3>Device specifications</h3><div class="srow stack"><dl class="kv" style="font-size:13px;grid-template-columns:150px 1fr;gap:8px">${spec.map(([a, b]) => `<dt class="muted">${a}</dt><dd style="margin:0">${esc(b)}</dd>`).join("")}</dl></div><h3>AxOS specifications</h3><div class="srow stack"><dl class="kv" style="font-size:13px;grid-template-columns:150px 1fr;gap:8px">${ax.map(([a, b]) => `<dt class="muted">${a}</dt><dd style="margin:0">${esc(b)}</dd>`).join("")}</dl></div><button class="btn cp" style="margin-top:8px">${ic("copy")} Copy specs</button>`; },
-      personalization: () => `<h1>Personalization</h1><div class="st-hero"><div class="mon has-win" style="background:${wallpaperCSS()}"></div><div class="grow"><div class="themepick" style="max-width:340px">${[["dark", "d", "Dark"], ["light", "l", "Light"]].map(([t, c, l]) => `<button data-theme-pick="${t}" class="${S("theme") === t ? "on" : ""}"><div class="pv ${c}"></div>${l}</button>`).join("")}</div><label class="row" style="margin-top:10px;font-size:12.5px"><span class="switch${S("theme") === "auto" ? " on" : ""}" data-auto></span> Match my computer's theme</label></div></div>
-        <h3>Background</h3><div class="srow stack"><div class="wp-grid">${Object.keys(WALLPAPERS).map(k => `<button data-wp="${k}" class="${S("wallpaper") === k ? "on" : ""}" style="background:${WALLPAPERS[k]}" data-tip="${k}"></button>`).join("")}${S("customWallpaper") ? `<button data-wp="custom" class="${S("wallpaper") === "custom" ? "on" : ""}" style="background:${wallpaperCSS("custom")}"></button>` : ""}</div><div class="row" style="margin-top:12px"><button class="btn wpf">${ic("image")} Choose from Pictures…</button><button class="btn wph">${ic("upload")} Upload image…</button></div></div>
-        <h3>Accent color</h3><div class="srow stack"><div class="swatches">${ACCENT_COLORS.map(c => `<button data-acc="${c}" class="${S("accent") === c ? "on" : ""}" style="background:${c}"></button>`).join("")}<label class="btn sm" style="position:relative;overflow:hidden">${ic("palette")} Custom<input type="color" class="acc-custom" value="${S("accent")}" style="position:absolute;inset:0;opacity:0"></label></div></div>
-        <h3>Effects</h3>${row("layers", "Transparency effects", "Windows and surfaces appear translucent", sw("transparency"))}${row("zap", "Animation effects", "", sw("animations"))}${row("grid", "Desktop icon size", "", sel("iconScale", [[.75, "Small"], [1, "Medium"], [1.35, "Large"]]))}${row("monitor", "Show desktop icons", "", sw("desktopIcons"))}`,
+      personalization: () => `<h1>Personalization</h1><div class="st-hero"><div class="mon has-win" style="background:${wallpaperCSS()}"></div><div class="grow"><div style="font-size:18px;font-weight:600">${esc(THEME_PRESETS[S("preset")]?.name || "Custom theme")}</div><div class="muted" style="font-size:12.5px;margin:4px 0 10px">Pick a theme below, or fine-tune every detail.</div><div class="row"><button class="btn sm" data-go="p-advanced">${ic("upload")} Import / export theme</button></div></div></div>
+        <h3>Themes</h3><div class="preset-grid">${Object.entries(THEME_PRESETS).map(([k, t]) => `<button class="preset${S("preset") === k ? " on" : ""}" data-preset="${k}"><div class="pv" style="background:${wallpaperCSS(t.wallpaper)}"><b style="background:${t.accent}"></b><i style="background:${t.theme === "light" ? "#fbfbfd" : "#202026"};border-radius:${Math.min(t.radius, 10)}px ${Math.min(t.radius, 10)}px 0 0"></i></div><span>${esc(t.name)}${t.wallpaper.startsWith("live:") ? ' <span class="chip" style="height:16px;font-size:10px">LIVE</span>' : ""}</span></button>`).join("")}</div>
+        <h3>Customize</h3>${link("image", "Background", "Pictures, live & dynamic wallpapers, slideshow", "p-background")}${link("palette", "Colors & transparency", "Light/dark mode, accent color, glass effects, color filters", "p-colors")}${link("layers", "Windows", "Corner radius, title bar buttons, shadows, animations", "p-windows")}${link("apps", "Taskbar", "Dock or full-width, size, alignment", "p-taskbar")}${link("grid", "Icons, fonts & cursor", "Icon shape and style, system font, mouse pointer", "p-icons")}${link("music", "Sounds", "Sound schemes", "p-sounds")}${link("lock", "Lock screen", "Background and clock style", "p-lock")}${link("sliders", "Widgets", "Clock, weather, notes and more on your desktop", "p-widgets")}${link("moon", "Screen saver", "Animated screen savers when you're away", "p-saver")}${link("code", "Advanced", "Theme files, custom CSS, reset", "p-advanced")}`,
+      "p-background": () => `${crumbs(["Personalization", "personalization"], ["Background"])}<div class="st-hero"><div class="mon has-win" style="background:${wallpaperCSS()}"></div><div class="grow muted">Current: ${esc(S("wallpaper").startsWith("live:") ? LIVE_WALLPAPERS[S("wallpaper").slice(5)]?.[0] + " (live)" : S("wallpaper"))}</div></div>
+        <h3>Pictures</h3><div class="srow stack"><div class="wp-grid">${Object.keys(WALLPAPERS).map(k => `<button data-wp="${k}" class="${S("wallpaper") === k ? "on" : ""}" style="background:${WALLPAPERS[k]}" data-tip="${k}"></button>`).join("")}${S("customWallpaper") ? `<button data-wp="custom" class="${S("wallpaper") === "custom" ? "on" : ""}" style="background:${wallpaperCSS("custom")}"></button>` : ""}</div><div class="row" style="margin-top:12px"><button class="btn wpf">${ic("image")} Choose from Pictures…</button><button class="btn wph">${ic("upload")} Upload image…</button></div></div>
+        <h3>Live wallpapers</h3><div class="srow stack"><div class="wp-grid">${Object.entries(LIVE_WALLPAPERS).map(([k, [n, base]]) => `<button data-wp="live:${k}" class="${S("wallpaper") === "live:" + k ? "on" : ""}" style="background:${WALLPAPERS[base]};position:relative;color:#fff;font-size:11.5px;font-weight:600;text-shadow:0 1px 4px #000">${esc(n)}<span class="chip" style="position:absolute;top:6px;right:6px;height:16px;font-size:9.5px;background:rgba(0,0,0,.5);color:#fff;border:0">LIVE</span></button>`).join("")}</div><div class="dim" style="font-size:12px;margin-top:8px">Animated with your accent color. Paused automatically when a window is maximized or animations are off.</div></div>
+        <h3>Dynamic</h3>${row("sunCloud", "Living sky", "Changes color through the day: dawn, day, dusk and night", `<button class="btn ${S("wallpaper") === "dynamic" ? "primary" : ""}" data-wp="dynamic">${S("wallpaper") === "dynamic" ? "On" : "Use"}</button>`)}
+        ${row("refresh", "Slideshow", `Rotate pictures from ${esc(S("slideshowDir") || FS.home + "/Pictures/Wallpapers")}`, `<div class="row"><button class="btn ssd">Folder…</button>${sel("slideshowInterval", [[1, "Every minute"], [5, "5 minutes"], [10, "10 minutes"], [30, "30 minutes"], [60, "1 hour"]])}<button class="btn ${S("wallpaper") === "slideshow" ? "primary" : ""}" data-wp="slideshow">${S("wallpaper") === "slideshow" ? "On" : "Use"}</button></div>`)}`,
+      "p-colors": () => `${crumbs(["Personalization", "personalization"], ["Colors & transparency"])}<div class="srow stack"><div class="themepick" style="max-width:420px">${[["dark", "d", "Dark"], ["light", "l", "Light"]].map(([t, c, l]) => `<button data-theme-pick="${t}" class="${S("theme") === t ? "on" : ""}"><div class="pv ${c}"></div>${l}</button>`).join("")}</div><label class="row" style="margin-top:10px;font-size:12.5px"><span class="switch${S("theme") === "auto" ? " on" : ""}" data-auto></span> Match my computer's theme</label></div>
+        <h3>Accent color</h3><div class="srow stack"><div class="swatches">${ACCENT_COLORS.map(c => `<button data-acc="${c}" class="${S("accent") === c ? "on" : ""}" style="background:${c}"></button>`).join("")}<label class="btn sm" style="position:relative;overflow:hidden">${ic("palette")} Custom<input type="color" class="acc-custom" value="${S("accent")}" style="position:absolute;inset:0;opacity:0"></label></div></div>${row("layers", "Accent color on title bars", "", sw("titlebarAccent"))}
+        <h3>Glass</h3>${row("layers", "Transparency effects", "", sw("transparency"))}${row("eye", "Glass opacity", "Taskbar, Start menu and flyouts", `<input type="range" min="35" max="100" data-range="glassOpacity" value="${S("glassOpacity")}" style="width:200px">`)}${row("brightness", "Blur strength", "", `<input type="range" min="0" max="60" data-range="blur" value="${S("blur")}" style="width:200px">`)}
+        <h3>Color filters</h3>${row("accessibility", "Filter", "Applies to the whole screen", sel("colorFilter", [["none", "Off"], ["grayscale", "Grayscale"], ["invert", "Inverted"], ["sepia", "Sepia (warm)"], ["contrast", "Vivid"], ["protan", "Red-weak (protanopia)"], ["deutan", "Green-weak (deuteranopia)"], ["tritan", "Blue-yellow (tritanopia)"]]))}`,
+      "p-windows": () => `${crumbs(["Personalization", "personalization"], ["Windows"])}${row("square", "Corner radius", `${S("radius")} px`, `<input type="range" min="0" max="24" data-range="radius" value="${S("radius")}" style="width:200px">`)}${row("layers", "Title bar buttons", "", sel("buttonStyle", [["win", "Right side (squares)"], ["mac", "Left side (traffic lights)"]]))}${row("layers", "Accent title bars", "", sw("titlebarAccent"))}${row("sun", "Window shadow", "", `<input type="range" min="0" max="100" data-range="winShadow" value="${S("winShadow")}" style="width:200px">`)}
+        <h3>Motion</h3>${row("zap", "Animations", "", sw("animations"))}${row("maximize", "Window open animation", "", sel("winAnim", [["zoom", "Zoom"], ["pop", "Pop (bouncy)"], ["fade", "Fade"], ["slide", "Slide up"], ["none", "None"]]))}${row("timer", "Animation speed", "", sel("animSpeed", [[.5, "Slow"], [1, "Normal"], [1.5, "Fast"], [2.5, "Very fast"]]))}${row("play", "Try it", "", `<button class="btn tryw">Open a test window</button>`)}`,
+      "p-taskbar": () => `${crumbs(["Personalization", "personalization"], ["Taskbar"])}${row("apps", "Style", "", sel("taskbarStyle", [["full", "Full width"], ["dock", "Floating dock"]]))}${row("maximize", "Size", "", sel("taskbarSize", [["s", "Small"], ["m", "Medium"], ["l", "Large"]]))}${row("apps", "Alignment", "", sel("taskbarAlign", [["center", "Center"], ["left", "Left"]]))}${row("search", "Search box", "", sw("taskbarSearch"))}${row("clock", "Show seconds", "", sw("showSeconds"))}${row("star", "Start menu: show Recommended", "", sw("showRecommended"))}${link("pin", "Pinned apps", "Choose what's pinned to the taskbar and Start", "taskbar")}`,
+      "p-icons": () => `${crumbs(["Personalization", "personalization"], ["Icons, fonts & cursor"])}<div class="srow stack"><div class="row" style="gap:14px;flex-wrap:wrap">${["explorer", "browser", "terminal", "settings", "axplay", "gdash"].filter(a => Apps[a]).map(a => appIconHTML(a, 44)).join("")}</div></div>${row("square", "Icon shape", "", sel("iconShape", [["squircle", "Squircle"], ["rounded", "Rounded square"], ["circle", "Circle"], ["square", "Square"]]))}${row("palette", "Icon style", "", sel("iconStyle", [["gradient", "Gradient"], ["flat", "Flat"], ["glass", "Glass"], ["mono", "Monochrome"], ["outline", "Outline"]]))}${row("grid", "Desktop icon size", "", sel("iconScale", [[.75, "Small"], [1, "Medium"], [1.35, "Large"]]))}
+        <h3>Font</h3>${row("type", "System font", `<span style="font-family:${(FONTS[S("font")] || FONTS.system)[2].replace(/"/g, "'")}">The quick brown axolotl jumps over the lazy dog</span>`, sel("font", Object.entries(FONTS).map(([k, f]) => [k, f[0]])))}${row("maximize", "Text size", "", sel("scale", [[85, "85%"], [100, "100%"], [110, "110%"], [125, "125%"], [150, "150%"]]))}
+        <h3>Mouse pointer</h3><div class="srow stack"><div class="row" style="gap:10px;flex-wrap:wrap">${Object.entries(CURSORS).map(([k, c]) => `<button class="btn ${S("cursor") === k ? "primary" : ""}" data-cur="${k}">${c[1] ? `<img style="width:18px;height:18px" src="data:image/svg+xml,${encodeURIComponent(c[1](S("accent")))}">` : ic("arrowU")} ${esc(c[0])}</button>`).join("")}</div></div>`,
+      "p-sounds": () => `${crumbs(["Personalization", "personalization"], ["Sounds"])}${row("music", "System sounds", "", sw("sounds"))}<h3>Sound scheme</h3>${[["default", "AxOS", "Bright chimes"], ["soft", "Soft", "Gentle and quiet"], ["glass", "Glass", "Airy, high-pitched"], ["retro", "Retro", "8-bit square waves"], ["deep", "Deep", "Low and warm"]].map(([k, n, d]) => row(S("soundScheme") === k ? "checkC" : "music", n, d, `<div class="row"><button class="btn sm" data-sch-test="${k}">${ic("play")}</button><button class="btn sm ${S("soundScheme") === k ? "primary" : ""}" data-sch="${k}">${S("soundScheme") === k ? "Selected" : "Use"}</button></div>`)).join("")}`,
+      "p-lock": () => `${crumbs(["Personalization", "personalization"], ["Lock screen"])}<div class="st-hero"><div class="mon" style="background:${wallpaperCSS(S("lockWallpaper") === "same" ? undefined : S("lockWallpaper"))}"></div><div class="grow"><button class="btn lkp">${ic("eye")} Preview lock screen</button></div></div>${row("image", "Background", "", sel("lockWallpaper", [["same", "Same as desktop"], ...Object.keys(WALLPAPERS).map(k => [k, k[0].toUpperCase() + k.slice(1)]), ...(S("customWallpaper") ? [["custom", "My picture"]] : [])]))}${row("clock", "Clock style", "", sel("lockClock", [["center", "Centered"], ["left", "Bottom left"], ["minimal", "Minimal"], ["hidden", "Hidden"]]))}${row("lock", "Show lock screen at startup", "", sw("lockOnBoot"))}`,
+      "p-widgets": () => `${crumbs(["Personalization", "personalization"], ["Widgets"])}<div class="srow stack"><div class="t" style="margin-bottom:10px">Add a widget to your desktop</div><div class="row" style="flex-wrap:wrap;gap:8px">${Object.entries(WIDGET_TYPES).map(([k, [n, i]]) => `<button class="btn" data-wadd="${k}">${ic(i)} ${esc(n)}</button>`).join("")}</div></div><h3>On your desktop</h3>${S("widgets").map(w => row(WIDGET_TYPES[w.type]?.[1] || "apps", esc(WIDGET_TYPES[w.type]?.[0] || w.type), "Drag it anywhere on the desktop", `<button class="btn sm" data-wrm="${w.id}">Remove</button>`)).join("") || `<div class="dim" style="font-size:12.5px">No widgets yet. You can also right-click the desktop → Add widget.</div>`}`,
+      "p-saver": () => `${crumbs(["Personalization", "personalization"], ["Screen saver"])}${row("moon", "Screen saver", "", sel("screensaver", [["none", "None"], ["stars", "Starfield"], ["aurora", "Aurora"], ["bubbles", "Bubbles"], ["matrix", "Digital rain"], ["waves", "Waves"], ["lava", "Lava lamp"], ["fireflies", "Fireflies"], ["clock", "Floating clock"]]))}${row("timer", "Wait", "", sel("screensaverTimeout", [[1, "1 minute"], [3, "3 minutes"], [5, "5 minutes"], [10, "10 minutes"], [20, "20 minutes"]]))}${row("lock", "On resume, show lock screen", "", sw("screensaverLock"))}${row("play", "Preview", "Move the mouse or press a key to stop", `<button class="btn svp" ${S("screensaver") === "none" ? "disabled" : ""}>Preview</button>`)}`,
+      "p-advanced": () => `${crumbs(["Personalization", "personalization"], ["Advanced"])}<h3>Theme files</h3>${row("download", "Export my theme", "Saves a .axtheme file to Documents and downloads it", `<button class="btn tex">Export</button>`)}${row("upload", "Import a theme", "From your AxOS files or this computer", `<div class="row"><button class="btn tif">From files…</button><button class="btn tih">Upload…</button></div>`)}
+        <h3>Custom CSS</h3><div class="srow stack"><div class="d muted" style="font-size:12px;margin-bottom:8px">Style anything in AxOS. Example: <code>.win .tbar { font-weight: 700 }</code></div><textarea class="input mono ccss" rows="8" spellcheck="false" style="width:100%;font-size:12.5px">${esc(S("customCSS"))}</textarea><div class="row" style="margin-top:8px"><button class="btn primary cca">Apply</button><button class="btn ccc">Clear</button></div></div>
+        <h3>Reset</h3>${row("restart", "Reset personalization", "Back to the AxOS default look. Files and apps are untouched.", `<button class="btn rpz">Reset</button>`)}`,
       taskbar: () => `<h1>Taskbar & Start</h1>${row("apps", "Taskbar alignment", "", sel("taskbarAlign", [["center", "Center"], ["left", "Left"]]))}${row("search", "Search box on taskbar", "", sw("taskbarSearch"))}${row("clock", "Show seconds in system tray clock", "", sw("showSeconds"))}
         <h3>Pinned to taskbar</h3>${S("pinned").filter(isInstalled).map(id => row("", `<span class="row">${appIconHTML(id, 22)} ${esc(Apps[id].name)}</span>`, "", `<button class="btn sm" data-unpin="${id}">Unpin</button>`)).join("") || `<div class="dim">Nothing pinned.</div>`}
         <h3>Pinned to Start</h3><div class="srow stack"><div class="row" style="flex-wrap:wrap;gap:6px">${Object.values(Apps).filter(a => isInstalled(a.id)).map(a => `<button class="btn sm ${S("startPinned").includes(a.id) ? "primary" : ""}" data-sp="${a.id}">${esc(a.name)}</button>`).join("")}</div><div class="dim" style="font-size:12px;margin-top:8px">Highlighted apps are pinned to Start. Click to toggle.</div></div>`,
@@ -3386,6 +3543,7 @@ registerApp("settings", {
         <h3>Windows programs (AxCompat)</h3>${progs.length ? progs.map((p, i) => row("winlogo", esc(p.name), `${esc(p.publisher || "Unknown publisher")} · installed ${fmtDate(p.date, false)}`, `<button class="btn sm" data-prun="${i}">Open</button><button class="btn sm" data-prm="${i}">Uninstall</button>`)).join("") : `<div class="dim" style="font-size:12.5px;margin-bottom:8px">Run a Windows installer (setup.exe) to install programs here.</div>`}
         <h3>Default apps</h3>${Object.keys(da).length ? Object.entries(da).map(([e, a]) => row("file", "." + esc(e), "Opens with " + esc(Apps[a]?.name || a), `<button class="btn sm" data-undef="${esc(e)}">Reset</button>`)).join("") : `<div class="dim" style="font-size:12.5px">No custom defaults. Choose "Always use this app" in an Open with dialog to set one.</div>`}`; },
       accounts: () => `<h1>Accounts</h1><div class="st-hero">${avatarHTML(96)}<div class="grow"><div style="font-size:20px;font-weight:600">${esc(S("username"))}</div><div class="muted">Local account · Administrator</div><div class="row" style="margin-top:10px"><button class="btn sm av">${ic("image")} Choose picture</button>${S("avatar") ? `<button class="btn sm avr">Remove picture</button>` : ""}</div></div></div>
+        <h3>Or pick an emoji avatar</h3><div class="srow stack"><div class="emoji-grid">${AVATAR_EMOJI.map(e => `<button data-emoji="${e}">${e}</button>`).join("")}</div></div>
         ${row("user", "Account name", `Home folder: ${esc(FS.home)}`, `<button class="btn un">Change</button>`)}${row("lock", "Password", S("password") ? "Your account is protected with a password" : "No password — anyone can sign in", `<button class="btn pw">${S("password") ? "Change" : "Add"}</button>${S("password") ? `<button class="btn pwr">Remove</button>` : ""}`)}${row("lock", "Lock now", "Ctrl+Alt+L", `<button class="btn lk">Lock</button>`)}`,
       time: () => { const tz = Intl.DateTimeFormat().resolvedOptions().timeZone; return `<h1>Time & language</h1><div class="st-hero"><div class="bigtime" style="font-size:48px" data-live-clock></div><div class="grow muted">${new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</div></div>${row("clock", "24-hour clock", "", sw("clock24"))}${row("clock", "Show seconds in taskbar", "", sw("showSeconds"))}${row("globe", "Time zone", esc(tz) + " (synced from your computer)", "")}${row("language", "Display language", esc(navigator.language) + " (from your browser)", "")}`; },
       network: () => { const b = S("browser"); const c = navigator.connection; return `<h1>Network & Browser</h1><div class="st-hero"><div style="width:64px;height:64px;border-radius:50%;background:rgba(var(--accent-rgb),.15);display:grid;place-items:center;color:var(--accent)">${ic(navigator.onLine && S("wifi") ? "wifi" : "wifiOff").replace('class="i ', 'style="width:32px;height:32px" class="i ')}</div><div class="grow"><div style="font-size:18px;font-weight:600">${navigator.onLine && S("wifi") && !S("airplane") ? "AxNet-5G" : "Not connected"}</div><div class="muted">${navigator.onLine ? "Connected, secured" : "No internet access"}${c?.effectiveType ? ` · ${c.effectiveType.toUpperCase()}${c.downlink ? " · ~" + c.downlink + " Mbps" : ""}` : ""}</div></div></div>
@@ -3451,6 +3609,23 @@ registerApp("settings", {
       });
       q(".pwr", async () => { const old = await Dialog.prompt("Remove password", "Enter your current password:", "", { type: "password" }); if (old === S("password")) { Settings.set("password", ""); render(); } else if (old != null) Dialog.alert("Incorrect password", "", { icon: "errorC" }); });
       q(".lk", () => Power.lock());
+      $$("[data-preset]", P).forEach(e => e.onclick = () => { applyPreset(e.dataset.preset); render(); });
+      $$("[data-cur]", P).forEach(e => e.onclick = () => { Settings.set("cursor", e.dataset.cur); render(); });
+      $$("[data-sch]", P).forEach(e => e.onclick = () => { Settings.set("soundScheme", e.dataset.sch); Settings.data.sounds = true; Sound.play("notify"); render(); });
+      $$("[data-sch-test]", P).forEach(e => e.onclick = () => { const o = S("soundScheme"), so = S("sounds"); Settings.data.soundScheme = e.dataset.schTest; Settings.data.sounds = true; Sound.play("startup"); Settings.data.soundScheme = o; Settings.data.sounds = so; });
+      $$("[data-wadd]", P).forEach(e => e.onclick = () => { Widgets.add(e.dataset.wadd); render(); });
+      $$("[data-wrm]", P).forEach(e => e.onclick = () => { Widgets.remove(e.dataset.wrm); render(); });
+      $$("[data-emoji]", P).forEach(e => e.onclick = () => { Settings.set("avatar", emojiAvatar(e.dataset.emoji, S("accent"))); render(); });
+      q(".ssd", async () => { const p = await FilePicker.open({ title: "Slideshow folder", mode: "folder", start: S("slideshowDir") || FS.home + "/Pictures" }); if (p) { Settings.set("slideshowDir", p); Settings.set("wallpaper", "slideshow"); render(); } });
+      q(".tryw", () => { const w = WM.create({ app: "settings", title: "Test window", w: 420, h: 260 }); w.body.innerHTML = `<div class="empty-state">${ic("layers")}<div>This is how windows look and animate.</div></div>`; });
+      q(".lkp", () => Lock.show());
+      q(".svp", () => ScreenSaver.start(S("screensaver"), true));
+      q(".tex", () => ThemeFile.export());
+      q(".tif", async () => { const p = await FilePicker.open({ title: "Import theme", start: FS.home + "/Documents", filters: ["axtheme", "json"], filterLabel: "AxOS themes" }); if (p) { try { ThemeFile.apply(FS.readText(p)); render(); } catch (er) { Dialog.alert("Couldn't import theme", er.message, { icon: "errorC" }); } } });
+      q(".tih", () => { const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".axtheme,.json"; inp.onchange = () => { const f = inp.files[0]; if (!f) return; f.text().then(t => { try { ThemeFile.apply(t); render(); } catch (er) { Dialog.alert("Couldn't import theme", er.message, { icon: "errorC" }); } }); }; inp.click(); });
+      q(".cca", () => { Settings.set("customCSS", $(".ccss", P).value); notify("Custom CSS applied", "", "settings", { silent: true, timeout: 1500 }); });
+      q(".ccc", () => { Settings.set("customCSS", ""); render(); });
+      q(".rpz", async () => { if (await Dialog.confirm("Reset personalization?", "Wallpaper, colors, fonts, icons, widgets and other appearance settings go back to defaults.", { ok: "Reset" })) { PERSONAL_KEYS.forEach(k => Settings.data[k] = structuredClone(DEFAULT_SETTINGS[k])); Settings.data.preset = "default"; Settings.save(); applyTheme(); Taskbar.renderApps(); Desktop.render(); render(); } });
       q(".tg", async () => {
         const out = $(".tgres", P); out.innerHTML = Object.entries(GATEWAYS).map(([k, g]) => `<div class="srow" data-g="${k}"><span class="spinner" style="width:16px;height:16px;border-width:2px"></span><div class="tx"><div class="t">${esc(g.name)}</div><div class="d">Testing…</div></div></div>`).join("");
         await Promise.all(Object.entries(GATEWAYS).map(async ([k, g]) => { const t0 = performance.now(); let ok = false, msg = ""; try { const ctl = new AbortController(); setTimeout(() => ctl.abort(), 15000); const r = await fetch(g.build("https://example.com/"), { signal: ctl.signal, headers: g.headers || {} }); const txt = await r.text(); ok = r.ok && /Example Domain/i.test(txt); msg = ok ? `${Math.round(performance.now() - t0)} ms` : `HTTP ${r.status}`; } catch (e) { msg = e.name === "AbortError" ? "Timed out" : "Unreachable"; } const el = $(`[data-g="${k}"]`, out); if (el) { el.firstElementChild.outerHTML = `<span style="color:${ok ? "var(--ok)" : "var(--danger)"}">${ic(ok ? "checkC" : "errorC")}</span>`; $(".d", el).textContent = ok ? "Working · " + msg : msg; } }));
@@ -3467,7 +3642,7 @@ registerApp("settings", {
     const fi = $(".sfind input", B);
     fi.oninput = () => { const q = fi.value.trim().toLowerCase(); if (!q) return render(); const hits = SETTINGS_PAGES.filter(([id, n]) => n.toLowerCase().includes(q) || (pages[id] ? pages[id]().replace(/<[^>]+>/g, " ").toLowerCase().includes(q) : false)); P.innerHTML = `<h1>Search results</h1>${hits.map(([id, n, i]) => link(i, n, "", id)).join("") || `<div class="dim">No settings found for "${esc(q)}".</div>`}`; $$("[data-go]", P).forEach(e => e.onclick = () => { fi.value = ""; go(e.dataset.go); }); };
     fi.onkeydown = e => e.stopPropagation();
-    const off = Bus.on("setting", k => { if (["wallpaper", "theme", "accent", "customWallpaper"].includes(k) && ["personalization", "system"].includes(page)) { const m = $(".mon", P); if (m) m.style.background = wallpaperCSS(); } });
+    const off = Bus.on("setting", k => { if (["wallpaper", "theme", "accent", "customWallpaper"].includes(k) && (["personalization", "system"].includes(page) || page.startsWith("p-"))) { const m = $(".mon", P); if (m) m.style.background = wallpaperCSS(); } });
     win.on("close", off);
     render();
   },
@@ -4353,6 +4528,489 @@ registerApp("stickies", {
 </script>
 <script>
 /* =====================================================================
+   Personalization engine — live wallpapers, slideshow, widgets,
+   screen saver, fonts, icons, cursors, presets, theme files
+   ===================================================================== */
+const FONTS = {
+  system: ["System default", null, 'var(--font-sys)'],
+  inter: ["Inter", "Inter:wght@400;500;600;700", '"Inter",system-ui,sans-serif'],
+  poppins: ["Poppins", "Poppins:wght@400;500;600;700", '"Poppins",system-ui,sans-serif'],
+  nunito: ["Nunito (rounded)", "Nunito:wght@400;600;700", '"Nunito",system-ui,sans-serif'],
+  space: ["Space Grotesk", "Space+Grotesk:wght@400;500;600;700", '"Space Grotesk",system-ui,sans-serif'],
+  outfit: ["Outfit", "Outfit:wght@400;500;600;700", '"Outfit",system-ui,sans-serif'],
+  jetbrains: ["JetBrains Mono", "JetBrains+Mono:wght@400;600", '"JetBrains Mono",ui-monospace,monospace'],
+  serif: ["Serif (Georgia)", null, 'Georgia,"Times New Roman",serif'],
+  comic: ["Comic Neue", "Comic+Neue:wght@400;700", '"Comic Neue","Comic Sans MS",cursive'],
+};
+const CURSORS = {
+  default: ["System default", null],
+  accent: ["Accent arrow", c => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M3 2l15 9-6.5 1.5L8 19z" fill="${c}" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>`, 3, 2],
+  large: ["Large white", () => `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><path d="M4 2l26 15-11 2.5-6 11z" fill="white" stroke="black" stroke-width="2" stroke-linejoin="round"/></svg>`, 4, 2],
+  dark: ["Dark", () => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M3 2l15 9-6.5 1.5L8 19z" fill="#111" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>`, 3, 2],
+  dot: ["Dot", c => `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"><circle cx="10" cy="10" r="6" fill="${c}" stroke="white" stroke-width="2"/></svg>`, 10, 10],
+  cross: ["Crosshair", c => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M12 2v8M12 14v8M2 12h8M14 12h8" stroke="${c}" stroke-width="2.5" stroke-linecap="round"/><circle cx="12" cy="12" r="1.5" fill="${c}"/></svg>`, 12, 12],
+};
+const THEME_PRESETS = {
+  default: { name: "AxOS Default", theme: "dark", accent: "#4f8cff", wallpaper: "aurora", radius: 10, iconStyle: "gradient", iconShape: "squircle", taskbarStyle: "full", buttonStyle: "win", font: "system", titlebarAccent: false, soundScheme: "default", winAnim: "zoom" },
+  neon: { name: "Midnight Neon", theme: "dark", accent: "#d946ef", wallpaper: "live:stars", radius: 14, iconStyle: "glass", iconShape: "circle", taskbarStyle: "dock", buttonStyle: "win", font: "space", titlebarAccent: false, soundScheme: "glass", winAnim: "pop" },
+  sakura: { name: "Sakura", theme: "light", accent: "#ec4899", wallpaper: "sakura", radius: 16, iconStyle: "gradient", iconShape: "circle", taskbarStyle: "dock", buttonStyle: "mac", font: "nunito", titlebarAccent: false, soundScheme: "soft", winAnim: "pop" },
+  forest: { name: "Forest", theme: "dark", accent: "#22c55e", wallpaper: "live:fireflies", radius: 12, iconStyle: "flat", iconShape: "rounded", taskbarStyle: "full", buttonStyle: "win", font: "outfit", titlebarAccent: false, soundScheme: "soft", winAnim: "fade" },
+  ocean: { name: "Ocean Glass", theme: "dark", accent: "#0ea5e9", wallpaper: "live:bubbles", radius: 18, iconStyle: "glass", iconShape: "squircle", taskbarStyle: "dock", buttonStyle: "mac", font: "inter", titlebarAccent: false, soundScheme: "glass", winAnim: "zoom" },
+  retro: { name: "Retro Terminal", theme: "dark", accent: "#22c55e", wallpaper: "live:matrix", radius: 0, iconStyle: "outline", iconShape: "square", taskbarStyle: "full", buttonStyle: "win", font: "jetbrains", titlebarAccent: true, soundScheme: "retro", winAnim: "none" },
+  minimal: { name: "Mono Minimal", theme: "light", accent: "#64748b", wallpaper: "arctic", radius: 6, iconStyle: "mono", iconShape: "rounded", taskbarStyle: "full", buttonStyle: "win", font: "inter", titlebarAccent: false, soundScheme: "soft", winAnim: "fade" },
+  sunset: { name: "Sunset Dock", theme: "dark", accent: "#f97316", wallpaper: "dusk", radius: 14, iconStyle: "gradient", iconShape: "squircle", taskbarStyle: "dock", buttonStyle: "mac", font: "poppins", titlebarAccent: true, soundScheme: "default", winAnim: "slide" },
+  lava: { name: "Lava", theme: "dark", accent: "#ef4444", wallpaper: "live:lava", radius: 12, iconStyle: "gradient", iconShape: "circle", taskbarStyle: "full", buttonStyle: "win", font: "outfit", titlebarAccent: false, soundScheme: "deep", winAnim: "pop" },
+  sky: { name: "Living Sky", theme: "auto", accent: "#2563eb", wallpaper: "dynamic", radius: 10, iconStyle: "flat", iconShape: "squircle", taskbarStyle: "full", buttonStyle: "win", font: "system", titlebarAccent: false, soundScheme: "default", winAnim: "zoom" },
+};
+const PERSONAL_KEYS = ["theme", "accent", "wallpaper", "customWallpaper", "transparency", "animations", "iconScale", "radius", "titlebarAccent", "buttonStyle", "winShadow", "winAnim", "animSpeed", "taskbarSize", "taskbarStyle", "taskbarAlign", "glassOpacity", "blur", "font", "iconShape", "iconStyle", "cursor", "soundScheme", "lockWallpaper", "lockClock", "customCSS", "widgets", "screensaver", "screensaverTimeout", "showSeconds", "clock24"];
+const _loadedFonts = new Set();
+document.documentElement.style.setProperty("--font-sys", getComputedStyle(document.documentElement).getPropertyValue("--font"));
+function applyPersonalization() {
+  const s = Settings.data, R = document.documentElement, B = document.body;
+  R.style.setProperty("--radius", s.radius + "px"); R.style.setProperty("--radius-sm", Math.max(0, Math.round(s.radius * .6)) + "px"); R.style.setProperty("--radius-lg", Math.round(s.radius * 1.4) + "px");
+  const sa = s.winShadow / 100; R.style.setProperty("--win-shadow", sa ? `0 ${Math.round(18 * sa + 2)}px ${Math.round(50 * sa + 6)}px rgba(0,0,0,${(.15 + .4 * sa).toFixed(2)}),0 2px 8px rgba(0,0,0,${(.1 + .2 * sa).toFixed(2)})` : "none");
+  R.style.setProperty("--spd", String(1 / (s.animSpeed || 1)));
+  R.style.setProperty("--tb-h", { s: 40, m: 48, l: 58 }[s.taskbarSize] + "px");
+  R.style.setProperty("--tb-space", ({ s: 40, m: 48, l: 58 }[s.taskbarSize] + (s.taskbarStyle === "dock" ? 16 : 0)) + "px");
+  R.style.setProperty("--glass-a", (s.glassOpacity / 100).toFixed(2)); R.style.setProperty("--blur", s.blur + "px");
+  R.style.setProperty("--icon-r", { squircle: .26, rounded: .16, circle: .5, square: .04 }[s.iconShape] ?? .26);
+  B.classList.toggle("tb-dock", s.taskbarStyle === "dock"); B.classList.toggle("tb-accent", !!s.titlebarAccent); B.classList.toggle("btn-mac", s.buttonStyle === "mac");
+  ["fade", "slide", "none", "pop"].forEach(a => B.classList.toggle("anim-" + a, s.winAnim === a));
+  ["flat", "glass", "mono", "outline"].forEach(a => B.classList.toggle("icons-" + a, s.iconStyle === a));
+  const f = FONTS[s.font] || FONTS.system;
+  if (f[1] && !_loadedFonts.has(s.font)) { _loadedFonts.add(s.font); const l = document.createElement("link"); l.rel = "stylesheet"; l.href = `https://fonts.googleapis.com/css2?family=${f[1]}&display=swap`; document.head.appendChild(l); }
+  R.style.setProperty("--font", f[2] === "var(--font-sys)" ? R.style.getPropertyValue("--font-sys") || getComputedStyle(R).getPropertyValue("--font-sys") : f[2]);
+  const cur = CURSORS[s.cursor];
+  if (cur && cur[1]) { B.dataset.cursor = s.cursor; R.style.setProperty("--cur", `url("data:image/svg+xml,${encodeURIComponent(cur[1](s.accent))}") ${cur[2]} ${cur[3]}, auto`); } else delete B.dataset.cursor;
+  $("#custom-css").textContent = s.customCSS || "";
+  const cf = { none: "", grayscale: "grayscale(1)", invert: "invert(1) hue-rotate(180deg)", sepia: "sepia(.8)", protan: "url(#cb-protan)", deutan: "url(#cb-deutan)", tritan: "url(#cb-tritan)", contrast: "contrast(1.35) saturate(1.2)" }[s.colorFilter] || "";
+  R.style.filter = cf;
+  LiveWallpaper.sync(); Slideshow.sync();
+  if (typeof Widgets !== "undefined" && Widgets.ready) Widgets.render();
+}
+setInterval(() => { if (Settings.get("wallpaper") === "dynamic") $("#wallpaper").style.background = wallpaperCSS(); }, 5 * 60 * 1000);
+
+/* ---------------- Live wallpaper renderers (also used by the screen saver) ---------------- */
+const LiveFX = {
+  make(type, cv, opts = {}) {
+    const ctx = cv.getContext("2d"); let W = 0, H = 0; const acc = () => Settings.get("accent"); const rgb = () => hexToRgb(acc()).join(",");
+    const rs = () => { const d = Math.min(devicePixelRatio, opts.hq ? 2 : 1.25); W = cv.width = Math.max(1, cv.offsetWidth * d); H = cv.height = Math.max(1, cv.offsetHeight * d); };
+    rs(); const R = Math.random; let st = {};
+    const init = {
+      stars() { st.s = Array.from({ length: 420 }, () => ({ x: R() * 2 - 1, y: R() * 2 - 1, z: R() })); },
+      bubbles() { st.b = Array.from({ length: 45 }, () => ({ x: R(), y: R(), r: 8 + R() * 50, v: .0004 + R() * .0012, w: R() * 6 })); },
+      rain() { st.d = Array.from({ length: 260 }, () => ({ x: R(), y: R(), l: 10 + R() * 25, v: .006 + R() * .01 })); },
+      matrix() { st.cols = Math.ceil(W / 16); st.y = Array.from({ length: st.cols }, () => R() * H / 16); },
+      fireflies() { st.f = Array.from({ length: 70 }, () => ({ x: R(), y: R(), a: R() * 6.28, s: .0004 + R() * .0008, p: R() * 6.28 })); },
+      lava() { st.l = Array.from({ length: 9 }, (_, i) => ({ x: R(), y: R(), r: .12 + R() * .14, vx: (R() - .5) * .0012, vy: (R() - .5) * .0016, h: i * 40 })); },
+      aurora() { }, waves() { },
+    };
+    (init[type] || (() => { }))();
+    const draw = (t) => {
+      if (cv.offsetWidth * 1 && Math.abs(cv.width - cv.offsetWidth * Math.min(devicePixelRatio, opts.hq ? 2 : 1.25)) > 2) { rs(); if (type === "matrix") init.matrix(); }
+      const c = ctx, T = t / 1000;
+      if (type === "aurora") {
+        c.fillStyle = "#070a1a"; c.fillRect(0, 0, W, H); c.globalCompositeOperation = "lighter";
+        const cols = [acc(), "#2dd4bf", "#a855f7", "#38bdf8"];
+        cols.forEach((col, i) => { const x = W * (.5 + .38 * Math.sin(T * .13 + i * 1.7)), y = H * (.45 + .3 * Math.cos(T * .1 + i * 2.3)), r = Math.max(W, H) * (.45 + .1 * Math.sin(T * .2 + i)); const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, col + "88"); g.addColorStop(1, col + "00"); c.fillStyle = g; c.fillRect(0, 0, W, H); });
+        c.globalCompositeOperation = "source-over";
+      } else if (type === "stars") {
+        c.fillStyle = "rgba(4,5,15,.35)"; c.fillRect(0, 0, W, H);
+        for (const s of st.s) { s.z -= .0016 * (opts.speed || 1); if (s.z <= .02) { s.x = R() * 2 - 1; s.y = R() * 2 - 1; s.z = 1; } const k = .5 / s.z, x = W / 2 + s.x * W * k * .5, y = H / 2 + s.y * H * k * .5; if (x < 0 || x > W || y < 0 || y > H) { s.z = 0; continue; } const sz = (1 - s.z) * 2.6; c.fillStyle = `rgba(${s.z < .3 ? rgb() : "255,255,255"},${1 - s.z})`; c.fillRect(x, y, sz, sz); }
+      } else if (type === "bubbles") {
+        const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#04203f"); g.addColorStop(1, "#0a4d7a"); c.fillStyle = g; c.fillRect(0, 0, W, H);
+        for (const b of st.b) { b.y -= b.v; if (b.y < -.1) { b.y = 1.1; b.x = R(); } const x = (b.x + Math.sin(T + b.w) * .01) * W, y = b.y * H; c.beginPath(); c.arc(x, y, b.r, 0, 7); c.fillStyle = `rgba(${rgb()},.12)`; c.fill(); c.strokeStyle = "rgba(255,255,255,.25)"; c.lineWidth = 1.5; c.stroke(); c.beginPath(); c.arc(x - b.r * .35, y - b.r * .35, b.r * .2, 0, 7); c.fillStyle = "rgba(255,255,255,.35)"; c.fill(); }
+      } else if (type === "rain") {
+        const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#1c2533"); g.addColorStop(1, "#2f3b4f"); c.fillStyle = g; c.fillRect(0, 0, W, H);
+        c.strokeStyle = "rgba(180,200,230,.35)"; c.lineWidth = 1.2; c.beginPath(); for (const d of st.d) { d.y += d.v; if (d.y > 1.05) { d.y = -.05; d.x = R(); } const x = d.x * W, y = d.y * H; c.moveTo(x, y); c.lineTo(x - 2, y + d.l); } c.stroke();
+      } else if (type === "matrix") {
+        c.fillStyle = "rgba(0,0,0,.09)"; c.fillRect(0, 0, W, H); c.fillStyle = acc(); c.font = "15px monospace";
+        st.y.forEach((v, i) => { c.fillText(String.fromCharCode(0x30a0 + R() * 96), i * 16, v * 16); st.y[i] = v * 16 > H && R() > .975 ? 0 : v + .5; });
+      } else if (type === "waves") {
+        const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, "#0b1e3b"); g.addColorStop(1, "#06101f"); c.fillStyle = g; c.fillRect(0, 0, W, H);
+        for (let k = 0; k < 5; k++) { c.beginPath(); c.moveTo(0, H); for (let x = 0; x <= W; x += 12) c.lineTo(x, H * (.55 + k * .08) + Math.sin(x / W * 6 + T * (.4 + k * .15) + k) * H * .04); c.lineTo(W, H); c.closePath(); c.fillStyle = `rgba(${rgb()},${.08 + k * .05})`; c.fill(); }
+      } else if (type === "fireflies") {
+        c.fillStyle = "rgba(6,20,14,.3)"; c.fillRect(0, 0, W, H);
+        for (const f of st.f) { f.a += (R() - .5) * .2; f.x += Math.cos(f.a) * f.s; f.y += Math.sin(f.a) * f.s; f.x = (f.x + 1) % 1; f.y = (f.y + 1) % 1; const glow = .5 + .5 * Math.sin(T * 2 + f.p); const x = f.x * W, y = f.y * H; const g = c.createRadialGradient(x, y, 0, x, y, 14); g.addColorStop(0, `rgba(220,255,140,${glow})`); g.addColorStop(1, "rgba(220,255,140,0)"); c.fillStyle = g; c.fillRect(x - 14, y - 14, 28, 28); }
+      } else if (type === "lava") {
+        c.fillStyle = "#1a0510"; c.fillRect(0, 0, W, H); c.globalCompositeOperation = "lighter";
+        for (const b of st.l) { b.x += b.vx; b.y += b.vy; if (b.x < 0 || b.x > 1) b.vx *= -1; if (b.y < 0 || b.y > 1) b.vy *= -1; const x = b.x * W, y = b.y * H, r = b.r * Math.max(W, H); const g = c.createRadialGradient(x, y, 0, x, y, r); g.addColorStop(0, `hsla(${(b.h + T * 8) % 60 - 10},95%,55%,.55)`); g.addColorStop(1, "hsla(0,90%,50%,0)"); c.fillStyle = g; c.fillRect(0, 0, W, H); }
+        c.globalCompositeOperation = "source-over";
+      }
+    };
+    return { draw, resize: rs };
+  },
+};
+const LiveWallpaper = {
+  type: null, raf: 0, fx: null, last: 0,
+  sync() {
+    const w = Settings.get("wallpaper"); const t = w && w.startsWith("live:") && Settings.get("animations") ? w.slice(5) : null;
+    if (t === this.type) return; this.stop(); this.type = t; if (!t) return;
+    const cv = document.createElement("canvas"); cv.id = "live-wp"; $("#wallpaper").appendChild(cv); this.fx = LiveFX.make(t, cv);
+    const loop = (ts) => { this.raf = requestAnimationFrame(loop); if (document.hidden || ts - this.last < 33) return; if (WM.topVisible()?.maxed && !TaskView.open) return; this.last = ts; this.fx.draw(ts); };
+    this.raf = requestAnimationFrame(loop);
+  },
+  stop() { cancelAnimationFrame(this.raf); $("#live-wp")?.remove(); this.fx = null; this.type = null; },
+};
+const Slideshow = {
+  current: null, timer: null, i: 0, dir: null, iv: null,
+  sync() {
+    const on = Settings.get("wallpaper") === "slideshow"; const dir = Settings.get("slideshowDir") || FS.home + "/Pictures/Wallpapers"; const iv = Settings.get("slideshowInterval");
+    if (!on) { clearInterval(this.timer); this.timer = null; this.dir = null; return; }
+    if (this.timer && this.dir === dir && this.iv === iv) return;
+    clearInterval(this.timer); this.dir = dir; this.iv = iv; this.next(); this.timer = setInterval(() => this.next(), Math.max(.25, iv) * 60000);
+  },
+  next() {
+    const imgs = FS.list(this.dir || "").filter(i => IMG_EXT.includes(extOf(i.name)));
+    if (!imgs.length) { this.current = null; $("#wallpaper").style.background = WALLPAPERS.aurora; return; }
+    this.i = (this.i + 1) % imgs.length; if (this.current) URL.revokeObjectURL(this.current); this.current = FS.blobURL(imgs[this.i].path);
+    $("#wallpaper").style.background = wallpaperCSS("slideshow");
+  },
+};
+
+/* ---------------- Desktop widgets ---------------- */
+const WIDGET_TYPES = {
+  clock: ["Clock", "clock"], calendar: ["Calendar", "fileText"], weather: ["Weather", "sunCloud"], sysmon: ["System monitor", "activity"], note: ["Quick note", "notepad"], photo: ["Photo frame", "image"], quote: ["Daily quote", "star"], battery: ["Battery & network", "battery"],
+};
+const Widgets = {
+  ready: false, timers: [],
+  add(type) { const ws = [...Settings.get("widgets")]; const n = ws.length; ws.push({ id: uid(), type, x: innerWidth - 280 - (n % 3) * 18, y: 20 + (n % 6) * 26 }); Settings.set("widgets", ws); this.render(); },
+  remove(id) { Settings.set("widgets", Settings.get("widgets").filter(w => w.id !== id)); this.render(); },
+  render() {
+    this.ready = true; this.timers.forEach(clearInterval); this.timers = [];
+    const box = $("#widgets"); box.innerHTML = "";
+    for (const w of Settings.get("widgets")) {
+      const [name, icon] = WIDGET_TYPES[w.type] || ["Widget", "apps"];
+      const el = h(`<div class="widget" data-id="${w.id}"><div class="wh">${ic(icon)}<span>${esc(name)}</span><button class="x" data-tip="Remove widget">${ic("x")}</button></div><div class="wb"></div></div>`);
+      el.style.left = clamp(w.x, 0, innerWidth - 120) + "px"; el.style.top = clamp(w.y, 0, innerHeight - 140) + "px";
+      box.appendChild(el); this.fill(w, $(".wb", el));
+      $(".x", el).onclick = () => this.remove(w.id);
+      el.oncontextmenu = e => { e.preventDefault(); e.stopPropagation(); Menu.show(e.clientX, e.clientY, [{ label: "Remove widget", icon: "x", action: () => this.remove(w.id) }, { label: "Add widget", icon: "plus", sub: this.menu() }, { label: "Widget settings", icon: "gear", action: () => launch("settings", { page: "p-widgets" }) }]); };
+      el.addEventListener("pointerdown", e => {
+        if (e.button !== 0 || e.target.closest("textarea,button,input,a")) return; e.preventDefault();
+        const sx = e.clientX - el.offsetLeft, sy = e.clientY - el.offsetTop; el.classList.add("dragging");
+        const mv = ev => { el.style.left = clamp(ev.clientX - sx, 0, innerWidth - 60) + "px"; el.style.top = clamp(ev.clientY - sy, 0, innerHeight - 80) + "px"; };
+        const up = () => { el.classList.remove("dragging"); document.removeEventListener("pointermove", mv); document.removeEventListener("pointerup", up); Settings.set("widgets", Settings.get("widgets").map(x => x.id === w.id ? { ...x, x: el.offsetLeft, y: el.offsetTop } : x)); };
+        document.addEventListener("pointermove", mv); document.addEventListener("pointerup", up);
+      });
+    }
+  },
+  menu() { return Object.entries(WIDGET_TYPES).map(([k, [n, i]]) => ({ label: n, icon: i, action: () => this.add(k) })); },
+  every(ms, f) { f(); this.timers.push(setInterval(f, ms)); },
+  fill(w, b) {
+    if (w.type === "clock") { b.innerHTML = `<div class="t" style="font-size:44px;font-weight:300;font-variant-numeric:tabular-nums;letter-spacing:-1px"></div><div class="d muted"></div>`; this.every(1000, () => { const d = new Date(); $(".t", b).textContent = fmtTime(d); $(".d", b).textContent = d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }); }); }
+    else if (w.type === "calendar") { const n = new Date(); const f = new Date(n.getFullYear(), n.getMonth(), 1); let d = ""; for (let i = 0; i < f.getDay(); i++) d += "<span></span>"; const days = new Date(n.getFullYear(), n.getMonth() + 1, 0).getDate(); for (let i = 1; i <= days; i++) d += `<span style="text-align:center;padding:3px 0;border-radius:50%;${i === n.getDate() ? "background:var(--accent);color:#fff;font-weight:600" : ""}">${i}</span>`; b.innerHTML = `<div style="font-weight:600;margin-bottom:6px">${n.toLocaleDateString(undefined, { month: "long", year: "numeric" })}</div><div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:11.5px">${["S", "M", "T", "W", "T", "F", "S"].map(x => `<span class="dim" style="text-align:center">${x}</span>`).join("")}${d}</div>`; }
+    else if (w.type === "weather") {
+      let place = null; try { place = JSON.parse(Settings.get("weatherCity") || "null"); } catch (e) { } place ||= { name: "Mexico City", lat: 19.43, lon: -99.13 };
+      b.innerHTML = `<div class="muted" style="font-size:12px">Loading…</div>`;
+      const load = async () => { try { const d = await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}&current=temperature_2m,weather_code&daily=temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=1${localStorage.getItem("axos.wUnit") === "F" ? "&temperature_unit=fahrenheit" : ""}`)).json(); const [em, tx] = WCODE[d.current.weather_code] || ["🌡️", ""]; b.innerHTML = `<div class="row" style="gap:12px"><span style="font-size:44px">${em}</span><div><div style="font-size:30px;font-weight:300">${Math.round(d.current.temperature_2m)}°</div><div class="muted" style="font-size:12px">${esc(tx)}</div></div></div><div class="row" style="justify-content:space-between;font-size:12px;margin-top:6px"><span>${esc(place.name)}</span><span class="muted">H ${Math.round(d.daily.temperature_2m_max[0])}° L ${Math.round(d.daily.temperature_2m_min[0])}°</span></div>`; b.onclick = () => launch("weather"); } catch (e) { b.innerHTML = `<div class="muted" style="font-size:12px">Weather unavailable offline</div>`; } };
+      load(); this.timers.push(setInterval(load, 30 * 60000));
+    }
+    else if (w.type === "sysmon") { const hist = Array(40).fill(0); let fr = 0, lt = performance.now(); b.innerHTML = `<canvas style="width:100%;height:60px;display:block"></canvas><div class="row" style="justify-content:space-between;font-size:12px;margin-top:6px"><span class="a"></span><span class="m muted"></span></div>`; const cv = $("canvas", b); this.every(1000, () => { const now = performance.now(); const lag = Math.max(0, now - lt - 1000); lt = now; const cpu = clamp(lag / 3 + WM.wins.size * 2 + Math.random() * 6, 1, 100); hist.push(cpu); hist.shift(); const c = cv.getContext("2d"); const W2 = cv.width = cv.offsetWidth, H2 = cv.height = 60; c.beginPath(); hist.forEach((v, i) => { const x = i / (hist.length - 1) * W2, y = H2 - v / 100 * H2; i ? c.lineTo(x, y) : c.moveTo(x, y); }); c.strokeStyle = Settings.get("accent"); c.lineWidth = 2; c.stroke(); c.lineTo(W2, H2); c.lineTo(0, H2); c.fillStyle = Settings.get("accent") + "33"; c.fill(); $(".a", b).textContent = `CPU ${cpu.toFixed(0)}% · ${WM.wins.size} windows`; $(".m", b).textContent = performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1048576) + " MB" : fmtSize(FS.du()); }); }
+    else if (w.type === "note") { const k = "axos.wnote." + w.id; b.innerHTML = `<textarea placeholder="Write something…"></textarea>`; const t = $("textarea", b); t.value = localStorage.getItem(k) || ""; t.oninput = () => localStorage.setItem(k, t.value); t.onkeydown = e => e.stopPropagation(); }
+    else if (w.type === "photo") { b.innerHTML = `<div style="aspect-ratio:4/3;border-radius:10px;overflow:hidden;background:var(--surface-3);display:grid;place-items:center"><img style="width:100%;height:100%;object-fit:cover;transition:opacity .6s" alt=""></div>`; const img = $("img", b); let i = 0, url = null; this.every(30000, () => { const imgs = []; FS.walk(FS.home + "/Pictures", (p, n, nm) => { if (n.type === "file" && IMG_EXT.includes(extOf(nm))) imgs.push(p); }); if (!imgs.length) { img.replaceWith(h(`<div class="dim" style="font-size:12px;padding:10px;text-align:center">Add images to ~/Pictures</div>`)); return; } const p = imgs[i++ % imgs.length]; if (url) URL.revokeObjectURL(url); url = FS.blobURL(p); img.src = url; img.onclick = () => openPath(p); }); }
+    else if (w.type === "quote") { const q = ["Stay curious.", "Small steps every day.", "Make it work, make it right, make it fast.", "Be kind. Ship things.", "Simplicity is the ultimate sophistication.", "Done is better than perfect.", "Dream big, debug small."]; b.innerHTML = `<div style="font-size:17px;line-height:1.4;font-weight:500">“${esc(q[Math.floor(Date.now() / 86400000) % q.length])}”</div>`; }
+    else if (w.type === "battery") { this.every(5000, () => { const bt = Shell.battery; b.innerHTML = `<div class="row" style="gap:10px">${ic(bt?.charging ? "batteryCharge" : "battery").replace('class="i ', 'style="width:30px;height:30px" class="i ')}<div><div style="font-size:24px;font-weight:600">${bt ? Math.round(bt.level * 100) + "%" : "AC"}</div><div class="muted" style="font-size:12px">${bt ? (bt.charging ? "Charging" : "On battery") : "Plugged in"}</div></div></div><div class="row" style="margin-top:8px;font-size:12px">${ic(navigator.onLine ? "wifi" : "wifiOff")} ${navigator.onLine && Settings.get("wifi") ? "Connected" : "Offline"}</div>`; }); }
+  },
+};
+window.addEventListener("resize", debounce(() => Widgets.ready && Widgets.render(), 200));
+
+/* ---------------- Screen saver ---------------- */
+const ScreenSaver = {
+  idle: 0, el: null, raf: 0,
+  init() { const reset = () => { this.idle = 0; if (this.el) this.stop(); }; ["pointermove", "pointerdown", "keydown", "wheel", "touchstart"].forEach(e => document.addEventListener(e, reset, true)); setInterval(() => { this.idle += 10; const t = Settings.get("screensaver"); if (t !== "none" && !this.el && !Lock.locked && !document.fullscreenElement && this.idle >= Settings.get("screensaverTimeout") * 60) this.start(t); }, 10000); },
+  start(type, preview = false) {
+    this.stop(); const el = this.el = h(`<div class="screensaver"><canvas></canvas></div>`); document.body.appendChild(el); const cv = $("canvas", el); el._preview = preview;
+    if (type === "clock") { const c = cv.getContext("2d"); let x = .3, y = .4, vx = .0012, vy = .0009; const loop = () => { this.raf = requestAnimationFrame(loop); const W = cv.width = cv.offsetWidth, H = cv.height = cv.offsetHeight; c.fillStyle = "#000"; c.fillRect(0, 0, W, H); x += vx; y += vy; if (x < .1 || x > .9) vx *= -1; if (y < .15 || y > .85) vy *= -1; c.fillStyle = Settings.get("accent"); c.font = `200 ${Math.round(W / 9)}px ${getComputedStyle(document.body).fontFamily}`; c.textAlign = "center"; c.fillText(fmtTime(new Date()), x * W, y * H); c.fillStyle = "#888"; c.font = `${Math.round(W / 50)}px ${getComputedStyle(document.body).fontFamily}`; c.fillText(new Date().toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }), x * W, y * H + W / 28); }; loop(); }
+    else { const fx = LiveFX.make(type, cv, { hq: true, speed: 2 }); const loop = t => { this.raf = requestAnimationFrame(loop); fx.draw(t); }; this.raf = requestAnimationFrame(loop); }
+  },
+  stop() { if (!this.el) return; cancelAnimationFrame(this.raf); const preview = this.el._preview; this.el.remove(); this.el = null; if (!preview && Settings.get("screensaverLock")) Power.lock(); },
+};
+
+/* ---------------- Presets, theme files, avatars ---------------- */
+function applyPreset(id) {
+  const p = THEME_PRESETS[id]; if (!p) return;
+  for (const [k, v] of Object.entries(p)) if (k !== "name") Settings.data[k] = v;
+  Settings.data.preset = id; Settings.save(); applyTheme(); Taskbar.renderApps(); Desktop.render(); Bus.emit("setting", "preset", id);
+  notify("Theme applied", p.name, "settings", { silent: true, timeout: 2500 });
+}
+const ThemeFile = {
+  data() { const o = {}; PERSONAL_KEYS.forEach(k => o[k] = Settings.data[k]); return { axosTheme: 1, name: Settings.get("username") + "'s theme", created: Date.now(), settings: o }; },
+  export() { const d = JSON.stringify(this.data(), null, 2); const dir = FS.home + "/Documents"; const p = FS.join(dir, FS.uniqueName(dir, "My theme.axtheme")); FS.write(p, d); download("my-theme.axtheme", d, "application/json"); notify("Theme exported", `Saved to ${p} and downloaded.`, "settings"); },
+  apply(text) { const j = JSON.parse(text); if (!j.axosTheme || !j.settings) throw new Error("This isn't an AxOS theme file."); for (const k of PERSONAL_KEYS) if (k in j.settings) Settings.data[k] = j.settings[k]; Settings.save(); applyTheme(); Taskbar.renderApps(); Desktop.render(); notify("Theme applied", j.name || "Custom theme", "settings"); },
+};
+function emojiAvatar(emoji, color) { const [a, b] = [color, hslToHex((hexToHsl(color)[0] + 50) % 360, 80, 60)]; return "data:image/svg+xml," + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><rect width="128" height="128" fill="url(#g)"/><text x="64" y="86" font-size="68" text-anchor="middle">${emoji}</text></svg>`); }
+const AVATAR_EMOJI = ["🦎", "🐱", "🐶", "🦊", "🐼", "🐸", "🦄", "🐙", "👾", "🤖", "🎮", "🚀", "🌸", "🍕", "⚡", "🌈", "🔥", "🌙", "🎧", "🐧", "🦖", "🐝", "🍉", "💎"];
+</script>
+<script>
+/* =====================================================================
+   Geometry Dash webport (loaded live from the user's GitHub fork)
+   ===================================================================== */
+const GD = {
+  site: "https://gd-webport.pages.dev/",
+  repo: "axolotlpriv/Geometry-Dash-webport",
+  cdn: "https://cdn.jsdelivr.net/gh/axolotlpriv/Geometry-Dash-webport@main/index.html",
+  async fetchFork(onProgress) {
+    const res = await fetch(this.cdn, { cache: "no-cache" }); if (!res.ok) throw new Error("GitHub CDN returned HTTP " + res.status);
+    const total = +res.headers.get("content-length") || 3650344; const rd = res.body?.getReader(); if (!rd) { const t = await res.text(); await IDB.set("gd-cache", { html: t, time: Date.now() }); return t; }
+    const chunks = []; let got = 0; for (; ;) { const { done, value } = await rd.read(); if (done) break; chunks.push(value); got += value.length; onProgress && onProgress(got, total); }
+    const html = new TextDecoder().decode(await new Blob(chunks).arrayBuffer()); await IDB.set("gd-cache", { html, time: Date.now(), size: got }); return html;
+  },
+};
+registerApp("gdash", {
+  name: "Geometry Dash", icon: "zap", colors: ["#fde047", "#f97316"], w: 1040, h: 640, minW: 420, minH: 300, category: "Games", keywords: "geometry dash gd rhythm platformer webport game",
+  desc: "Your Geometry Dash webport, loaded live from axolotlpriv/Geometry-Dash-webport.",
+  launch(win, args) {
+    const B = win.body; let src = args.source || localStorage.getItem("axos.gdSource") || "site";
+    win.extra.innerHTML = `<button class="ibtn sm-src" data-tip="Game source" style="width:30px;height:30px">${ic("layers")}</button><button class="ibtn sm-rl" data-tip="Reload" style="width:30px;height:30px">${ic("refresh")}</button><button class="ibtn sm-fs" data-tip="Full screen" style="width:30px;height:30px">${ic("maximize")}</button>`;
+    const show = async () => {
+      B.innerHTML = `<div style="flex:1;position:relative;background:#000"><div class="empty-state" style="position:absolute;inset:0;color:#ccc"><div class="spinner"></div><div class="msg">Loading Geometry Dash…</div><div class="progress" style="width:240px"><i style="width:0"></i></div></div></div>`;
+      const host = B.firstElementChild; const msg = $(".msg", B), bar = $(".progress i", B);
+      const frame = (setup) => { const f = document.createElement("iframe"); f.setAttribute("allow", "fullscreen; autoplay; gamepad; clipboard-write"); f.setAttribute("allowfullscreen", ""); f.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border:0;background:#000"; setup(f); host.appendChild(f); f.onload = () => $(".empty-state", host)?.remove(); return f; };
+      if (src === "site") {
+        if (!navigator.onLine) return offline();
+        msg.textContent = "Connecting to gd-webport.pages.dev…"; bar.parentElement.classList.add("indet");
+        frame(f => { f.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups allow-modals allow-downloads"); f.src = GD.site; });
+      } else {
+        let cached = await IDB.get("gd-cache"); let html = cached?.html;
+        if (!html || args.refresh) { try { msg.textContent = `Downloading from GitHub (${GD.repo})…`; html = await GD.fetchFork((g, t) => { bar.style.width = Math.min(100, g / t * 100) + "%"; msg.textContent = `Downloading from GitHub… ${fmtSize(g)} of ${fmtSize(t)}`; }); } catch (e) { if (!html) return offline(e.message); } }
+        frame(f => { f.setAttribute("sandbox", "allow-scripts allow-pointer-lock allow-modals allow-forms"); f.srcdoc = html; });
+      }
+    };
+    const offline = (why) => { B.innerHTML = `<div class="empty-state" style="background:#0b0b0f;color:#ccc">${ic("wifiOff")}<div>Geometry Dash needs an internet connection to load its game files.</div><div class="dim" style="font-size:12px">${esc(why || "You appear to be offline.")}</div><button class="btn primary rt">Try again</button></div>`; $(".rt", B).onclick = show; };
+    $(".sm-rl", win.extra).onclick = () => show();
+    $(".sm-fs", win.extra).onclick = () => { const f = $("iframe", B); (f || B).requestFullscreen?.(); };
+    $(".sm-src", win.extra).onclick = e => Menu.at(e.currentTarget, [
+      { label: "Live site (gd-webport.pages.dev)", checked: src === "site", action: () => { src = "site"; localStorage.setItem("axos.gdSource", src); show(); } },
+      { label: "Your GitHub fork (via jsDelivr)", checked: src === "fork", action: () => { src = "fork"; localStorage.setItem("axos.gdSource", src); show(); } },
+      { label: "Update fork copy now", icon: "download", disabled: src !== "fork", action: () => { args.refresh = true; show(); args.refresh = false; } }, "-",
+      { label: "Open repository on GitHub", icon: "external", action: () => launch("browser", { url: "https://github.com/" + GD.repo }) },
+    ]);
+    show();
+  },
+});
+
+/* =====================================================================
+   Sample games (original) shipped as real PE / ELF files with payloads
+   ===================================================================== */
+const SAMPLE_GAMES = {
+  neondrift: { title: "Neon Drift", w: 500, h: 700, html: `<!doctype html><html><head><style>html,body{margin:0;height:100%;background:#05010f;overflow:hidden;font-family:system-ui,sans-serif;color:#fff}canvas{display:block;margin:0 auto;height:100vh}#h{position:fixed;top:10px;left:0;right:0;text-align:center;font-weight:700;letter-spacing:2px;text-shadow:0 0 10px #f0f}</style></head><body><div id="h">NEON DRIFT</div><canvas id="c" width="420" height="640"></canvas><script>
+const c=document.getElementById('c'),x=c.getContext('2d');let lane=1,px=1,obs=[],t=0,sp=4,score=0,over=false,best=0;try{best=+localStorage.nd||0}catch(e){}
+const L=i=>70+i*140;function reset(){obs=[];t=0;sp=4;score=0;over=false;lane=1;px=1}
+addEventListener('keydown',e=>{if(over&&(e.key===' '||e.key==='Enter'))return reset();if(/Left|^a$/i.test(e.key))lane=Math.max(0,lane-1);if(/Right|^d$/i.test(e.key))lane=Math.min(2,lane+1)});
+c.addEventListener('pointerdown',e=>{if(over)return reset();const r=c.getBoundingClientRect();lane=(e.clientX-r.left)/r.width<.5?Math.max(0,lane-1):Math.min(2,lane+1)});
+function loop(){requestAnimationFrame(loop);x.fillStyle='#05010f';x.fillRect(0,0,420,640);x.strokeStyle='#ff00e655';x.lineWidth=2;for(let i=0;i<4;i++){x.beginPath();x.moveTo(i*140,0);x.lineTo(i*140,640);x.stroke()}x.strokeStyle='#00e5ff33';for(let y=(t*sp)%40;y<640;y+=40){x.beginPath();x.moveTo(0,y);x.lineTo(420,y);x.stroke()}
+if(!over){t++;score+=sp/40;sp+=.002;if(t%Math.max(18,60-sp*3|0)===0)obs.push({l:Math.random()*3|0,y:-60,c:Math.random()<.5?'#ff2bd6':'#ffe600'});px+=(lane-px)*.25}
+obs.forEach(o=>{if(!over)o.y+=sp;x.shadowBlur=18;x.shadowColor=o.c;x.fillStyle=o.c;x.fillRect(L(o.l)-30,o.y,60,40)});obs=obs.filter(o=>o.y<700);
+const cx=70+px*140;x.shadowBlur=24;x.shadowColor='#00e5ff';x.fillStyle='#00e5ff';x.beginPath();x.moveTo(cx,540);x.lineTo(cx-26,600);x.lineTo(cx+26,600);x.closePath();x.fill();x.shadowBlur=0;
+if(!over&&obs.some(o=>Math.abs(L(o.l)-cx)<46&&o.y+40>540&&o.y<600)){over=true;if(score>best){best=score|0;try{localStorage.nd=best}catch(e){}}}
+x.fillStyle='#fff';x.font='bold 22px system-ui';x.textAlign='left';x.fillText('SCORE '+(score|0),14,40);x.textAlign='right';x.fillText('BEST '+(best|0),406,40);
+if(over){x.fillStyle='#000a';x.fillRect(0,0,420,640);x.textAlign='center';x.fillStyle='#ff2bd6';x.font='bold 40px system-ui';x.fillText('CRASHED',210,300);x.fillStyle='#fff';x.font='18px system-ui';x.fillText('Space / tap to drive again',210,340)}}loop();<\/script></body></html>` },
+  orbital: { title: "Orbital", w: 640, h: 640, html: `<!doctype html><html><head><style>html,body{margin:0;height:100%;background:#020617;overflow:hidden;font-family:system-ui,sans-serif}canvas{display:block;width:100vw;height:100vh}</style></head><body><canvas id="c"></canvas><script>
+const c=document.getElementById('c'),x=c.getContext('2d');let W,H;function rs(){W=c.width=innerWidth;H=c.height=innerHeight}rs();onresize=rs;
+let a=0,ring=1,rr=1,rocks=[],t=0,score=0,over=false,stars=[...Array(150)].map(()=>[Math.random(),Math.random(),Math.random()]);
+const R=i=>Math.min(W,H)*(i?.36:.22);function flip(){if(over){rocks=[];score=0;t=0;over=false;return}ring^=1}
+addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'||e.key==='ArrowUp'||e.key==='ArrowDown'){e.preventDefault();flip()}});addEventListener('pointerdown',flip);
+function loop(){requestAnimationFrame(loop);x.fillStyle='#020617';x.fillRect(0,0,W,H);stars.forEach(s=>{x.fillStyle='rgba(255,255,255,'+s[2]+')';x.fillRect(s[0]*W,s[1]*H,1.5,1.5)});
+const cx=W/2,cy=H/2;const g=x.createRadialGradient(cx,cy,0,cx,cy,R(0)*.6);g.addColorStop(0,'#fbbf24');g.addColorStop(1,'#ea580c');x.fillStyle=g;x.beginPath();x.arc(cx,cy,R(0)*.45,0,7);x.fill();
+x.strokeStyle='#ffffff22';[0,1].forEach(i=>{x.beginPath();x.arc(cx,cy,R(i),0,7);x.stroke()});
+if(!over){t++;a+=.025+score/40000;score++;rr+=(ring-rr)*.2;if(t%50===0)rocks.push({ang:a+Math.PI*(0.9+Math.random()*.6),ring:Math.random()<.5?0:1,v:-.012-Math.random()*.01})}
+rocks.forEach(k=>{if(!over)k.ang+=k.v;const r=R(k.ring);x.fillStyle='#94a3b8';x.beginPath();x.arc(cx+Math.cos(k.ang)*r,cy+Math.sin(k.ang)*r,10,0,7);x.fill()});rocks=rocks.filter(k=>k.ang>a-7);
+const pr=R(0)+(R(1)-R(0))*rr,px=cx+Math.cos(a)*pr,py=cy+Math.sin(a)*pr;x.shadowBlur=20;x.shadowColor='#38bdf8';x.fillStyle='#38bdf8';x.beginPath();x.arc(px,py,9,0,7);x.fill();x.shadowBlur=0;
+if(!over&&rocks.some(k=>{const r=R(k.ring);return Math.hypot(cx+Math.cos(k.ang)*r-px,cy+Math.sin(k.ang)*r-py)<18}))over=true;
+x.fillStyle='#fff';x.font='bold 20px system-ui';x.textAlign='center';x.fillText('ORBITAL  '+score,cx,36);x.font='13px system-ui';x.fillStyle='#94a3b8';x.fillText('Space / click switches orbit',cx,H-20);
+if(over){x.fillStyle='#000b';x.fillRect(0,0,W,H);x.fillStyle='#38bdf8';x.font='bold 40px system-ui';x.fillText('LOST IN SPACE',cx,cy-10);x.fillStyle='#fff';x.font='16px system-ui';x.fillText('Score '+score+' — click to relaunch',cx,cy+24)}}loop();<\/script></body></html>` },
+};
+Compat.repack = function (buf, payload) {
+  const b = new Uint8Array(buf); const s = new TextDecoder("latin1").decode(b); const i = s.indexOf("<<AXOS-PAYLOAD>>"); const base = i >= 0 ? b.subarray(0, i) : b;
+  const pl = new TextEncoder().encode("<<AXOS-PAYLOAD>>" + JSON.stringify(payload) + "<<END>>"); const out = new Uint8Array(base.length + pl.length); out.set(base); out.set(pl, base.length); return out.buffer;
+};
+
+/* =====================================================================
+   AxPlay — game library & launcher with a Proton-style compat layer
+   ===================================================================== */
+const AXPLAY_CATALOG = [
+  { id: "gd", title: "Geometry Dash (webport)", kind: "app", app: "gdash", platform: "web", dev: "axolotlpriv", tags: ["Rhythm", "Platformer"], size: "3.6 MB", desc: "Jump, fly and flip through rhythm-based levels. This is your webport from github.com/axolotlpriv/Geometry-Dash-webport, loaded live inside AxOS.", featured: true, colors: ["#facc15", "#ea580c"] },
+  { id: "neondrift", title: "Neon Drift", kind: "elf", file: "Neon Drift/NeonDrift.x86_64", platform: "linux", dev: "AxOS Games", tags: ["Arcade", "Racing"], size: "24 KB", desc: "A native Linux arcade racer. Dodge glowing barriers on an endless synthwave highway. Ships as an x86-64 ELF binary and runs through the AxPlay Linux Runtime.", colors: ["#ff2bd6", "#00e5ff"] },
+  { id: "orbital", title: "Orbital", kind: "exe", file: "Orbital/Orbital.exe", platform: "windows", dev: "AxOS Games", tags: ["Arcade", "Space"], size: "26 KB", desc: "A Windows game about staying in orbit. Switch between rings to dodge incoming rocks. Runs on AxOS through AxCompat's Proton-style compatibility layer.", colors: ["#0ea5e9", "#1e1b4b"] },
+  { id: "serpent", title: "Serpent", kind: "app", app: "serpent", platform: "axos", dev: "AxOS", tags: ["Arcade", "Classic"], size: "12 KB", desc: "Guide the serpent, eat the glowing fruit and don't bite your own tail.", colors: ["#a3e635", "#15803d"] },
+  { id: "memory", title: "Memory Match", kind: "app", app: "memory", platform: "axos", dev: "AxOS", tags: ["Puzzle"], size: "9 KB", desc: "Flip the cards and find all the pairs in as few moves as you can.", colors: ["#fdba74", "#c2410c"] },
+  { id: "tictactoe", title: "Tic-Tac-Toe", kind: "app", app: "tictactoe", platform: "axos", dev: "AxOS", tags: ["Board"], size: "8 KB", desc: "Three in a row against an unbeatable AI or a friend.", colors: ["#fb7185", "#7c3aed"] },
+];
+const PLATFORM = { web: ["Web", "globe", "web"], linux: ["Native Linux", "tux", "lx"], windows: ["Windows · Proton-style", "winlogo", "wn"], axos: ["AxOS", "apps", "web"] };
+const COMPAT_TOOLS = { auto: "Default for this game", proton: "AxCompat Proton-style layer 9.0 (stable)", protonexp: "AxCompat Proton-style layer — Experimental", native: "None (run natively)" };
+const AxPlay = {
+  get() { try { return JSON.parse(localStorage.getItem("axos.axplay")) || { games: [] }; } catch (e) { return { games: [] }; } },
+  save(d) { localStorage.setItem("axos.axplay", JSON.stringify(d)); Bus.emit("axplay"); },
+  game(id) { return this.get().games.find(g => g.id === id); },
+  update(id, p) { const d = this.get(); const g = d.games.find(x => x.id === id); if (g) Object.assign(g, p); this.save(d); },
+  colorsFor(t) { let hsh = 0; for (const c of t) hsh = (hsh * 31 + c.charCodeAt(0)) >>> 0; const a = hsh % 360; return [hslToHex(a, 70, 55), hslToHex((a + 60) % 360, 65, 30)]; },
+  downloads: [],
+  installed(g) { if (g.kind === "app") return isInstalled(g.app); if (g.path) return FS.exists(g.path); return !!g.url; },
+  async install(cat) {
+    const d = this.get(); if (!d.games.find(g => g.id === cat.id)) d.games.push({ ...cat, added: Date.now(), playtime: 0, compat: "auto", opts: "" }); this.save(d);
+    const dl = { id: cat.id, title: cat.title, p: 0, status: "Downloading" }; this.downloads.unshift(dl); Bus.emit("axplay");
+    try {
+      if (cat.id === "gd") { await GD.fetchFork((g, t) => { dl.p = g / t; Bus.emit("axplay-dl"); }); }
+      else { for (let i = 1; i <= 20; i++) { await sleep(70 + Math.random() * 60); dl.p = i / 20; if (i === 16) dl.status = "Installing"; Bus.emit("axplay-dl"); } }
+      if (cat.kind === "app") Store.install(cat.app, true);
+      if (cat.kind === "elf" || cat.kind === "exe") {
+        const p = FS.join(FS.home, "Games", cat.file); FS.mkdir(FS.dirname(p), true);
+        const base = cat.kind === "elf" ? Compat.buildSampleELF() : Compat.buildSamplePE(); const sg = SAMPLE_GAMES[cat.id];
+        FS.write(p, Compat.repack(base, { title: sg.title, w: sg.w, h: sg.h, html: sg.html }), { mime: cat.kind === "exe" ? "application/x-msdownload" : "application/x-executable" });
+        this.update(cat.id, { path: p });
+      }
+      dl.status = "Ready to play"; dl.p = 1; Bus.emit("axplay"); notify(`${cat.title} is ready to play`, "Installed with AxPlay.", "axplay");
+    } catch (e) { dl.status = "Failed: " + e.message; if (cat.kind === "app") Store.install(cat.app, true); Bus.emit("axplay"); }
+  },
+  async uninstall(g) {
+    if (!(await Dialog.confirm(`Uninstall ${g.title}?`, "Its files will be removed. Your play time is kept.", { ok: "Uninstall", danger: true }))) return;
+    if (g.kind === "app" && AXPLAY_CATALOG.some(c => c.id === g.id && c.app !== "gdash")) Store.uninstall(g.app, true);
+    if (g.path && g.catalog !== false && AXPLAY_CATALOG.some(c => c.id === g.id && c.file)) { try { FS.rm(FS.dirname(g.path)); } catch (e) { } }
+    if (g.id === "gd") await IDB.del("gd-cache");
+    this.update(g.id, { uninstalled: true }); Bus.emit("axplay");
+  },
+  addFile(path) {
+    const n = FS.node(path); if (!n) return null; const e = extOf(path); const k = Compat.sniff(n);
+    const kind = k === "pe" ? "exe" : k === "elf" ? "elf" : (e === "html" || e === "htm") ? "html" : null;
+    if (!kind) { Dialog.alert("Not a game", "AxPlay can add Windows .exe files, Linux binaries / AppImages, and .html games.", { icon: "alert" }); return null; }
+    const d = this.get(); const ex = d.games.find(g => g.path === path); if (ex) return ex.id;
+    const r = kind === "html" ? {} : Compat.info(path); const title = (r.payload?.title || r.version?.ProductName || FS.basename(path).replace(/\.(exe|x86_64|appimage|html?|bin|run)$/i, "").replace(/[_-]+/g, " "));
+    const g = { id: uid(), title, kind, path, platform: kind === "exe" ? "windows" : kind === "elf" ? "linux" : "web", dev: r.version?.CompanyName || "Unknown developer", tags: ["Non-AxPlay game"], desc: kind === "exe" ? `${r.format}, ${r.arch}. Runs through the Proton-style compatibility layer.` : kind === "elf" ? `${r.format} ${r.type}, ${r.arch}${r.glibc ? ", needs glibc " + r.glibc : ""}.` : "An HTML5 game from your files.", colors: this.colorsFor(title), added: Date.now(), playtime: 0, compat: "auto", opts: "", catalog: false };
+    d.games.push(g); this.save(d); return g.id;
+  },
+  scan() { let n = 0; FS.walk(FS.home + "/Games", (p, node, name) => { if (node.type !== "file") return; const e = extOf(name); if ((Compat.sniff(node) || e === "html") && !this.get().games.some(g => g.path === p) && this.addFile(p)) n++; }); return n; },
+  async play(g, from) {
+    if (!this.installed(g) || g.uninstalled) { notify(`${g.title} isn't installed`, "Install it from the AxPlay library first.", "axplay"); return; }
+    const t0 = Date.now(); let win = null; const tool = g.compat === "auto" ? (g.kind === "exe" ? "proton" : "native") : g.compat;
+    if (g.kind === "app") win = launch(g.app);
+    else if (g.kind === "url") { win = WM.create({ app: "axplay", title: g.title, w: 960, h: 620, iconHTML: appIconHTML({ icon: "gamepad", colors: g.colors }) }); win.customIcon = true; const f = document.createElement("iframe"); f.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups"); f.setAttribute("allow", "fullscreen; autoplay; gamepad"); f.style.cssText = "flex:1;border:0;width:100%;height:100%;background:#000"; f.src = g.url; win.body.appendChild(f); }
+    else if (g.kind === "html") { win = WM.create({ app: "axplay", title: g.title, w: 900, h: 620, iconHTML: appIconHTML({ icon: "gamepad", colors: g.colors }) }); win.customIcon = true; const f = document.createElement("iframe"); f.setAttribute("sandbox", "allow-scripts allow-pointer-lock allow-modals"); f.style.cssText = "flex:1;border:0;width:100%;height:100%;background:#000"; f.srcdoc = FS.readText(g.path); win.body.appendChild(f); }
+    else {
+      const steps = g.kind === "exe" && tool !== "native"
+        ? [`Compatibility tool: ${COMPAT_TOOLS[tool]}`, "Creating Wine prefix in ~/.local/share/axplay/compatdata", "Installing Visual C++ & DirectX redistributables (simulated)", "Translating Direct3D → Vulkan (DXVK, simulated)", "Processing shader cache", "Starting game…"]
+        : g.kind === "elf" ? ["AxPlay Linux Runtime (sniper-compatible container)", "Resolving shared libraries", "Starting game…"] : ["Running Windows game without a compatibility tool…"];
+      const sp = WM.create({ app: "axplay", title: "AxPlay", w: 440, h: 190, resizable: false, maximizable: false });
+      sp.body.innerHTML = `<div style="padding:20px;display:flex;flex-direction:column;gap:12px;height:100%;background:#14171c;color:#dfe3ea"><div style="font-weight:700;font-size:15px">Launching ${esc(g.title)}</div><div class="progress"><i style="width:0"></i></div><div class="st" style="font-size:12px;color:#8d96a6"></div></div>`;
+      for (let i = 0; i < steps.length; i++) { if (sp.closing) return; $(".st", sp.body).textContent = steps[i]; $(".progress i", sp.body).style.width = ((i + 1) / steps.length * 100) + "%"; await sleep(g.kind === "exe" && tool !== "native" ? 380 : 260); }
+      sp.close(true);
+      if (g.kind === "exe" && tool === "native") { Dialog.alert(g.title, "This is a Windows program. Without a compatibility tool it can't start on AxOS.\n\nEnable the Proton-style layer in the game's Properties → Compatibility.", { icon: "errorC" }); return; }
+      win = await Compat.launch(g.path);
+    }
+    if (win) win._game = g.id; this.update(g.id, { last: Date.now() });
+    if (win && win.on) win.on("close", () => { const d = this.get(); const x = d.games.find(y => y.id === g.id); if (x) { x.playtime = (x.playtime || 0) + (Date.now() - t0); this.save(d); } });
+  },
+};
+function fmtPlay(ms) { if (!ms) return "None"; const m = Math.round(ms / 60000); return m < 60 ? `${m} minute${m === 1 ? "" : "s"}` : `${(m / 60).toFixed(1)} hours`; }
+window.addEventListener("gamepadconnected", e => notify("Controller connected", e.gamepad.id.slice(0, 60), "axplay", { silent: true }));
+
+registerApp("axplay", {
+  name: "AxPlay", icon: "gamepad", colors: ["#3b82f6", "#1e1b4b"], w: 1120, h: 700, minW: 640, minH: 420, single: true, category: "Games", keywords: "steam games library launcher proton linux gaming",
+  desc: "Your game library: AxOS, web, native Linux and Windows games.",
+  launch(win, args) {
+    const B = win.body; let tab = "library", sel = null, filter = "all", q = "", storeSel = null, bp = false;
+    if (!localStorage.getItem("axos.axplayInit")) { localStorage.setItem("axos.axplayInit", "1"); const d = AxPlay.get(); for (const c of AXPLAY_CATALOG.filter(c => c.kind === "app")) if (!d.games.find(g => g.id === c.id)) d.games.push({ ...c, added: Date.now(), playtime: 0, compat: "auto", opts: "" }); AxPlay.save(d); }
+    AxPlay.scan();
+    B.innerHTML = `<div class="axp"><div class="top"><button class="tab" data-t="store">STORE</button><button class="tab" data-t="library">LIBRARY</button><button class="tab" data-t="downloads">DOWNLOADS</button><span class="grow"></span><button class="btn sm bpb">${ic("maximize")} Big Picture</button><span class="row" style="font-size:12.5px;color:#9aa3b2">${avatarHTML(24)} ${esc(Settings.get("username"))}</span></div><div class="body"></div></div>`;
+    const body = $(".body", B);
+    const icon = g => { if (g.path && FS.exists(g.path)) { const r = g.kind === "html" ? null : Compat.info(g.path); if (r?.icon) return `<span class="appicon raw"><img src="${r.icon}"></span>`; } if (g.kind === "app" && Apps[g.app]) return appIconHTML(g.app); return appIconHTML({ icon: g.platform === "linux" ? "tux" : g.platform === "windows" ? "winlogo" : "gamepad", colors: g.colors || ["#3b82f6", "#1e1b4b"] }); };
+    const games = () => AxPlay.get().games.filter(g => (!q || g.title.toLowerCase().includes(q)) && (filter === "all" || (filter === "installed" ? AxPlay.installed(g) && !g.uninstalled : g.platform === filter)));
+    const badge = g => { const [n, i, c] = PLATFORM[g.platform] || PLATFORM.web; return `<span class="badge ${c}">${ic(i)} ${n}</span>`; };
+    const render = () => {
+      $$(".top .tab", B).forEach(t => t.classList.toggle("on", t.dataset.t === tab));
+      if (tab === "library") renderLibrary(); else if (tab === "store") renderStore(); else renderDownloads();
+      if (bp) renderBP();
+    };
+    const renderLibrary = () => {
+      const list = games();
+      body.innerHTML = `<div class="lib"><div class="f"><div class="row"><select class="input fl" style="flex:1;height:28px;font-size:12px">${[["all", "All games"], ["installed", "Installed"], ["linux", "Native Linux"], ["windows", "Windows (Proton-style)"], ["web", "Web"], ["axos", "AxOS"]].map(([k, l]) => `<option value="${k}"${filter === k ? " selected" : ""}>${l}</option>`).join("")}</select></div><input class="input sq" placeholder="Search" value="${esc(q)}" style="height:28px"></div>
+        <div class="list"><div class="g home${!sel ? " on" : ""}">${ic("home")}<span>Home</span></div><div class="navhead" style="color:#6b7380">ALL GAMES (${list.length})</div>${list.sort((a, b) => a.title.localeCompare(b.title)).map(g => `<div class="g${sel === g.id ? " on" : ""}${AxPlay.installed(g) && !g.uninstalled ? "" : " notinst"}" data-id="${g.id}">${icon(g)}<span class="ellipsis">${esc(g.title)}</span>${WM.ordered().some(w => w._game === g.id) ? `<span class="dot"></span>` : ""}</div>`).join("")}</div>
+        <div style="padding:8px;border-top:1px solid #222831"><button class="btn sm add" style="width:100%">${ic("plus")} Add a game</button></div></div><div class="main"></div>`;
+      $(".fl", body).onchange = e => { filter = e.target.value; render(); };
+      const sq = $(".sq", body); sq.oninput = () => { q = sq.value.toLowerCase(); const ps = sq.selectionStart; render(); const n = $(".sq", body); n.focus(); n.setSelectionRange(ps, ps); }; sq.onkeydown = e => e.stopPropagation();
+      $(".home", body).onclick = () => { sel = null; render(); };
+      $$(".g[data-id]", body).forEach(el => { el.onclick = () => { sel = el.dataset.id; render(); }; el.ondblclick = () => { const g = AxPlay.game(el.dataset.id); if (AxPlay.installed(g) && !g.uninstalled) AxPlay.play(g); }; el.oncontextmenu = e => { e.preventDefault(); e.stopPropagation(); gameMenu(AxPlay.game(el.dataset.id), e.clientX, e.clientY); }; });
+      $(".add", body).onclick = e => Menu.at(e.currentTarget, [
+        { label: "Add a game from your files…", icon: "folder", action: async () => { const p = await FilePicker.open({ title: "Add a game", start: FS.home + "/Games" }); if (p) { const id = AxPlay.addFile(p); if (id) { sel = id; render(); } } } },
+        { label: "Upload a game from this computer…", icon: "upload", action: async () => { FS.mkdir(FS.home + "/Games", true); const n = await pickHostFiles(FS.home + "/Games", ".exe,.x86_64,.appimage,.html,.bin,.run,application/x-msdownload,application/x-executable"); if (n?.length) { const id = AxPlay.addFile(FS.join(FS.home + "/Games", n[0])); if (id) { sel = id; render(); } } } },
+        { label: "Add a web game (URL)…", icon: "globe", action: async () => { const u = await Dialog.prompt("Add a web game", "Enter the game's web address (the site must allow embedding):", "https://"); if (!u || !/^https?:\/\/\S+\.\S+/.test(u)) return; const t = await Dialog.prompt("Add a web game", "Name:", new URL(u).hostname); if (!t) return; const d = AxPlay.get(); const g = { id: uid(), title: t, kind: "url", url: u, platform: "web", dev: new URL(u).hostname, tags: ["Web"], desc: "A web game added by you.", colors: AxPlay.colorsFor(t), added: Date.now(), playtime: 0, compat: "auto", opts: "", catalog: false }; d.games.push(g); AxPlay.save(d); sel = g.id; render(); } },
+        "-", { label: "Scan ~/Games for games", icon: "refresh", action: () => { const n = AxPlay.scan(); notify("Scan complete", n ? `Added ${n} game(s).` : "No new games found in ~/Games.", "axplay", { silent: true }); render(); } },
+      ]);
+      const main = $(".main", body); const g = sel && AxPlay.game(sel);
+      if (!g) {
+        const all = AxPlay.get().games; const recent = [...all].filter(x => x.last).sort((a, b) => b.last - a.last).slice(0, 6);
+        main.innerHTML = `<div class="sect">${recent.length ? `<div class="navhead" style="padding-left:0;color:#9aa3b2">RECENT GAMES</div><div class="shelf" style="margin-bottom:22px">${recent.map(cap).join("")}</div>` : ""}<div class="navhead" style="padding-left:0;color:#9aa3b2">ALL GAMES</div><div class="shelf">${all.sort((a, b) => a.title.localeCompare(b.title)).map(cap).join("") || `<div style="color:#8d96a6">Your library is empty. Visit the Store.</div>`}</div></div>`;
+        $$(".cap", main).forEach(c => { c.onclick = () => { sel = c.dataset.id; render(); }; c.ondblclick = () => AxPlay.play(AxPlay.game(c.dataset.id)); });
+        return;
+      }
+      const inst = AxPlay.installed(g) && !g.uninstalled; const dl = AxPlay.downloads.find(d => d.id === g.id && d.p < 1);
+      main.innerHTML = `<div class="hero" style="background:linear-gradient(120deg,${g.colors?.[0] || "#3b82f6"},${g.colors?.[1] || "#1e1b4b"})"><div class="in">${icon(g)}<div><h1>${esc(g.title)}</h1><div style="color:#e5e7eb;opacity:.85;font-size:13px">${esc(g.dev || "")}</div></div></div></div>
+        <div class="bar"><button class="play ${dl ? "inst" : inst ? "" : "inst"}">${ic(inst ? "play" : "download")} ${dl ? "INSTALLING " + Math.round(dl.p * 100) + "%" : inst ? "PLAY" : "INSTALL"}</button>
+          <div class="stat"><div class="k">Last played</div><div class="v">${g.last ? timeAgo(g.last) : "Never"}</div></div><div class="stat"><div class="k">Play time</div><div class="v">${fmtPlay(g.playtime)}</div></div><div class="stat"><div class="k">Platform</div><div class="v">${badge(g)}</div></div>
+          <span class="grow"></span><button class="ibtn gear" style="color:#c6ccd6" data-tip="Manage">${ic("gear")}</button><button class="ibtn fav" style="color:${g.fav ? "#facc15" : "#c6ccd6"}" data-tip="Favorite">${ic(g.fav ? "starFill" : "star")}</button></div>
+        <div class="sect" style="display:grid;grid-template-columns:1.6fr 1fr;gap:16px"><div class="card2"><b>About this game</b><p style="color:#b9c0cc;line-height:1.6;font-size:13px">${esc(g.desc || "")}</p><div class="row" style="flex-wrap:wrap;gap:6px">${(g.tags || []).map(t => `<span class="badge">${esc(t)}</span>`).join("")}</div></div>
+          <div class="card2"><b>Compatibility</b><p style="color:#b9c0cc;line-height:1.55;font-size:12.5px">${g.platform === "windows" ? `Runs through <b>${esc(COMPAT_TOOLS[g.compat === "auto" ? "proton" : g.compat])}</b>. Games with an embedded AxOS payload run for real; other Windows games run in AxCompat simulation mode because native x86 code can't execute in a browser.` : g.platform === "linux" ? `Native Linux build, started by the <b>AxPlay Linux Runtime</b> via AxCompat's ELF loader. Payload games run for real; other binaries run in simulation mode.` : g.platform === "web" ? "Runs natively in AxOS. No compatibility layer needed." : "Built for AxOS."}</p>${g.path ? `<div style="font-size:11.5px;color:#7d8696;word-break:break-all">${esc(g.path)}</div>` : ""}</div></div>`;
+      $(".play", main).onclick = () => { if (dl) return; if (inst) AxPlay.play(g); else { const c = AXPLAY_CATALOG.find(x => x.id === g.id); if (c) { AxPlay.update(g.id, { uninstalled: false }); AxPlay.install(c); } else if (g.kind === "app") { Store.install(g.app, true); AxPlay.update(g.id, { uninstalled: false }); } else Dialog.alert("Files missing", `${g.path || "The game"} no longer exists. Remove it from your library or add it again.`, { icon: "alert" }); } };
+      $(".gear", main).onclick = e => { const r = e.currentTarget.getBoundingClientRect(); gameMenu(g, r.left, r.bottom + 4); };
+      $(".fav", main).onclick = () => { AxPlay.update(g.id, { fav: !g.fav }); };
+    };
+    const cap = g => `<div class="cap" data-id="${g.id}"><div class="art" style="background:linear-gradient(160deg,${g.colors?.[0] || "#3b82f6"},${g.colors?.[1] || "#1e1b4b"})">${icon(g)}<div class="nm">${esc(g.title)}</div></div><div class="meta"><span>${(PLATFORM[g.platform] || PLATFORM.web)[0]}</span><span>${g.playtime ? fmtPlay(g.playtime) : AxPlay.installed(g) && !g.uninstalled ? "Installed" : "Not installed"}</span></div></div>`;
+    const gameMenu = (g, x, y) => Menu.show(x, y, [
+      { label: "Play", icon: "play", disabled: !AxPlay.installed(g) || g.uninstalled, action: () => AxPlay.play(g) },
+      { label: "Properties…", icon: "gear", action: () => props(g) },
+      { label: "Add desktop shortcut", icon: "link", disabled: !AxPlay.installed(g), action: () => FS.write(FS.join(Desktop.dir, FS.uniqueName(Desktop.dir, g.title.replace(/[\\/:*?"<>|]/g, "") + ".lnk")), JSON.stringify({ target: g.kind === "app" ? "app:" + g.app : g.path ? "path:" + g.path : "url:" + g.url })) },
+      { label: "Browse local files", icon: "folder", disabled: !g.path, action: () => launch("explorer", { path: FS.dirname(g.path), select: g.path }) },
+      g.path && g.kind !== "html" ? { label: "Inspect executable", icon: "chip", action: () => launch("compat", { path: g.path, inspect: true }) } : null, "-",
+      { label: "Uninstall", icon: "trash", disabled: !AxPlay.installed(g) || g.uninstalled || g.catalog === false, action: () => AxPlay.uninstall(g) },
+      { label: "Remove from library", icon: "x", danger: true, action: () => { const d = AxPlay.get(); d.games = d.games.filter(x => x.id !== g.id); AxPlay.save(d); sel = null; render(); } },
+    ]);
+    const props = async (g) => {
+      const body2 = h(`<div class="col" style="margin-top:10px;gap:12px"><label><div class="muted" style="font-size:12px;margin-bottom:4px">Name</div><input class="input nm" style="width:100%" value="${esc(g.title)}"></label><label><div class="muted" style="font-size:12px;margin-bottom:4px">Launch options</div><input class="input lo" style="width:100%" value="${esc(g.opts || "")}" placeholder="e.g. -windowed -novid"></label>${g.kind === "exe" || g.kind === "elf" ? `<label><div class="muted" style="font-size:12px;margin-bottom:4px">Compatibility tool ${g.kind === "elf" ? "(native Linux games normally use none)" : ""}</div><select class="input ct" style="width:100%">${Object.entries(COMPAT_TOOLS).map(([k, v]) => `<option value="${k}"${(g.compat || "auto") === k ? " selected" : ""}>${esc(v)}</option>`).join("")}</select></label>` : ""}<div class="dim" style="font-size:12px">Added ${fmtDate(g.added || Date.now(), false)} · Play time ${fmtPlay(g.playtime)}</div></div>`);
+      const ok = await Dialog.open({ title: `${g.title} — Properties`, body: body2, buttons: [{ label: "Cancel", value: false }, { label: "Save", primary: true, value: true }] });
+      if (ok) { AxPlay.update(g.id, { title: $(".nm", body2).value.trim() || g.title, opts: $(".lo", body2).value, compat: $(".ct", body2)?.value || g.compat }); }
+    };
+    const renderStore = () => {
+      const lib = AxPlay.get().games; const owned = id => lib.some(g => g.id === id && !g.uninstalled && AxPlay.installed(g));
+      const feat = AXPLAY_CATALOG.find(c => c.featured);
+      if (storeSel) {
+        const c = AXPLAY_CATALOG.find(x => x.id === storeSel);
+        body.innerHTML = `<div class="main"><div class="hero" style="background:linear-gradient(120deg,${c.colors[0]},${c.colors[1]})"><div class="in">${c.app ? appIconHTML(c.app) : appIconHTML({ icon: PLATFORM[c.platform][1], colors: c.colors })}<div><h1>${esc(c.title)}</h1><div style="color:#e5e7eb;opacity:.85;font-size:13px">${esc(c.dev)} · ${esc(c.size)}</div></div></div></div><div class="bar"><button class="btn sm back">${ic("chevL")} Store</button><button class="play ${owned(c.id) ? "" : "inst"}">${ic(owned(c.id) ? "play" : "download")} ${owned(c.id) ? "PLAY" : "FREE — INSTALL"}</button>${badge(c)}</div><div class="sect"><div class="card2"><p style="color:#b9c0cc;line-height:1.6">${esc(c.desc)}</p><div class="row" style="gap:6px">${c.tags.map(t => `<span class="badge">${esc(t)}</span>`).join("")}</div></div></div></div>`;
+        $(".back", body).onclick = () => { storeSel = null; render(); };
+        $(".play", body).onclick = () => { if (owned(c.id)) AxPlay.play(AxPlay.game(c.id)); else { AxPlay.update(c.id, { uninstalled: false }); AxPlay.install(c); tab = "downloads"; render(); } };
+        return;
+      }
+      const shelf = (t, items) => items.length ? `<div class="navhead" style="padding-left:0;color:#9aa3b2;margin-top:18px">${t}</div><div class="shelf">${items.map(c => `<div class="cap" data-sid="${c.id}"><div class="art" style="background:linear-gradient(160deg,${c.colors[0]},${c.colors[1]})">${c.app ? appIconHTML(c.app) : appIconHTML({ icon: PLATFORM[c.platform][1], colors: c.colors })}<div class="nm">${esc(c.title)}</div></div><div class="meta"><span>${PLATFORM[c.platform][0]}</span><span>${owned(c.id) ? "In library" : "Free"}</span></div></div>`).join("")}</div>` : "";
+      body.innerHTML = `<div class="main"><div class="sect">${feat ? `<div class="hero" data-sid="${feat.id}" style="border-radius:12px;height:240px;background:linear-gradient(120deg,${feat.colors[0]},${feat.colors[1]});cursor:pointer"><div class="in">${appIconHTML(feat.app)}<div><div class="badge" style="margin-bottom:8px">FEATURED</div><h1>${esc(feat.title)}</h1><div style="color:#fff;opacity:.9;font-size:13px;max-width:520px">${esc(feat.desc)}</div></div></div></div>` : ""}
+        ${shelf("NATIVE LINUX", AXPLAY_CATALOG.filter(c => c.platform === "linux"))}${shelf("WINDOWS · PROTON-STYLE COMPATIBLE", AXPLAY_CATALOG.filter(c => c.platform === "windows"))}${shelf("WEB & AXOS GAMES", AXPLAY_CATALOG.filter(c => c.platform === "web" || c.platform === "axos"))}</div></div>`;
+      $$("[data-sid]", body).forEach(c => c.onclick = () => { storeSel = c.dataset.sid; render(); });
+    };
+    const renderDownloads = () => {
+      const ds = AxPlay.downloads;
+      body.innerHTML = `<div class="main"><div class="sect"><h2 style="margin:0 0 14px;color:#fff;font-weight:600">Downloads</h2>${ds.map(d => `<div class="dl">${appIconHTML({ icon: "download", colors: ["#3b82f6", "#1e1b4b"] }, 36)}<div class="grow"><div style="font-weight:600">${esc(d.title)}</div><div class="progress" style="margin:8px 0 4px"><i style="width:${Math.round(d.p * 100)}%"></i></div><div style="font-size:12px;color:#8d96a6">${esc(d.status)} · ${Math.round(d.p * 100)}%</div></div>${d.p >= 1 && !d.status.startsWith("Failed") ? `<button class="btn sm primary" data-play="${d.id}">Play</button>` : ""}</div>`).join("") || `<div style="color:#8d96a6">No downloads. Install free games from the Store.</div>`}</div></div>`;
+      $$("[data-play]", body).forEach(b => b.onclick = () => AxPlay.play(AxPlay.game(b.dataset.play)));
+    };
+    /* Big Picture mode with keyboard & gamepad navigation */
+    let bpi = 0, gpRaf = 0, gpPrev = {};
+    const renderBP = () => {
+      $(".bp", B)?.remove(); const list = AxPlay.get().games.filter(g => AxPlay.installed(g) && !g.uninstalled); bpi = clamp(bpi, 0, Math.max(0, list.length - 1));
+      const el = h(`<div class="bp"><div class="row" style="padding:26px 60px 0;justify-content:space-between"><div style="font-size:26px;font-weight:700">AxPlay <span style="opacity:.5;font-weight:400">Big Picture</span></div><div style="font-size:20px">${fmtTime(new Date())}</div></div><div class="row1">${list.map((g, i) => `<div class="tile${i === bpi ? " on" : ""}" style="background:linear-gradient(160deg,${g.colors?.[0] || "#3b82f6"},${g.colors?.[1] || "#1e1b4b"})" data-i="${i}">${icon(g)}<div class="nm">${esc(g.title)}</div></div>`).join("") || `<div style="opacity:.7">No installed games.</div>`}</div><div class="foot"><span><b>A</b>Play</span><span><b>B</b>Exit</span><span>◀ ▶ Browse</span><span class="grow"></span><span>${list[bpi] ? esc(list[bpi].title) + " · " + fmtPlay(list[bpi].playtime) : ""}</span></div></div>`);
+      $(".axp", B).appendChild(el); const on = $(".tile.on", el); on && on.scrollIntoView({ inline: "center", block: "nearest" });
+      $$(".tile", el).forEach(t => { t.onclick = () => { bpi = +t.dataset.i; renderBP(); }; t.ondblclick = () => AxPlay.play(list[+t.dataset.i]); });
+      el._list = list;
+    };
+    const bpKey = k => { const el = $(".bp", B); if (!el) return; const list = el._list; if (k === "left") { bpi = Math.max(0, bpi - 1); renderBP(); } else if (k === "right") { bpi = Math.min(list.length - 1, bpi + 1); renderBP(); } else if (k === "a" && list[bpi]) AxPlay.play(list[bpi]); else if (k === "b") toggleBP(false); };
+    const toggleBP = (v) => { bp = v; if (bp) { win.maximize(); renderBP(); const poll = () => { gpRaf = requestAnimationFrame(poll); const gp = [...(navigator.getGamepads?.() || [])].find(Boolean); if (!gp) return; const st = { left: gp.buttons[14]?.pressed || gp.axes[0] < -.6, right: gp.buttons[15]?.pressed || gp.axes[0] > .6, a: gp.buttons[0]?.pressed, b: gp.buttons[1]?.pressed }; for (const k in st) if (st[k] && !gpPrev[k]) bpKey(k); gpPrev = st; }; poll(); } else { cancelAnimationFrame(gpRaf); $(".bp", B)?.remove(); } };
+    $(".bpb", B).onclick = () => toggleBP(!bp);
+    win.el.tabIndex = -1; win.el.addEventListener("keydown", e => { if (!bp) return; const m = { ArrowLeft: "left", ArrowRight: "right", Enter: "a", Escape: "b", Backspace: "b" }[e.key]; if (m) { e.preventDefault(); e.stopPropagation(); bpKey(m); } });
+    $$(".top .tab", B).forEach(t => t.onclick = () => { tab = t.dataset.t; storeSel = null; render(); });
+    const off1 = Bus.on("axplay", render), off2 = Bus.on("axplay-dl", () => { if (tab === "downloads") renderDownloads(); else if (tab === "library" && sel) { const b = $(".play", body); const d = AxPlay.downloads.find(x => x.id === sel && x.p < 1); if (b && d) b.innerHTML = `${ic("download")} INSTALLING ${Math.round(d.p * 100)}%`; } }), off3 = Bus.on("store", render);
+    win.on("close", () => { off1(); off2(); off3(); cancelAnimationFrame(gpRaf); });
+    if (args.page) tab = args.page; render();
+  },
+});
+</script>
+<script>
+/* =====================================================================
    Boot
    ===================================================================== */
 window.addEventListener("error", e => { console.error(e.error || e.message); if (!Shell.started || /ResizeObserver|Script error/.test(e.message)) return; const k = String(e.message); if (Shell._lastErr === k) return; Shell._lastErr = k; notify("Something went wrong", k.slice(0, 160), "taskmgr", { silent: true }); });
@@ -4361,7 +5019,8 @@ window.addEventListener("unhandledrejection", e => console.warn("Unhandled:", e.
   applyTheme();
   if (!localStorage.getItem("axos.installed")) localStorage.setItem("axos.installed", String(Date.now()));
   await bootSequence();
-  Taskbar.init(); Desktop.init();
+  if (!localStorage.getItem("axos.migr2")) { localStorage.setItem("axos.migr2", "1"); const sp = Settings.get("startPinned"); ["axplay", "gdash"].forEach(a => { if (!sp.includes(a)) sp.splice(4, 0, a); }); Settings.set("startPinned", sp); const tp = Settings.get("pinned"); if (!tp.includes("axplay")) Settings.set("pinned", [...tp, "axplay"]); FS.mkdir(FS.home + "/Games", true); }
+  Taskbar.init(); Desktop.init(); Widgets.render(); ScreenSaver.init(); applyTheme();
   if (!Settings.get("setupDone")) { await runOOBE(); Desktop.render(); Taskbar.renderApps(); Sound.play("startup"); }
   else if (Settings.get("lockOnBoot") || Settings.get("password")) await Lock.show();
   else Sound.play("startup");

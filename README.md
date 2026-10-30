@@ -21,7 +21,44 @@ Your files and settings are saved in the browser (IndexedDB and localStorage), s
 | **AxCompat** | Opens Windows `.exe` (PE32/PE32+) and Linux ELF programs (see below) |
 | **Settings** | Wallpapers, accent color, dark/light/auto theme, night light, brightness, scale, taskbar, accounts, default apps, network/proxy, accessibility, backup and restore, factory reset |
 | **Apps** | Notepad (with Markdown preview), Calculator, Paint, Photos, Media Player, Task Manager, Clock, Weather, AxOS Store |
+| **AxPlay** | Steam-style game launcher: store, library, downloads, play time, Big Picture mode with gamepad support, Proton-style compatibility layer for Windows games, native Linux games |
+| **Geometry Dash** | Your [Geometry-Dash-webport](https://github.com/axolotlpriv/Geometry-Dash-webport), loaded live inside a window |
 | **Store extras** | Serpent, Tic-Tac-Toe, Memory Match, Sticky Notes. Install them from the Store or with `apt install` |
+
+## Personalization
+
+**Settings → Personalization** has:
+- 10 one-click themes (Midnight Neon, Sakura, Retro Terminal, Ocean Glass and more)
+- 23 picture wallpapers, 8 live animated wallpapers, a time-of-day sky, and a slideshow from any folder
+- Accent colors, glass opacity, blur strength and color filters
+- Window corner radius, shadows, title-bar buttons on the left or right, accent title bars, open animations and speed
+- A full-width taskbar or a floating dock, in three sizes
+- Icon shape and style, 9 fonts, 6 mouse pointers and 5 sound schemes
+- Lock screen background and clock style
+- Desktop widgets: clock, calendar, weather, system monitor, notes, photo frame, quote, battery
+- Screen savers
+- Emoji avatars
+- Custom CSS
+- Exporting and importing `.axtheme` files
+
+You can also right-click the desktop to change the wallpaper or theme, or to add a widget.
+
+## AxPlay and games
+
+AxPlay is an original Steam-style launcher. It isn't Steam, and it doesn't connect to Steam.
+
+**Launching games:**
+- **Windows `.exe` games** start through AxCompat's Proton-style layer. You can choose the compatibility tool for each game under Properties.
+- **Linux ELF and AppImage games** start through the "AxPlay Linux Runtime".
+- **Web and AxOS games** run directly.
+
+As with AxCompat, only games that carry an AxOS payload actually run. Two examples are in the store: **Neon Drift**, a native Linux ELF game, and **Orbital**, a Windows PE game. Other native binaries run in simulation mode.
+
+**Adding your own games:** in the library, choose **Add a game** to add an `.exe`, a Linux binary, an `.html` game or a web URL. You can also drop games into `~/Games` and scan for them.
+
+**Big Picture mode** works with the arrow keys, Enter and Esc, or with a gamepad (D-pad, A and B).
+
+**Geometry Dash** isn't bundled into `index.html`. The app loads your webport at runtime: by default from https://gd-webport.pages.dev/, or from your GitHub fork through jsDelivr (switch this with the layers button in the title bar). It always runs the latest version of your repo, but it needs an internet connection.
 
 ## How the browser loads websites
 
@@ -61,3 +98,4 @@ A browser tab can't run native x86 or ARM machine code. Here is what happens whe
 | Ctrl+Alt+L | Lock |
 | Ctrl+Alt+D | Show desktop |
 | Ctrl+Shift+Esc | Task Manager |
+
