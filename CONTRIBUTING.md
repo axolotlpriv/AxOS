@@ -78,20 +78,34 @@ As with AxCompat, only games that carry an AxOS payload actually run. Two exampl
 
 **Lagoon Merge** is an original slide-and-merge puzzle. Sea creatures evolve up to an axolotl on a 5×5 lagoon, rocks wash in as walls, and pearls clear tiles.
 
-**Web games:** the store lists 36 free web games, each embedded from its creator's or publisher's official site:
+**Web games:** the store lists 92 free web games, each embedded from its creator's or publisher's official site:
 
 | Category | Games |
 | --- | --- |
-| Action & arcade | HexGL, Q1K3, Underrun, X-Type, Biolab Disaster, Z-Type, Radius Raid, Space Huggers |
-| Multiplayer | Krunker, Shell Shockers, Smash Karts, Slither.io, Diep.io, Territorial.io, skribbl.io |
-| Puzzle | Astray, Hextris, Untrusted, Minesweeper Online, Little Alchemy 2, Worldle, Solitaire |
-| Idle | A Dark Room, Universal Paperclips, Candy Box 2, Particle Clicker, Bitburner, Gridland |
-| Sandbox | Minecraft Classic, Sandspiel, Townscaper |
-| Play & learn | The Evolution of Trust, Elevator Saga, Flexbox Froggy, Grid Garden, Keybr |
+| Action & arcade | HexGL, Q1K3, Underrun, Xibalba, X-Type, Biolab Disaster, Z-Type, Radius Raid, Space Huggers, Swooop |
+| Multiplayer | Krunker, Shell Shockers, Smash Karts, Kirka, Deadshot, EV.IO, Venge, Repuls, Rocket Bot Royale, Slither.io, Diep.io, Mope.io, Wings.io, Paper.io 2, Hexanaut, Defly, Zombs, Tribals, YoHoHo, Lordz, Tanx, generals.io, Territorial.io, skribbl.io, Papergames |
+| Sandbox & creative | Minecraft Classic, Bloxd.io, shapez, Sandspiel, Sandboxels, Line Rider, Orb.Farm, Townscaper |
+| Puzzle | Astray, Hextris, Untrusted, Minesweeper Online, Little Alchemy 2, Solitaire, and Simon Tatham's Net, Bridges, Loopy, Pattern, Galaxies, Untangle, Keen, Light Up, Signpost, Towers and Inertia |
+| Word & daily | Worldle, Nerdle, Globle, Framed, Semantle |
+| Idle | A Dark Room, Universal Paperclips, Candy Box 2, Particle Clicker, Bitburner, Gridland, Kittens Game, Trimps, Antimatter Dimensions, Swarm Simulator, Evolve, Progress Knight, The Prestige Tree |
+| Music | Patatap, Chrome Music Lab, Incredibox (demo) |
+| Play & learn | The Evolution of Trust, Adventures with Anxiety, Elevator Saga, Flexbox Froggy, Grid Garden, CSS Diner, Learn Git Branching, SQL Murder Mystery, NandGame, CodeCombat, Keybr |
 
 Store pages and library tiles show each game's real logo and preview art, loaded from its official site. If a site doesn't publish one, AxOS shows a symbol instead.
 
 Web games need an internet connection. Each game window has buttons to reload, go full screen, or open the game in AxBrowser. **Add all web games to library** puts them all in your library at once.
+
+**Steam:** the **STEAM** tab connects AxPlay to your real Steam account. A browser can't run Steam games, so AxPlay hands them off to the Steam app on your computer.
+
+- **Connecting:** enter your profile link or name.
+  - Without a key, AxPlay reads your public profile and recently played games.
+  - Adding a free Steam Web API key imports your whole library. Steam no longer shows game lists to logged-out visitors, so the key is required for that.
+- **Store:** search the Steam store. Each game page shows its description, screenshots, price, Metacritic score, platforms, and its ProtonDB rating or native Linux support.
+- **Buttons:**
+  - **Play** and **Install** open the Steam app on this computer with `steam://` links.
+  - **Store page** opens in AxBrowser.
+  - **Add to AxPlay library** puts the game next to your other games, including in Big Picture.
+- **Privacy:** requests go through AxProxy. Set up a personal gateway so your API key doesn't pass through public gateways.
 
 **Big Picture mode** works with the arrow keys, Enter and Esc, or with a gamepad (D-pad, A and B).
 
