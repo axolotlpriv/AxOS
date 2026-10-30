@@ -45,6 +45,23 @@ AxOS ships with a soft plum-and-pink **AxOS Default** theme. The AxOS logo is th
 
 You can also right-click the desktop to change the wallpaper or theme, or to add a widget.
 
+## Motion
+
+AxOS uses spring physics for its animations. It simulates a spring and turns the result into CSS `linear()` easing curves, falling back to cubic-bézier curves in older browsers.
+
+- **Windows:**
+  - Open by zooming out of wherever you clicked, with a blur-in.
+  - Minimize into their taskbar icon and restore back out of it.
+  - Maximizing, restoring and snapping smoothly morph the window between sizes.
+- **Menus and panels:**
+  - The Start menu, flyouts, menus, dialogs, toasts and tooltips spring in.
+  - List items ripple in one after another.
+- **Screen changes:**
+  - Theme and wallpaper changes crossfade the whole screen.
+  - Unlocking zooms the desktop into focus as the taskbar glides up.
+
+Animations only move, fade or blur things, so they run on the GPU without making the page recalculate layout. **Settings → Personalization → Windows** sets the animation speed. Turning off **Animations**, or setting reduced motion in your operating system, disables them.
+
 ## AxPlay and games
 
 AxPlay is an original Steam-style launcher. It isn't Steam, and it doesn't connect to Steam.

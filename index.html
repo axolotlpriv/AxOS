@@ -862,6 +862,85 @@ body[data-cursor]{ cursor:var(--cur); }
 .bp .foot{ display:flex; gap:24px; padding:16px 60px; background:rgba(0,0,0,.4); font-size:13px; color:#aaa; align-items:center; }
 .bp .foot b{ display:inline-grid; place-items:center; width:22px; height:22px; border-radius:50%; background:#fff; color:#000; font-size:11px; margin-right:6px; }
 
+/* =====================================================================
+   Motion layer — spring curves come from JS (--spring, --spring-soft,
+   --spring-bouncy); fallbacks below. Only transform/opacity/filter animate.
+   ===================================================================== */
+:root{ --spring:cubic-bezier(.34,1.36,.64,1); --spring-soft:cubic-bezier(.22,1,.36,1); --spring-bouncy:cubic-bezier(.34,1.8,.64,1); --ease-out:cubic-bezier(.22,1,.36,1); --ease-in:cubic-bezier(.55,0,.9,.4); }
+.win.opening,.win.closing{ animation:none!important; }
+.win.lifted{ box-shadow:0 40px 100px rgba(0,0,0,.5),0 8px 24px rgba(0,0,0,.3)!important; }
+.win .tbar,.win .tbar .ttl,.win .tbar .tico{ transition:background .35s var(--ease-out),opacity .35s var(--ease-out),color .35s; }
+.win .tbar .tctl button{ transition:background .2s var(--ease-out),color .2s,transform .5s var(--spring-bouncy); }
+.win .tbar .tctl button:active{ transform:scale(.86); }
+.flyout{ transform:translateY(28px) scale(.96); transform-origin:50% 100%; filter:blur(6px); transition:opacity calc(.22s * var(--spd)) var(--ease-out),transform calc(.32s * var(--spd)) var(--ease-in),filter calc(.25s * var(--spd)) var(--ease-out); will-change:transform,opacity; }
+.flyout.open{ transform:none; filter:none; transition:opacity calc(.3s * var(--spd)) var(--ease-out),transform calc(.7s * var(--spd)) var(--spring),filter calc(.35s * var(--spd)) var(--ease-out); }
+#calendar-fly,#quick-fly{ transform-origin:100% 100%; }
+.ctx{ animation:ctxIn calc(.5s * var(--spd)) var(--spring) both; }
+.ctx.out{ animation:ctxOut calc(.15s * var(--spd)) var(--ease-in) forwards; }
+@keyframes ctxIn{ from{ opacity:0; transform:scale(.82); filter:blur(4px); } }
+@keyframes ctxOut{ to{ opacity:0; transform:scale(.94); } }
+.ctx .mi,.ctx .sep{ animation:miIn calc(.42s * var(--spd)) var(--ease-out) both; animation-delay:calc(var(--i,0) * 14ms * var(--spd)); }
+@keyframes miIn{ from{ opacity:0; transform:translateY(-6px); } }
+.ctx .mi{ transition:background .16s var(--ease-out),padding .3s var(--spring); }
+.ctx .mi:hover{ padding-left:13px; }
+.toast{ animation:toastIn calc(.8s * var(--spd)) var(--spring) both; }
+.toast.out{ animation:toastOut calc(.35s * var(--spd)) var(--ease-in) forwards; }
+@keyframes toastIn{ from{ opacity:0; transform:translateX(115%) scale(.9); filter:blur(6px); } }
+@keyframes toastOut{ to{ opacity:0; transform:translateX(70%) scale(.92); filter:blur(4px); } }
+#modal-layer > .backdrop{ animation:bdIn calc(.35s * var(--spd)) var(--ease-out) both; backdrop-filter:blur(3px); -webkit-backdrop-filter:blur(3px); }
+#modal-layer > .backdrop.out{ animation:bdOut calc(.2s * var(--spd)) var(--ease-in) forwards; pointer-events:none; }
+#modal-layer > .backdrop.out .dialog{ animation:dlgOut calc(.2s * var(--spd)) var(--ease-in) forwards; }
+@keyframes bdIn{ from{ opacity:0; } } @keyframes bdOut{ to{ opacity:0; } }
+.dialog{ animation:dlgIn calc(.65s * var(--spd)) var(--spring) both; }
+@keyframes dlgIn{ from{ opacity:0; transform:scale(.86) translateY(18px); filter:blur(8px); } }
+@keyframes dlgOut{ to{ opacity:0; transform:scale(.94); } }
+.tooltip{ animation:tipIn calc(.35s * var(--spd)) var(--spring) both; }
+@keyframes tipIn{ from{ opacity:0; transform:translateY(6px) scale(.9); } }
+.tb-preview{ animation:pvIn calc(.55s * var(--spd)) var(--spring) both; transform-origin:50% 100%; }
+@keyframes pvIn{ from{ opacity:0; transform:translateY(14px) scale(.9); filter:blur(4px); } }
+.btn,.ibtn,.tray-btn,.sm-app,.qs-tile button,.seg button,.br-tab,.preset,.wp-grid button,.swatches button,.themepick button,.emoji-grid button,.sm-user{ transition:background .2s var(--ease-out),border-color .2s,color .2s,box-shadow .3s,filter .2s,transform .55s var(--spring-bouncy),outline-color .2s; }
+.btn:active,.ibtn:active,.tray-btn:active,.sm-app:active,.qs-tile button:active,.preset:active,.wp-grid button:active,.swatches button:active,.emoji-grid button:active{ transform:scale(.93); transition-duration:.1s; }
+.wp-grid button:hover,.preset:hover,.swatches button:hover{ transform:translateY(-2px) scale(1.03); }
+.tb-btn{ transition:background .2s var(--ease-out); }
+.tb-btn .appicon,.tb-btn > svg.i,#start-btn .startlogo{ transition:transform .6s var(--spring-bouncy),filter .3s; }
+.tb-btn:hover .appicon,.tb-btn:hover > svg.i,#start-btn:hover .startlogo{ transform:translateY(-3px) scale(1.06); }
+.tb-btn:active .appicon,.tb-btn:active > svg.i,#start-btn:active .startlogo{ transform:scale(.8); transition-duration:.12s; }
+.tb-btn.running::after{ transition:width .55s var(--spring-bouncy),margin .55s var(--spring-bouncy),background .3s; }
+.switch{ transition:background .3s var(--ease-out),border-color .3s; }
+.switch::after{ transition:transform .55s var(--spring-bouncy),width .25s var(--ease-out),background .3s; }
+.switch:active::after{ width:19px; } .switch.on:active::after{ transform:translateX(13px); }
+.navitem{ transition:background .2s var(--ease-out); }
+.navitem.on::before{ animation:barIn calc(.55s * var(--spd)) var(--spring-bouncy); }
+@keyframes barIn{ from{ transform:scaleY(0); opacity:0; } }
+.dicon{ transition:background .2s var(--ease-out),border-color .2s,transform .55s var(--spring-bouncy); }
+.dicon:active{ transform:scale(.94); }
+.dicon .appicon,.dicon .fileicon{ transition:transform .55s var(--spring-bouncy); }
+.dicon:hover .appicon,.dicon:hover .fileicon{ transform:translateY(-2px) scale(1.04); }
+.dicon.dragging{ transition:none; }
+.fx .fi{ transition:background .18s var(--ease-out),border-color .18s,transform .5s var(--spring-bouncy); }
+.fx .fi:active{ transform:scale(.96); }
+#snap-preview{ transform:scale(.92); transition:opacity .3s var(--ease-out),transform .6s var(--spring),left .45s var(--spring-soft),top .45s var(--spring-soft),width .45s var(--spring-soft),height .45s var(--spring-soft); }
+#snap-preview.on{ transform:none; }
+.win{ transition:box-shadow .45s var(--ease-out); }
+body.taskview-on .win{ transition:transform calc(.7s * var(--spd)) var(--spring-soft),opacity .3s; }
+#taskview{ transition:opacity calc(.45s * var(--spd)) var(--ease-out); }
+.sm-search .box{ transition:border-color .25s,box-shadow .35s var(--ease-out); }
+.axp .cap{ transition:transform .6s var(--spring-bouncy),box-shadow .35s var(--ease-out); }
+.axp .play{ transition:filter .2s,transform .55s var(--spring-bouncy); } .axp .play:active{ transform:scale(.95); }
+.bp .tile{ transition:transform .7s var(--spring-bouncy),opacity .4s var(--ease-out),box-shadow .4s; }
+.widget{ animation:none; transition:box-shadow .3s var(--ease-out),transform .55s var(--spring-bouncy); }
+.widget.dragging{ transform:scale(1.04) rotate(-1deg); }
+.mem-card{ transition:transform .7s var(--spring); }
+.lagoon .t{ transition:left .26s var(--spring-soft),top .26s var(--spring-soft),transform .4s var(--spring-bouncy); }
+#lock .clock{ transition:transform .8s var(--spring),opacity .4s var(--ease-out),filter .5s; }
+#lock.auth .clock{ filter:blur(8px); }
+#lock .wall-bg{ transition:filter .8s var(--ease-out),transform 1.1s var(--spring-soft); }
+::view-transition-old(root){ animation:vtOut calc(.55s * var(--spd)) var(--ease-out) both; }
+::view-transition-new(root){ animation:vtIn calc(.7s * var(--spd)) var(--ease-out) both; }
+@keyframes vtOut{ to{ opacity:0; filter:blur(4px); } }
+@keyframes vtIn{ from{ opacity:0; filter:blur(10px); transform:scale(1.015); } }
+.reduce-motion ::view-transition-old(root),.reduce-motion ::view-transition-new(root){ animation:none; }
+
 @media (max-width:760px){
   #startmenu{ left:6px; right:6px; margin-left:0; width:auto; }
   .sm-grid{ grid-template-columns:repeat(4,1fr); }
@@ -1371,6 +1450,7 @@ const Menu = {
   _blur: () => Menu.closeAll(),
   _outside(e) { if (!e.target.closest(".ctx")) Menu.closeAll(); },
   _open(x, y, items, level, opts) {
+    const ox = x, oy = y;
     while (this.stack.length > level) this.stack.pop().remove();
     const el = h(`<div class="ctx" role="menu"></div>`);
     items.filter(Boolean).forEach((it) => {
@@ -1393,10 +1473,12 @@ const Menu = {
     if (x + r.width > W - 4) x = level ? x - r.width - (this.stack[level - 1]?.getBoundingClientRect().width || 0) + 8 : W - r.width - 4;
     if (y + r.height > H - 4) y = Math.max(4, H - r.height - 4);
     el.style.left = Math.max(4, x) + "px"; el.style.top = Math.max(4, y) + "px";
+    el.style.transformOrigin = `${clamp(ox - Math.max(4, x), 0, r.width)}px ${clamp(oy - Math.max(4, y), 0, r.height)}px`;
+    $$(".mi,.sep", el).forEach((m, i) => m.style.setProperty("--i", i));
     this.stack.push(el);
     return el;
   },
-  closeAll() { clearTimeout(this._t); this.stack.forEach(e => e.remove()); this.stack = []; document.removeEventListener("pointerdown", this._outside, true); window.removeEventListener("blur", this._blur); },
+  closeAll() { clearTimeout(this._t); this.stack.forEach(e => { e.classList.add("out"); e.style.pointerEvents = "none"; setTimeout(() => e.remove(), 160); }); this.stack = []; document.removeEventListener("pointerdown", this._outside, true); window.removeEventListener("blur", this._blur); },
   open() { return this.stack.length > 0; },
   /* Show a menu anchored below an element */
   at(el, items, opts) { const r = el.getBoundingClientRect(); this.show(opts?.up ? r.left : r.left, opts?.up ? r.top - 8 : r.bottom + 4, items, opts); if (opts?.up && this.stack[0]) { const m = this.stack[0]; m.style.top = Math.max(4, r.top - m.offsetHeight - 6) + "px"; } },
@@ -1422,7 +1504,7 @@ const Dialog = {
       if (body) { const slot = $(".dslot", dlg); if (typeof body === "string") slot.innerHTML = body; else slot.appendChild(body); }
       const foot = $(".dfoot", dlg);
       let done = false;
-      const close = (v) => { if (done) return; done = true; bd.remove(); document.removeEventListener("keydown", key, true); resolve(v); };
+      const close = (v) => { if (done) return; done = true; bd.classList.add("out"); setTimeout(() => bd.remove(), 200); document.removeEventListener("keydown", key, true); resolve(v); };
       buttons.forEach(b => { const btn = h(`<button class="btn${b.primary ? " primary" : ""}${b.danger ? " danger" : ""}">${esc(b.label)}</button>`); btn.onclick = () => { const v = typeof b.value === "function" ? b.value(dlg) : b.value; if (v === undefined && b.keepOpen) return; close(v); }; foot.appendChild(btn); });
       const key = (e) => {
         if (e.key === "Escape") { e.stopPropagation(); e.preventDefault(); close(cancelValue); }
@@ -1592,7 +1674,7 @@ class Win {
     if (extra) this.extra.appendChild(extra);
     this.setBounds(x, y, w, ht);
     $("#windows").appendChild(this.el);
-    setTimeout(() => this.el.classList.remove("opening"), 260);
+    this.el.classList.remove("opening"); if (typeof Motion !== "undefined") Motion.open(this);
     this._wire();
     this.focus();
     if (max) this.maximize(false);
@@ -1612,37 +1694,36 @@ class Win {
   }
   get isActive() { return WM.active === this && !this.minimized; }
   minimize() {
-    if (this.minimized) return; this.animate(); this.minimized = true;
-    const btn = $(`#taskbar .tb-btn[data-app="${this.app}"]`);
-    if (btn) { const r = btn.getBoundingClientRect(); this.el.style.transformOrigin = `${r.left + r.width / 2 - this.x}px ${innerHeight - this.y}px`; }
-    this.el.classList.add("minimized");
+    if (this.minimized) return; this.minimized = true; this.el.style.pointerEvents = "none";
+    Motion.minimize(this, () => { if (this.minimized) this.el.classList.add("minimized"); this.el.style.pointerEvents = ""; });
     if (WM.active === this) { WM.active = null; WM.focusTop(); } Bus.emit("wm");
   }
-  restore() { if (!this.minimized) return; this.animate(); this.minimized = false; this.el.classList.remove("minimized"); this.minimizedFocus = true; this.focus(); }
+  restore() { if (!this.minimized) return; this.minimized = false; this.el.style.pointerEvents = ""; this.el.classList.remove("minimized"); Motion.restore(this); this.minimizedFocus = true; this.focus(); }
+  flip(fn, anim = true) { if (anim && typeof Motion !== "undefined") Motion.flip(this, fn); else fn(); }
   maximize(anim = true) {
-    if (!this.maximizable) return; if (anim) this.animate();
+    if (!this.maximizable) return;
     if (!this.maxed && !this.snapped) this.prev = { x: this.x, y: this.y, w: this.w, h: this.h };
-    const A = WM.area(); this.maxed = true; this.snapped = null; this.el.classList.add("max"); this.el.classList.remove("snapped");
-    this.setBounds(0, 0, A.w, A.h); const b = $(".mx", this.el); if (b) b.innerHTML = ic("restore"); Bus.emit("wm");
+    this.flip(() => { const A = WM.area(); this.maxed = true; this.snapped = null; this.el.classList.add("max"); this.el.classList.remove("snapped"); this.setBounds(0, 0, A.w, A.h); }, anim);
+    const b = $(".mx", this.el); if (b) b.innerHTML = ic("restore"); Bus.emit("wm");
   }
   unmaximize(anim = true) {
-    if (anim) this.animate(); this.maxed = false; this.snapped = null; this.el.classList.remove("max", "snapped");
-    const p = this.prev || { x: 60, y: 40, w: 760, h: 520 }; this.setBounds(p.x, p.y, p.w, p.h); const b = $(".mx", this.el); if (b) b.innerHTML = ic("square");
+    this.flip(() => { this.maxed = false; this.snapped = null; this.el.classList.remove("max", "snapped"); const p = this.prev || { x: 60, y: 40, w: 760, h: 520 }; this.setBounds(p.x, p.y, p.w, p.h); }, anim);
+    const b = $(".mx", this.el); if (b) b.innerHTML = ic("square");
   }
   toggleMax() { this.maxed || this.snapped ? this.unmaximize() : this.maximize(); }
   snap(where) {
     const A = WM.area(); if (!this.maxed && !this.snapped) this.prev = { x: this.x, y: this.y, w: this.w, h: this.h };
     if (where === "max") return this.maximize();
     const r = snapRect(where, A); if (!r) return;
-    this.animate(); this.maxed = false; this.snapped = where; this.el.classList.remove("max"); this.el.classList.add("snapped"); this.setBounds(r.x, r.y, r.w, r.h);
+    this.flip(() => { this.maxed = false; this.snapped = where; this.el.classList.remove("max"); this.el.classList.add("snapped"); this.setBounds(r.x, r.y, r.w, r.h); });
   }
   async close(force = false) {
     if (this.closing) return;
     if (!force) { for (const f of this.handlers.beforeClose) { if ((await f()) === false) return; } }
     this.closing = true; this.emit("close");
-    this.el.classList.add("closing"); WM.wins.delete(this.id);
+    Motion.close(this); WM.wins.delete(this.id);
     if (WM.active === this) { WM.active = null; WM.focusTop(); }
-    Bus.emit("wm"); setTimeout(() => this.el.remove(), 170);
+    Bus.emit("wm");
   }
   flash() { const b = $(`#taskbar .tb-btn[data-app="${this.app}"]`); if (b) { b.classList.remove("attn"); void b.offsetWidth; b.classList.add("attn"); } }
   menu(x, y) {
@@ -1675,7 +1756,7 @@ class Win {
         const dx = ev.clientX - sx, dy = ev.clientY - sy;
         if (!moved && Math.hypot(dx, dy) < 4) return;
         if (!moved) {
-          moved = true; document.body.classList.add("wm-drag");
+          moved = true; document.body.classList.add("wm-drag"); el.classList.add("lifted");
           if (this.maxed || this.snapped) { const p = this.prev || { w: 760, h: 520 }; const rel = (sx - this.x) / this.w; this.maxed = false; this.snapped = null; el.classList.remove("max", "snapped"); const b = $(".mx", el); if (b) b.innerHTML = ic("square"); ox = clamp(sx - p.w * rel, 0, A.w - p.w); oy = 0; this.setBounds(ox, oy, p.w, p.h); }
         }
         const nx = ox + dx, ny = clamp(oy + dy, 0, A.h - 30);
@@ -1690,7 +1771,7 @@ class Win {
         else pv.classList.remove("on");
       };
       const up = () => {
-        document.removeEventListener("pointermove", move); document.removeEventListener("pointerup", up); document.body.classList.remove("wm-drag"); pv.classList.remove("on");
+        document.removeEventListener("pointermove", move); document.removeEventListener("pointerup", up); document.body.classList.remove("wm-drag"); el.classList.remove("lifted"); pv.classList.remove("on");
         if (zone) this.snap(zone);
       };
       document.addEventListener("pointermove", move); document.addEventListener("pointerup", up);
@@ -1817,7 +1898,8 @@ function applyTheme() {
 }
 darkMQ.addEventListener?.("change", applyTheme);
 const THEME_KEYS = new Set(["theme", "accent", "scale", "iconScale", "transparency", "animations", "highContrast", "wallpaper", "customWallpaper", "nightLight", "nightStrength", "brightness", "desktopIcons", "taskbarAlign", "volume", "muted", "radius", "titlebarAccent", "buttonStyle", "winShadow", "winAnim", "animSpeed", "taskbarSize", "taskbarStyle", "glassOpacity", "blur", "font", "iconShape", "iconStyle", "cursor", "customCSS", "colorFilter", "slideshowDir", "slideshowInterval"]);
-Bus.on("setting", (k) => { if (THEME_KEYS.has(k)) applyTheme(); });
+const VT_KEYS = new Set(["theme", "accent", "wallpaper", "customWallpaper", "iconStyle", "iconShape", "font", "buttonStyle", "taskbarStyle", "taskbarSize", "taskbarAlign", "titlebarAccent", "transparency", "highContrast", "colorFilter", "cursor", "desktopIcons", "nightLight"]);
+Bus.on("setting", (k) => { if (THEME_KEYS.has(k)) { if (VT_KEYS.has(k) && typeof Motion !== "undefined" && Shell.started) Motion.vt(applyTheme); else applyTheme(); } });
 
 const AXOS_LOGO = `<svg viewBox="0 0 64 64"><defs><linearGradient id="axmk" x1="4" y1="4" x2="60" y2="60" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent-2)"/></linearGradient></defs><rect x="4" y="4" width="26" height="26" rx="7.5" fill="url(#axmk)"/><rect x="34" y="4" width="26" height="26" rx="7.5" fill="url(#axmk)" opacity=".82"/><rect x="4" y="34" width="26" height="26" rx="7.5" fill="url(#axmk)" opacity=".82"/><rect x="38.5" y="38.5" width="17" height="17" rx="4.5" fill="url(#axmk)" transform="rotate(45 47 47)"/></svg>`;
 const START_LOGO = `<svg class="startlogo" viewBox="0 0 64 64"><defs><linearGradient id="stlg" x1="4" y1="4" x2="60" y2="60" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent-2)"/></linearGradient></defs><rect x="4" y="4" width="26" height="26" rx="7.5" fill="url(#stlg)"/><rect x="34" y="4" width="26" height="26" rx="7.5" fill="url(#stlg)" opacity=".82"/><rect x="4" y="34" width="26" height="26" rx="7.5" fill="url(#stlg)" opacity=".82"/><rect x="38.5" y="38.5" width="17" height="17" rx="4.5" fill="url(#stlg)" transform="rotate(45 47 47)"/></svg>`;
@@ -1838,6 +1920,7 @@ async function bootSequence() {
     for (const l of lines) { $(".bios", el).textContent += l + "\n"; await sleep(90); }
     await sleep(250);
     $(".bios", el).classList.add("hidden"); $(".logo", el).classList.remove("hidden");
+    if (Motion.on()) { $(".mark", el).animate([{ transform: "scale(.3) rotate(-25deg)", opacity: 0, filter: "blur(12px)" }, { transform: "none", opacity: 1, filter: "blur(0)" }], { duration: 1100, easing: Motion.bouncy }); $(".dots", el).animate([{ opacity: 0 }, { opacity: 1 }], { duration: 600, delay: 400, fill: "backwards" }); }
   } else { $(".bios", el).classList.add("hidden"); $(".logo", el).classList.remove("hidden"); }
   const t0 = performance.now();
   $(".msg", el).textContent = "Starting AxOS…";
@@ -1845,6 +1928,7 @@ async function bootSequence() {
   const msgs = ["Mounting virtual file system", "Starting window manager", "Loading AxCompat runtime", "Preparing your desktop"];
   if (!fast) for (const m of msgs) { $(".msg", el).textContent = m + "…"; await sleep(260); }
   const rest = (fast ? 300 : 1400) - (performance.now() - t0); if (rest > 0) await sleep(rest);
+  if (Motion.on()) { $(".mark", el).animate([{ transform: "none" }, { transform: "scale(1.25)", opacity: 0, filter: "blur(8px)" }], { duration: 500, easing: Motion.in, fill: "forwards" }); }
   el.style.opacity = 0; await sleep(500); el.remove();
 }
 
@@ -1853,6 +1937,7 @@ function runOOBE() {
   return new Promise(resolve => {
     const el = h(`<div id="oobe" class="fullscreen-layer"><div class="wall-bg" style="background:${wallpaperCSS()}"></div><div class="panel"><div class="side"><div><div style="width:56px;height:56px">${AXOS_LOGO}</div><h1>Let's set up AxOS</h1><p class="sp"></p></div><div class="steps"><i></i><i></i><i></i></div></div><div class="main"></div></div></div>`);
     document.body.appendChild(el);
+    if (Motion.on()) $(".panel", el).animate([{ opacity: 0, transform: "translateY(40px) scale(.94)", filter: "blur(10px)" }, { opacity: 1, transform: "none", filter: "blur(0)" }], { duration: 900, easing: Motion.spring });
     const st = { name: "", pw: "", theme: Settings.get("theme"), accent: Settings.get("accent"), wp: Settings.get("wallpaper") };
     const ACCENTS = ["#4f8cff", "#8b5cf6", "#e1468c", "#ef4444", "#f59e0b", "#10b981", "#06b6d4", "#64748b"];
     const steps = [
@@ -1873,7 +1958,7 @@ function runOOBE() {
     const show = () => {
       const s = steps[i]; $(".sp", el).textContent = s.side; $$(".steps i", el).forEach((d, j) => d.classList.toggle("on", j <= i));
       const m = $(".main", el); m.innerHTML = s.html + `<div class="foot">${i ? `<button class="btn back">Back</button>` : ""}<button class="btn primary next">${i === steps.length - 1 ? "Finish" : "Next"}</button></div>`;
-      s.mount(m);
+      s.mount(m); Motion.stagger([...m.children], { y: 18, step: 45, dur: 650 });
       if ($(".back", m)) $(".back", m).onclick = () => { i--; show(); };
       $(".next", m).onclick = next;
       m.onkeydown = e => { if (e.key === "Enter") next(); };
@@ -1883,7 +1968,8 @@ function runOOBE() {
       if (i < steps.length - 1) { i++; show(); return; }
       renameUser(st.name); Settings.set("password", st.pw); Settings.set("setupDone", true);
       $(".panel", el).innerHTML = `<div style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:40px">${avatarHTML(96)}<h1 style="margin:0;font-weight:600">Hi, ${esc(st.name)}</h1><div class="muted">We're getting everything ready for you</div><div class="spinner"></div></div>`;
-      await sleep(1600); el.style.transition = "opacity .5s"; el.style.opacity = 0; await sleep(500); el.remove(); resolve(true);
+      Motion.stagger([...$(".panel", el).firstElementChild.children], { y: 20, step: 120, dur: 800, easing: Motion.bouncy });
+      await sleep(1600); if (Motion.on()) el.animate([{ opacity: 1, transform: "none", filter: "blur(0)" }, { opacity: 0, transform: "scale(1.06)", filter: "blur(14px)" }], { duration: 650, easing: Motion.soft, fill: "forwards" }); else el.style.opacity = 0; await sleep(620); el.remove(); resolve(true);
     };
     show();
   });
@@ -1917,7 +2003,7 @@ const Lock = {
     const tick = () => { const d = new Date(); $(".t", el).textContent = d.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit", hour12: !Settings.get("clock24") }).replace(/\s?[AP]M/i, ""); $(".d", el).textContent = d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric" }); };
     tick(); this.timer = setInterval(tick, 1000);
     $(".lk-net", el).innerHTML = ic(navigator.onLine && Settings.get("wifi") ? "wifi" : "wifiOff"); $(".lk-bat", el).innerHTML = ic("battery");
-    const auth = () => { if (el.classList.contains("auth")) return; el.classList.add("auth"); $(".corner", el).classList.remove("hidden"); setTimeout(() => { const i = $("input", el); i ? i.focus() : $(".signin", el)?.focus(); }, 350); };
+    const auth = () => { if (el.classList.contains("auth")) return; el.classList.add("auth"); Motion.stagger([...$(".login", el).children], { y: 26, scale: .9, step: 60, dur: 750 }); $(".corner", el).classList.remove("hidden"); setTimeout(() => { const i = $("input", el); i ? i.focus() : $(".signin", el)?.focus(); }, 350); };
     el.addEventListener("click", e => { if (!e.target.closest(".login,.corner")) { if (el.classList.contains("auth") && !e.target.closest(".login")) return; auth(); } });
     this.key = e => { if (!el.classList.contains("auth")) { auth(); if (e.key.length === 1) e.preventDefault(); } else if (e.key === "Escape") { el.classList.remove("auth"); $(".corner", el).classList.add("hidden"); } };
     document.addEventListener("keydown", this.key);
@@ -1934,8 +2020,9 @@ const Lock = {
     const el = this.el; if (!el) return;
     clearInterval(this.timer); document.removeEventListener("keydown", this.key);
     Sound.play(Shell.started ? "unlock" : "startup");
-    el.style.transition = "opacity .45s, transform .45s"; el.style.opacity = 0; el.style.transform = "scale(1.04)";
-    setTimeout(() => { el.remove(); this.el = null; }, 460);
+    if (Motion.on()) { el.animate([{ opacity: 1, transform: "none", filter: "blur(0)" }, { opacity: 0, transform: "scale(1.08)", filter: "blur(14px)" }], { duration: Motion.d(650), easing: Motion.soft, fill: "forwards" }); Motion.reveal(); }
+    else { el.style.opacity = 0; }
+    setTimeout(() => { el.remove(); this.el = null; }, Motion.on() ? Motion.d(660) : 10);
     this.resolve && this.resolve();
   },
   get locked() { return !!this.el; },
@@ -2263,7 +2350,7 @@ const Desktop = {
 const Shell = {
   started: false, battery: null,
   closeFlyouts(except) { ["startmenu", "calendar-fly", "quick-fly"].forEach(id => { if (id !== except) $("#" + id).classList.remove("open"); }); $$(".tb-preview").forEach(e => e.remove()); },
-  toggle(id) { const el = $("#" + id); const open = !el.classList.contains("open"); this.closeFlyouts(id); Menu.closeAll(); if (open) { ({ startmenu: Start, "calendar-fly": CalFly, "quick-fly": QuickFly })[id].render(); } el.classList.toggle("open", open); if (open && id === "startmenu") setTimeout(() => $("#startmenu input")?.focus(), 60); },
+  toggle(id) { const el = $("#" + id); const open = !el.classList.contains("open"); this.closeFlyouts(id); Menu.closeAll(); if (open) { ({ startmenu: Start, "calendar-fly": CalFly, "quick-fly": QuickFly })[id].render(); if (id !== "startmenu") Motion.stagger($$(".qs-tile,.qs-slider,.notif-item,.cal .grid > div", el).slice(0, 60), { y: 10, scale: .92, step: 8, dur: 520 }); } el.classList.toggle("open", open); if (open && id === "startmenu") setTimeout(() => $("#startmenu input")?.focus(), 60); },
 };
 document.addEventListener("pointerdown", e => {
   if (!e.target.closest(".flyout,#taskbar,.ctx,#modal-layer")) Shell.closeFlyouts();
@@ -2303,7 +2390,7 @@ const Taskbar = {
     for (const id of ids) {
       const wins = WM.byApp(id); const active = WM.active && WM.active.app === id && !WM.active.minimized;
       const iconWin = wins.find(w => w.customIcon);
-      const b = prev.get(id) || h(`<button class="tb-btn" data-app="${id}"></button>`);
+      const isNew = !prev.get(id); const b = prev.get(id) || h(`<button class="tb-btn" data-app="${id}"></button>`); if (isNew && Shell.started) requestAnimationFrame(() => Motion.pop(b, .2));
       b.innerHTML = (iconWin ? iconWin.iconHTML : appIconHTML(id)) + (wins.length > 1 ? `<span class="badge">${wins.length}</span>` : "");
       b.classList.toggle("running", wins.length > 0); b.classList.toggle("active", !!active);
       b.dataset.tip = wins.length ? "" : (Apps[id]?.name || id); if (!wins.length) b.setAttribute("data-tip", Apps[id]?.name || id); else b.removeAttribute("data-tip");
@@ -2401,6 +2488,7 @@ const Start = {
         ${rec ? `<div class="sec-h" style="margin-top:22px"><span>Recommended</span></div>` : ""}${!rec ? "" : rec.length ? `<div class="sm-rec">${rec.map(p => `<div class="it" data-path="${esc(p)}">${fileIconHTML(FS.basename(p), FS.node(p), p)}<div style="min-width:0"><div class="t ellipsis">${esc(FS.basename(p).replace(/\.lnk$/, ""))}</div><div class="s">${timeAgo(FS.node(p).mtime)}</div></div></div>`).join("")}</div>` : `<div class="dim" style="padding:10px 8px;font-size:12.5px">Files you open recently will show up here.</div>`}`;
       $(".all", b).onclick = () => { this.showAll = true; this.body(""); };
     }
+    if (!q) Motion.stagger($$(".sm-app,.sm-rec .it,.sm-all .it,.sec-h", b), { y: 16, scale: .9, step: 14, dur: 620, max: 60 });
     $$("[data-app]", b).forEach(el => { el.onclick = () => { Shell.closeFlyouts(); launch(el.dataset.app); }; el.oncontextmenu = e => { e.preventDefault(); e.stopPropagation(); this.appMenu(el.dataset.app, e); }; });
     $$("[data-path]", b).forEach(el => { el.onclick = () => { Shell.closeFlyouts(); openPath(el.dataset.path); }; el.oncontextmenu = e => { e.preventDefault(); e.stopPropagation(); Menu.show(e.clientX, e.clientY, [{ label: "Open file location", icon: "folder", action: () => { Shell.closeFlyouts(); launch("explorer", { path: FS.dirname(el.dataset.path), select: el.dataset.path }); } }, { label: "Remove from list", icon: "x", action: () => { const r = Recents.get(); r.files = r.files.filter(x => x !== el.dataset.path); Recents.set(r); this.body(""); } }]); }; });
   },
@@ -2486,7 +2574,7 @@ const TaskView = {
       const s = Math.min(cw / w.w, (ch - 20) / w.h, 1); const tx = pad + offX + c * (cw + gx) + (cw - w.w * s) / 2, ty = pad + 26 + r * (ch + gy) + (ch - 20 - w.h * s) / 2;
       w.el.style.transformOrigin = "0 0"; w.el.style.transform = `translate(${tx - w.x}px,${ty - w.y}px) scale(${s})`;
       const lb = h(`<div class="tv-label">${w.iconHTML}<span class="ellipsis grow">${esc(w.title)}</span><button class="x">${ic("x")}</button></div>`);
-      Object.assign(lb.style, { left: tx + "px", top: ty - 30 + "px", width: w.w * s + "px" }); tv.appendChild(lb);
+      Object.assign(lb.style, { left: tx + "px", top: ty - 30 + "px", width: w.w * s + "px" }); tv.appendChild(lb); Motion.stagger([lb], { y: 10, dur: 600 });
       $(".x", lb).onclick = e => { e.stopPropagation(); w.close(); setTimeout(() => this.open && this.show(), 200); };
       w._tv = e => { e.stopPropagation(); e.preventDefault(); this.close(w); };
       w.el.addEventListener("click", w._tv, true);
@@ -2496,7 +2584,7 @@ const TaskView = {
   close(focus) {
     if (!this.open) return; this.open = false; const tv = $("#taskview"); tv.classList.remove("open");
     WM.wins.forEach(w => { w.el.style.transform = ""; w.el.style.transformOrigin = ""; if (w._tv) w.el.removeEventListener("click", w._tv, true); w._tv = null; });
-    setTimeout(() => { document.body.classList.remove("taskview-on"); tv.innerHTML = ""; }, 280);
+    setTimeout(() => { if (!this.open) { document.body.classList.remove("taskview-on"); tv.innerHTML = ""; } }, Motion.d(620));
     if (focus) { if (focus.minimized) focus.restore(); else focus.focus(); }
   },
 };
@@ -2918,7 +3006,7 @@ registerApp("explorer", {
     const go = (p, push = true) => {
       p = FS.norm(p); if (!FS.isDir(p)) { if (FS.exists(p)) return openPath(p); return Dialog.alert("File Explorer", `Can't find '${p}'. Check the spelling and try again.`, { icon: "errorC" }); }
       if (push && p !== st.cwd) { st.back.push(st.cwd); st.fwd = []; }
-      st.cwd = p; st.sel.clear(); st.q = ""; $(".srch input", B).value = ""; render();
+      st.cwd = p; st.sel.clear(); st.q = ""; $(".srch input", B).value = ""; st.intro = true; render();
     };
     const renderAddr = () => {
       const parts = st.cwd === "/" ? [] : st.cwd.split("/").slice(1); let acc = "";
@@ -2964,6 +3052,7 @@ registerApp("explorer", {
       if ($(".du", C) && navigator.storage?.estimate) navigator.storage.estimate().then(e => { const u = $(".du", C); if (!u) return; u.style.width = Math.max(2, (e.usage / e.quota) * 100) + "%"; $(".dut", C).textContent = `${fmtSize(e.quota - e.usage)} free of ${fmtSize(e.quota)} · AxOS files: ${fmtSize(FS.du())}`; });
       $$(".statusbar [data-v]", B).forEach(b => b.classList.toggle("on", b.dataset.v === st.view));
       status(); renderPreview();
+      if (st.intro) { st.intro = false; Motion.stagger($$(".fi,.drive", C), { y: 10, scale: .94, step: 14, dur: 520, max: 48 }); }
       if (st.sel.size === 1) $(`.fi[data-p="${CSS.escape([...st.sel][0])}"]`, C)?.scrollIntoView({ block: "nearest" });
     };
     const status = () => {
@@ -3113,7 +3202,7 @@ registerApp("explorer", {
     const offClip = Bus.on("clip", () => { $$(".fi", C).forEach(el => el.classList.toggle("cut", FileOps.isCut(el.dataset.p))); status(); });
     win.on("close", () => { offFs(); offClip(); });
     win.on("focus", () => setTimeout(() => { if (!B.contains(document.activeElement)) C.focus({ preventScroll: true }); }, 0));
-    render(); setTimeout(() => C.focus(), 50);
+    st.intro = true; render(); setTimeout(() => C.focus(), 50);
   },
 });
 </script>
@@ -3521,7 +3610,7 @@ registerApp("settings", {
     const NAV = [["system", "System", "monitor"], ["personalization", "Personalization", "palette"], ["taskbar", "Taskbar & Start", "apps"], ["apps", "Apps", "grid"], ["accounts", "Accounts", "user"], ["time", "Time & language", "clock"], ["network", "Network & Browser", "globe"], ["compat", "AxCompat", "chip"], ["accessibility", "Accessibility", "accessibility"], ["privacy", "Privacy & security", "shield"], ["update", "AxOS Update", "update"]];
     const who = () => { $(".who", B).innerHTML = `${avatarHTML(56)}<div class="tx" style="min-width:0"><div style="font-weight:600" class="ellipsis">${esc(Settings.get("username"))}</div><div class="dim" style="font-size:12px">Local account</div></div>`; $(".who", B).onclick = () => go("accounts"); };
     const renderNav = () => { nav.innerHTML = NAV.map(([id, n, i]) => `<div class="navitem${id === page || (id === "system" && ["display", "sound", "notifications", "storage", "about", "power"].includes(page)) || (id === "personalization" && page.startsWith("p-")) ? " on" : ""}" data-id="${id}">${ic(i)}<span>${n}</span></div>`).join(""); $$(".navitem", nav).forEach(n => n.onclick = () => go(n.dataset.id)); };
-    const go = p => { page = p; render(); P.scrollTop = 0; };
+    const go = p => { page = p; render(); P.scrollTop = 0; Motion.stagger([...P.children].slice(0, 18), { y: 14, step: 24, dur: 560 }); };
     win.goPage = go;
     const S = k => Settings.get(k);
     const sw = (k, on) => `<span class="switch${on ?? S(k) ? " on" : ""}" data-set="${k}"></span>`;
@@ -4710,7 +4799,7 @@ const WIDGET_TYPES = {
 };
 const Widgets = {
   ready: false, timers: [],
-  add(type) { const ws = [...Settings.get("widgets")]; const n = ws.length; ws.push({ id: uid(), type, x: innerWidth - 280 - (n % 3) * 18, y: 20 + (n % 6) * 26 }); Settings.set("widgets", ws); this.render(); },
+  add(type) { const ws = [...Settings.get("widgets")]; const n = ws.length; const nid = uid(); this._added = nid; ws.push({ id: nid, type, x: innerWidth - 280 - (n % 3) * 18, y: 20 + (n % 6) * 26 }); Settings.set("widgets", ws); this.render(); },
   remove(id) { Settings.set("widgets", Settings.get("widgets").filter(w => w.id !== id)); this.render(); },
   render() {
     this.ready = true; this.timers.forEach(clearInterval); this.timers = [];
@@ -4719,7 +4808,7 @@ const Widgets = {
       const [name, icon] = WIDGET_TYPES[w.type] || ["Widget", "apps"];
       const el = h(`<div class="widget" data-id="${w.id}"><div class="wh">${ic(icon)}<span>${esc(name)}</span><button class="x" data-tip="Remove widget">${ic("x")}</button></div><div class="wb"></div></div>`);
       el.style.left = clamp(w.x, 0, innerWidth - 120) + "px"; el.style.top = clamp(w.y, 0, innerHeight - 140) + "px";
-      box.appendChild(el); this.fill(w, $(".wb", el));
+      box.appendChild(el); this.fill(w, $(".wb", el)); if (this._added === w.id) { Motion.pop(el, .6); this._added = null; }
       $(".x", el).onclick = () => this.remove(w.id);
       el.oncontextmenu = e => { e.preventDefault(); e.stopPropagation(); Menu.show(e.clientX, e.clientY, [{ label: "Remove widget", icon: "x", action: () => this.remove(w.id) }, { label: "Add widget", icon: "plus", sub: this.menu() }, { label: "Widget settings", icon: "gear", action: () => launch("settings", { page: "p-widgets" }) }]); };
       el.addEventListener("pointerdown", e => {
@@ -4767,7 +4856,7 @@ const ScreenSaver = {
 function applyPreset(id) {
   const p = THEME_PRESETS[id]; if (!p) return;
   for (const [k, v] of Object.entries(p)) if (k !== "name") Settings.data[k] = v;
-  Settings.data.preset = id; Settings.save(); applyTheme(); Taskbar.renderApps(); Desktop.render(); Bus.emit("setting", "preset", id);
+  Settings.data.preset = id; Settings.save(); Motion.vt(() => { applyTheme(); Taskbar.renderApps(); Desktop.render(); }); Bus.emit("setting", "preset", id);
   notify("Theme applied", p.name, "settings", { silent: true, timeout: 2500 });
 }
 const ThemeFile = {
@@ -5004,7 +5093,7 @@ registerApp("axplay", {
   name: "AxPlay", icon: "gamepad", colors: ["#3b82f6", "#1e1b4b"], w: 1120, h: 700, minW: 640, minH: 420, single: true, category: "Games", keywords: "steam games library launcher proton linux gaming",
   desc: "Your game library: AxOS, web, native Linux and Windows games.",
   launch(win, args) {
-    const B = win.body; let tab = "library", sel = null, filter = "all", q = "", storeSel = null, bp = false, sq = "";
+    const B = win.body; let tab = "library", sel = null, filter = "all", q = "", storeSel = null, bp = false, sq = "", prevTab = null, prevSel = undefined, prevStore = undefined;
     if (!localStorage.getItem("axos.axplayInit")) { localStorage.setItem("axos.axplayInit", "1"); const d = AxPlay.get(); for (const c of AXPLAY_CATALOG.filter(c => c.kind === "app")) if (!d.games.find(g => g.id === c.id)) d.games.push({ ...c, added: Date.now(), playtime: 0, compat: "auto", opts: "" }); AxPlay.save(d); }
     AxPlay.scan();
     B.innerHTML = `<div class="axp"><div class="top"><button class="tab" data-t="store">STORE</button><button class="tab" data-t="library">LIBRARY</button><button class="tab" data-t="downloads">DOWNLOADS</button><span class="grow"></span><button class="btn sm bpb">${ic("maximize")} Big Picture</button><span class="row" style="font-size:12.5px;color:#9aa3b2">${avatarHTML(24)} ${esc(Settings.get("username"))}</span></div><div class="body"></div></div>`;
@@ -5016,6 +5105,8 @@ registerApp("axplay", {
       $$(".top .tab", B).forEach(t => t.classList.toggle("on", t.dataset.t === tab));
       if (tab === "library") renderLibrary(); else if (tab === "store") renderStore(); else renderDownloads();
       if (bp) renderBP();
+      if (tab !== prevTab || sel !== prevSel || storeSel !== prevStore) Motion.stagger($$(".cap,.dl,.card2,.bar,.hero .in", body), { y: 18, scale: .94, step: 18, dur: 620, max: 30 });
+      prevTab = tab; prevSel = sel; prevStore = storeSel;
     };
     const renderLibrary = () => {
       const list = games();
@@ -5185,6 +5276,82 @@ registerApp("lagoon", {
 </script>
 <script>
 /* =====================================================================
+   Motion — physically based springs, FLIP window morphs, staggers,
+   view-transition crossfades. Everything animates transform / opacity /
+   filter only, so it stays on the compositor at full frame rate.
+   ===================================================================== */
+const Motion = {
+  last: { x: 0, y: 0, t: 0 },
+  spring: "cubic-bezier(.34,1.36,.64,1)", soft: "cubic-bezier(.22,1,.36,1)", bouncy: "cubic-bezier(.34,1.8,.64,1)", out: "cubic-bezier(.22,1,.36,1)", in: "cubic-bezier(.55,0,.9,.4)",
+  on() { return Settings.get("animations") !== false && !matchMedia("(prefers-reduced-motion: reduce)").matches; },
+  d(ms) { return ms / (Settings.get("animSpeed") || 1); },
+  /* Simulate a damped spring and encode it as a CSS linear() easing */
+  curve(k, c, m = 1) {
+    let x = 0, v = 0, t = 0; const dt = 1 / 600, pts = [];
+    while (t < 4) { const a = (-k * (x - 1) - c * v) / m; v += a * dt; x += v * dt; t += dt; pts.push(x); if (t > .1 && Math.abs(x - 1) < .0008 && Math.abs(v) < .004) break; }
+    const n = 56, out = []; for (let i = 0; i <= n; i++) out.push(+(i === 0 ? 0 : i === n ? 1 : pts[Math.min(pts.length - 1, Math.round(i / n * (pts.length - 1)))]).toFixed(4));
+    return `linear(${out.join(", ")})`;
+  },
+  init() {
+    if (window.CSS?.supports?.("transition-timing-function", "linear(0, 0.5, 1)")) { this.spring = this.curve(230, 21); this.soft = this.curve(170, 26); this.bouncy = this.curve(320, 15); }
+    const R = document.documentElement.style; R.setProperty("--spring", this.spring); R.setProperty("--spring-soft", this.soft); R.setProperty("--spring-bouncy", this.bouncy);
+    document.addEventListener("pointerdown", e => { this.last = { x: e.clientX, y: e.clientY, t: performance.now() }; }, true);
+  },
+  vt(fn) { if (this.on() && document.startViewTransition && !document.hidden) { try { document.startViewTransition(fn); return; } catch (e) { } } fn(); },
+  stagger(nodes, { y = 12, scale = .97, step = 22, dur = 560, max = 40, easing } = {}) {
+    if (!this.on()) return; let i = 0;
+    for (const n of nodes) { if (i >= max) break; n.animate([{ opacity: 0, transform: `translateY(${y}px) scale(${scale})` }, { opacity: 1, transform: "none" }], { duration: this.d(dur), delay: this.d(i * step), easing: easing || this.spring, fill: "backwards" }); i++; }
+  },
+  pop(el, from = .4) { if (!this.on()) return; el.animate([{ opacity: 0, transform: `scale(${from})` }, { opacity: 1, transform: "none" }], { duration: this.d(620), easing: this.bouncy, fill: "backwards" }); },
+  /* window lifecycle */
+  open(win) {
+    if (!this.on()) return; const el = win.el; const recent = performance.now() - this.last.t < 900;
+    const ox = recent ? clamp(this.last.x - win.x, -200, win.w + 200) : win.w / 2, oy = recent ? clamp(this.last.y - win.y, -200, win.h + 200) : win.h / 2;
+    el.style.transformOrigin = `${ox}px ${oy}px`;
+    el.animate([{ transform: "scale(.55)" }, { transform: "none" }], { duration: this.d(720), easing: this.spring });
+    el.animate([{ opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0)" }], { duration: this.d(340), easing: this.out });
+    setTimeout(() => { if (!win.closing) el.style.transformOrigin = ""; }, this.d(760));
+  },
+  close(win) {
+    const el = win.el; if (!this.on()) { el.remove(); return; }
+    el.style.pointerEvents = "none"; el.getAnimations().forEach(a => a.cancel());
+    const a = el.animate([{ opacity: 1, transform: "none", filter: "blur(0)" }, { opacity: 0, transform: "scale(.88) translateY(14px)", filter: "blur(6px)" }], { duration: this.d(260), easing: this.in, fill: "forwards" });
+    a.onfinish = () => el.remove(); setTimeout(() => el.isConnected && el.remove(), this.d(600));
+  },
+  flip(win, fn) {
+    const el = win.el; if (!this.on() || document.body.classList.contains("taskview-on")) { fn(); return; }
+    const a = el.getBoundingClientRect(); el.getAnimations().forEach(x => x.cancel()); fn(); const b = el.getBoundingClientRect();
+    if (!b.width || !b.height) return; const dx = a.left - b.left, dy = a.top - b.top, sx = a.width / b.width, sy = a.height / b.height;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1 && Math.abs(sx - 1) < .01 && Math.abs(sy - 1) < .01) return;
+    el.animate([{ transformOrigin: "0 0", transform: `translate(${dx}px,${dy}px) scale(${sx},${sy})` }, { transformOrigin: "0 0", transform: "none" }], { duration: this.d(560), easing: this.soft });
+  },
+  dockTarget(win) { const b = $(`#taskbar .tb-btn[data-app="${win.app}"]`) || $("#start-btn"); return b ? b.getBoundingClientRect() : { left: innerWidth / 2, top: innerHeight, width: 0, height: 0 }; },
+  minimize(win, done) {
+    const el = win.el; if (!this.on()) { done(); return; }
+    const r = this.dockTarget(win), w = el.getBoundingClientRect(); el.getAnimations().forEach(a => a.cancel());
+    const s = Math.max(.04, Math.min(.14, r.width / w.width)); const tx = r.left + r.width / 2 - (w.left + w.width * s / 2), ty = r.top + r.height / 2 - (w.top + w.height * s / 2);
+    const a = el.animate([{ transformOrigin: "0 0", transform: "none", opacity: 1, filter: "blur(0)" }, { transformOrigin: "0 0", transform: `translate(${tx * .6}px,${ty * .35}px) scale(${.5 + s / 2})`, opacity: .85, offset: .45, filter: "blur(1px)" }, { transformOrigin: "0 0", transform: `translate(${tx}px,${ty}px) scale(${s})`, opacity: 0, filter: "blur(4px)" }], { duration: this.d(480), easing: "cubic-bezier(.5,0,.2,1)" });
+    a.onfinish = () => { done(); a.cancel(); };
+  },
+  restore(win) {
+    if (!this.on()) return; const el = win.el; const r = this.dockTarget(win), w = el.getBoundingClientRect(); el.getAnimations().forEach(a => a.cancel());
+    const s = Math.max(.04, Math.min(.14, r.width / w.width)); const tx = r.left + r.width / 2 - (w.left + w.width * s / 2), ty = r.top + r.height / 2 - (w.top + w.height * s / 2);
+    el.animate([{ transformOrigin: "0 0", transform: `translate(${tx}px,${ty}px) scale(${s})`, opacity: 0, filter: "blur(4px)" }, { transformOrigin: "0 0", transform: "none", opacity: 1, filter: "blur(0)" }], { duration: this.d(620), easing: this.spring });
+  },
+  /* desktop entrance after boot / unlock */
+  reveal() {
+    if (!this.on()) return;
+    $("#desktop").animate([{ scale: "1.08", filter: "blur(16px) brightness(.55)" }, { scale: "1", filter: "blur(0) brightness(1)" }], { duration: this.d(1100), easing: this.soft });
+    $("#taskbar").animate([{ translate: "0 130%", opacity: 0 }, { translate: "0 0", opacity: 1 }], { duration: this.d(900), delay: this.d(220), easing: this.spring, fill: "backwards" });
+    this.stagger($$("#taskbar .tb-btn"), { y: 18, scale: .6, step: 40, dur: 800, easing: this.bouncy });
+    this.stagger($$("#icons .dicon"), { y: 16, scale: .8, step: 45, dur: 800 });
+    this.stagger($$("#widgets .widget"), { y: 24, scale: .9, step: 90, dur: 900 });
+  },
+};
+Motion.init();
+</script>
+<script>
+/* =====================================================================
    Boot
    ===================================================================== */
 window.addEventListener("error", e => { console.error(e.error || e.message); if (!Shell.started || /ResizeObserver|Script error/.test(e.message)) return; const k = String(e.message); if (Shell._lastErr === k) return; Shell._lastErr = k; notify("Something went wrong", k.slice(0, 160), "taskmgr", { silent: true }); });
@@ -5196,9 +5363,9 @@ window.addEventListener("unhandledrejection", e => console.warn("Unhandled:", e.
   if (!localStorage.getItem("axos.migr2")) { localStorage.setItem("axos.migr2", "1"); const sp = Settings.get("startPinned"); ["axplay", "gdash"].forEach(a => { if (!sp.includes(a)) sp.splice(4, 0, a); }); Settings.set("startPinned", sp); const tp = Settings.get("pinned"); if (!tp.includes("axplay")) Settings.set("pinned", [...tp, "axplay"]); FS.mkdir(FS.home + "/Games", true); }
   if (!localStorage.getItem("axos.migr3")) { localStorage.setItem("axos.migr3", "1"); if (Settings.get("accent") === "#4f8cff" && Settings.get("wallpaper") === "aurora") { Settings.set("accent", "#e8679f"); Settings.set("wallpaper", "axolotl"); Settings.set("preset", "default"); } const sp = Settings.get("startPinned"); if (!sp.includes("lagoon")) { sp.splice(6, 0, "lagoon"); Settings.set("startPinned", sp); } const d = AxPlay.get(); if (d.games.length && !d.games.find(g => g.id === "lagoon")) { d.games.push({ ...AXPLAY_CATALOG.find(c => c.id === "lagoon"), added: Date.now(), playtime: 0, compat: "auto", opts: "" }); AxPlay.save(d); } }
   Taskbar.init(); Desktop.init(); Widgets.render(); ScreenSaver.init(); applyTheme();
-  if (!Settings.get("setupDone")) { await runOOBE(); Desktop.render(); Taskbar.renderApps(); Sound.play("startup"); }
+  if (!Settings.get("setupDone")) { await runOOBE(); Desktop.render(); Taskbar.renderApps(); Sound.play("startup"); Motion.reveal(); }
   else if (Settings.get("lockOnBoot") || Settings.get("password")) await Lock.show();
-  else Sound.play("startup");
+  else { Sound.play("startup"); Motion.reveal(); }
   Shell.started = true;
   if (!localStorage.getItem("axos.noWelcome")) launch("welcome");
   if (!localStorage.getItem("axos.tipShown")) { localStorage.setItem("axos.tipShown", "1"); setTimeout(() => Notify.push({ app: "compat", title: "Try running a program", body: "Open ~/Projects and double-click AxDemo.exe or axhello.", actions: [{ label: "Open Projects", primary: true, action: () => launch("explorer", { path: FS.home + "/Projects" }) }] }), 2500); }
