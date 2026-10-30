@@ -27,8 +27,10 @@ Your files and settings are saved in the browser (IndexedDB and localStorage), s
 
 ## Personalization
 
+AxOS ships with a soft plum-and-pink **AxOS Default** theme and an axolotl logo. The old blue look is available as the **Classic Blue** theme.
+
 **Settings → Personalization** has:
-- 10 one-click themes (Midnight Neon, Sakura, Retro Terminal, Ocean Glass and more)
+- 11 one-click themes (Midnight Neon, Sakura, Retro Terminal, Ocean Glass and more)
 - 23 picture wallpapers, 8 live animated wallpapers, a time-of-day sky, and a slideshow from any folder
 - Accent colors, glass opacity, blur strength and color filters
 - Window corner radius, shadows, title-bar buttons on the left or right, accent title bars, open animations and speed
@@ -56,6 +58,8 @@ As with AxCompat, only games that carry an AxOS payload actually run. Two exampl
 
 **Adding your own games:** in the library, choose **Add a game** to add an `.exe`, a Linux binary, an `.html` game or a web URL. You can also drop games into `~/Games` and scan for them.
 
+**Lagoon Merge** is an original slide-and-merge puzzle. Sea creatures evolve up to an axolotl on a 5×5 lagoon, rocks wash in as walls, and pearls clear tiles.
+
 **Web games:** the store lists 36 free web games, each embedded from its creator's or publisher's official site:
 
 | Category | Games |
@@ -66,6 +70,8 @@ As with AxCompat, only games that carry an AxOS payload actually run. Two exampl
 | Idle | A Dark Room, Universal Paperclips, Candy Box 2, Particle Clicker, Bitburner, Gridland |
 | Sandbox | Minecraft Classic, Sandspiel, Townscaper |
 | Play & learn | The Evolution of Trust, Elevator Saga, Flexbox Froggy, Grid Garden, Keybr |
+
+Store pages and library tiles show each game's real logo and preview art, loaded from its official site. If a site doesn't publish one, AxOS shows a symbol instead.
 
 Web games need an internet connection. Each game window has buttons to reload, go full screen, or open the game in AxBrowser. **Add all web games to library** puts them all in your library at once.
 

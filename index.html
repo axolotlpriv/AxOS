@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>AxOS</title>
 <meta name="description" content="AxOS — a complete desktop operating system that runs in a single HTML file.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236aa8ff'/%3E%3Cstop offset='1' stop-color='%239b5cff'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M18 46 30 16h4l12 30h-6l-3-8H27l-3 8zm11-13h6l-3-9z' fill='white'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Cdefs%3E%3ClinearGradient%20id%3D%22g%22%20x1%3D%220%22%20y1%3D%220%22%20x2%3D%221%22%20y2%3D%221%22%3E%3Cstop%20offset%3D%220%22%20stop-color%3D%22%23ffa3c7%22/%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23d9468a%22/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2216%22%20fill%3D%22url%28%23g%29%22/%3E%3Cg%20stroke%3D%22%23fff%22%20stroke-width%3D%224.6%22%20stroke-linecap%3D%22round%22%3E%3Cpath%20d%3D%22M19%2030%209%2022M18%2036H6M19%2042l-9%207M45%2030l10-8M46%2036h12M45%2042l9%207%22/%3E%3C/g%3E%3Cg%20fill%3D%22%23fff%22%3E%3Ccircle%20cx%3D%229%22%20cy%3D%2222%22%20r%3D%223.4%22/%3E%3Ccircle%20cx%3D%226%22%20cy%3D%2236%22%20r%3D%223.4%22/%3E%3Ccircle%20cx%3D%2210%22%20cy%3D%2249%22%20r%3D%223.4%22/%3E%3Ccircle%20cx%3D%2255%22%20cy%3D%2222%22%20r%3D%223.4%22/%3E%3Ccircle%20cx%3D%2258%22%20cy%3D%2236%22%20r%3D%223.4%22/%3E%3Ccircle%20cx%3D%2254%22%20cy%3D%2249%22%20r%3D%223.4%22/%3E%3C/g%3E%3Cellipse%20cx%3D%2232%22%20cy%3D%2237%22%20rx%3D%2215.5%22%20ry%3D%2213%22%20fill%3D%22%23fff%22/%3E%3Ccircle%20cx%3D%2225.5%22%20cy%3D%2235%22%20r%3D%222.8%22%20fill%3D%22%233b1530%22/%3E%3Ccircle%20cx%3D%2238.5%22%20cy%3D%2235%22%20r%3D%222.8%22%20fill%3D%22%233b1530%22/%3E%3Cpath%20d%3D%22M28%2041.5q4%203%208%200%22%20stroke%3D%22%233b1530%22%20stroke-width%3D%222.2%22%20fill%3D%22none%22%20stroke-linecap%3D%22round%22/%3E%3Cellipse%20cx%3D%2221.5%22%20cy%3D%2240.5%22%20rx%3D%222.6%22%20ry%3D%221.6%22%20fill%3D%22%23ff9cc4%22/%3E%3Cellipse%20cx%3D%2242.5%22%20cy%3D%2240.5%22%20rx%3D%222.6%22%20ry%3D%221.6%22%20fill%3D%22%23ff9cc4%22/%3E%3C/svg%3E">
 <style>
 /* =====================================================================
    AxOS — design tokens
@@ -113,7 +113,14 @@ input[type=range]::-moz-range-thumb{ width:12px; height:12px; border-radius:50%;
 /* ---------- app icons ---------- */
 .appicon{ --s:40px; width:var(--s); height:var(--s); flex:none; display:inline-grid; place-items:center; border-radius:calc(var(--s) * var(--icon-r)); color:#fff; box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 2px 6px rgba(0,0,0,.25); position:relative; overflow:hidden; }
 .appicon::before{ content:""; position:absolute; inset:0; background:linear-gradient(180deg,rgba(255,255,255,.18),transparent 55%); }
-.appicon svg{ width:56%; height:56%; position:relative; stroke:#fff; fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; filter:drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+.appicon svg{ width:62%; height:62%; position:relative; stroke:#fff; color:#fff; fill:none; stroke-width:2.3; stroke-linecap:round; stroke-linejoin:round; filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.35)); }
+.appicon.dk svg{ stroke:#2a1626; color:#2a1626; filter:drop-shadow(0 1px 0 rgba(255,255,255,.35)); }
+.appicon{ outline:1px solid rgba(255,255,255,.08); outline-offset:-1px; }
+.appicon.glogo{ background:linear-gradient(160deg,#ffffff,#eceaf0)!important; }
+.appicon.glogo img{ width:74%; height:74%; object-fit:contain; border-radius:18%; }
+.appicon.glogo.px img{ image-rendering:pixelated; }
+.appicon.glogo .fb{ display:none; position:absolute; inset:0; place-items:center; }
+.appicon.glogo.fail{ background:var(--fbg)!important; } .appicon.glogo.fail img{ display:none; } .appicon.glogo.fail .fb{ display:grid; }
 .appicon img{ width:78%; height:78%; object-fit:contain; position:relative; image-rendering:auto; }
 .appicon.raw{ background:none!important; box-shadow:none; }
 .appicon.raw::before{ display:none; }
@@ -208,7 +215,7 @@ input[type=range]::-moz-range-thumb{ width:12px; height:12px; border-radius:50%;
 #desktop{ position:fixed; inset:0; overflow:hidden; }
 #wallpaper{ position:absolute; inset:0; background-size:cover; background-position:center; transition:background .6s; }
 #icons{ position:absolute; inset:0 0 var(--tb-space) 0; }
-.dicon{ --s:calc(46px * var(--icon-scale,1)); position:absolute; width:calc(var(--s) + 42px); padding:6px 3px 5px; border-radius:6px; display:flex; flex-direction:column; align-items:center; gap:5px; color:#fff; text-align:center; border:1px solid transparent; }
+.dicon{ --s:calc(50px * var(--icon-scale,1)); position:absolute; width:calc(var(--s) + 42px); padding:6px 3px 5px; border-radius:6px; display:flex; flex-direction:column; align-items:center; gap:5px; color:#fff; text-align:center; border:1px solid transparent; }
 .dicon .lbl{ font-size:12.5px; line-height:1.25; text-shadow:0 1px 3px rgba(0,0,0,.8),0 0 8px rgba(0,0,0,.4); display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; word-break:break-word; max-width:100%; }
 .dicon:hover{ background:rgba(255,255,255,.12); border-color:rgba(255,255,255,.12); }
 .dicon.sel{ background:rgba(var(--accent-rgb),.32); border-color:rgba(var(--accent-rgb),.6); }
@@ -216,7 +223,7 @@ input[type=range]::-moz-range-thumb{ width:12px; height:12px; border-radius:50%;
 .dicon.cut{ opacity:.5; }
 .dicon.droptarget{ background:rgba(var(--accent-rgb),.45); }
 .dicon.dragging{ opacity:.75; z-index:5; pointer-events:none; }
-.dicon .appicon,.dicon .fileicon{ --s:calc(46px * var(--icon-scale,1)); }
+.dicon .appicon,.dicon .fileicon{ --s:calc(50px * var(--icon-scale,1)); }
 .rename-input{ width:100%; font-size:12.5px; text-align:center; border:1px solid var(--accent); background:var(--input); color:var(--text); border-radius:3px; padding:1px 3px; outline:none; resize:none; font-family:inherit; }
 #selrect{ position:absolute; border:1px solid rgba(var(--accent-rgb),.9); background:rgba(var(--accent-rgb),.2); z-index:3; pointer-events:none; display:none; }
 #windows{ position:absolute; inset:0 0 var(--tb-space) 0; pointer-events:none; }
@@ -244,7 +251,7 @@ input[type=range]::-moz-range-thumb{ width:12px; height:12px; border-radius:50%;
 .win.inactive .tbar{ background:var(--win-tb-inactive); }
 .win.inactive .tbar .ttl,.win.inactive .tbar .tico{ opacity:.55; }
 .win .tbar .tico{ display:flex; }
-.win .tbar .tico .appicon,.win .tbar .tico .fileicon{ --s:18px; }
+.win .tbar .tico .appicon,.win .tbar .tico .fileicon{ --s:20px; }
 .win .tbar .ttl{ flex:1; min-width:0; font-size:12.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-left:4px; }
 .win .tbar .tctl{ display:flex; height:100%; align-self:flex-start; }
 .win .tbar .tctl button{ width:46px; height:100%; border:0; background:transparent; color:var(--text); display:grid; place-items:center; }
@@ -303,7 +310,7 @@ body.wm-drag.rz-ns{ cursor:ns-resize; } body.wm-drag.rz-ew{ cursor:ew-resize; } 
 .tb-btn.attn{ animation:attn 1s 3; }
 @keyframes attn{ 50%{ background:rgba(255,170,0,.35); } }
 .tb-btn .badge{ position:absolute; top:3px; right:3px; min-width:15px; height:15px; border-radius:8px; background:var(--accent); color:#fff; font-size:9.5px; display:grid; place-items:center; padding:0 3px; }
-#start-btn .startlogo{ width:24px; height:24px; }
+#start-btn .startlogo{ width:calc(var(--tb-h) * .56); height:calc(var(--tb-h) * .56); filter:drop-shadow(0 1px 2px rgba(0,0,0,.3)); }
 .tb-search{ display:flex; align-items:center; gap:8px; height:34px; width:190px; padding:0 12px; border-radius:20px; background:var(--hover); border:1px solid var(--border); color:var(--text-2); margin:0 4px; flex:none; }
 .tb-search:hover{ background:var(--active); }
 #taskbar .tb-right{ margin-left:auto; display:flex; align-items:center; gap:2px; height:100%; }
@@ -340,7 +347,7 @@ body.wm-drag.rz-ns{ cursor:ns-resize; } body.wm-drag.rz-ew{ cursor:ew-resize; } 
 .sm-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:4px; }
 .sm-app{ display:flex; flex-direction:column; align-items:center; gap:7px; padding:12px 4px 10px; border-radius:8px; border:0; background:transparent; text-align:center; font-size:12px; color:var(--text); }
 .sm-app:hover{ background:var(--hover); }
-.sm-app .appicon{ --s:36px; }
+.sm-app .appicon{ --s:42px; }
 .sm-app span{ max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .sm-rec{ display:grid; grid-template-columns:1fr 1fr; gap:4px; }
 .sm-rec .it{ display:flex; align-items:center; gap:12px; padding:8px 10px; border-radius:8px; min-width:0; }
@@ -738,7 +745,7 @@ body.taskview-on .win.minimized{ opacity:1; pointer-events:auto; }
 /* =====================================================================
    Personalization
    ===================================================================== */
-.tb-btn .appicon{ --s:calc(var(--tb-h) * .54); }
+.tb-btn .appicon{ --s:calc(var(--tb-h) * .6); }
 .tb-btn{ height:calc(var(--tb-h) - 8px); min-width:calc(var(--tb-h) - 8px); }
 body.tb-dock #taskbar{ left:50%; right:auto; bottom:8px; transform:translateX(-50%); width:max-content; max-width:calc(100% - 16px); border:1px solid var(--border-2); border-radius:18px; box-shadow:var(--shadow); padding:0 8px; gap:4px; }
 body.tb-dock #taskbar .tb-center{ position:static; transform:none; max-width:none; }
@@ -786,6 +793,21 @@ body[data-cursor]{ cursor:var(--cur); }
 .emoji-grid{ display:grid; grid-template-columns:repeat(auto-fill,44px); gap:6px; }
 .emoji-grid button{ width:44px; height:44px; border-radius:50%; border:2px solid transparent; font-size:22px; background:var(--surface-3); }
 .emoji-grid button:hover{ border-color:var(--accent); }
+/* ---- Lagoon Merge ---- */
+.lagoon{ height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; padding:14px; background:radial-gradient(800px 500px at 50% 0%,rgba(56,189,248,.25),transparent),linear-gradient(180deg,#06243b,#0a3a4f 60%,#0f4c5c); color:#e0f2fe; user-select:none; }
+.lagoon .hud{ display:flex; gap:10px; align-items:center; width:min(420px,100%); }
+.lagoon .pill{ flex:1; background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.15); border-radius:12px; padding:6px 10px; text-align:center; }
+.lagoon .pill b{ display:block; font-size:18px; color:#fff; } .lagoon .pill span{ font-size:10.5px; letter-spacing:.8px; text-transform:uppercase; opacity:.7; }
+.lagoon .board{ position:relative; width:min(420px,calc(100vh - 230px),100%); aspect-ratio:1; background:rgba(2,20,35,.55); border:1px solid rgba(255,255,255,.12); border-radius:18px; padding:8px; box-shadow:inset 0 0 40px rgba(0,0,0,.35); touch-action:none; }
+.lagoon .cellbg{ position:absolute; border-radius:12px; background:rgba(255,255,255,.05); }
+.lagoon .t{ position:absolute; border-radius:12px; display:flex; flex-direction:column; align-items:center; justify-content:center; transition:left .12s ease,top .12s ease,transform .12s; box-shadow:0 3px 0 rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.35); color:#fff; font-weight:700; }
+.lagoon .t .e{ font-size:min(5.4vw,30px); line-height:1; } .lagoon .t .n{ font-size:9.5px; letter-spacing:.4px; opacity:.9; margin-top:2px; text-transform:uppercase; }
+.lagoon .t.rock{ background:linear-gradient(160deg,#78716c,#44403c)!important; } .lagoon .t.new{ animation:lgPop .18s ease; } .lagoon .t.merged{ animation:lgMerge .2s ease; }
+.lagoon .t.target{ outline:3px dashed #fde68a; outline-offset:-3px; cursor:crosshair; }
+@keyframes lgPop{ from{ transform:scale(.3); opacity:0; } } @keyframes lgMerge{ 50%{ transform:scale(1.15); } }
+.lagoon .msg{ position:absolute; inset:0; border-radius:18px; background:rgba(2,20,35,.82); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; text-align:center; padding:20px; backdrop-filter:blur(4px); }
+.lagoon .ladder{ display:flex; gap:3px; flex-wrap:wrap; justify-content:center; width:min(420px,100%); font-size:16px; }
+.lagoon .ladder span{ opacity:.3; } .lagoon .ladder span.got{ opacity:1; }
 /* ---- AxPlay ---- */
 .axp{ display:flex; flex-direction:column; height:100%; background:#14171c; color:#dfe3ea; }
 .axp .top{ display:flex; align-items:center; gap:4px; padding:6px 12px; background:#0f1216; border-bottom:1px solid #222831; }
@@ -818,7 +840,13 @@ body[data-cursor]{ cursor:var(--cur); }
 .axp .shelf{ display:grid; grid-template-columns:repeat(auto-fill,minmax(170px,1fr)); gap:14px; }
 .axp .cap{ border-radius:8px; overflow:hidden; background:#1b2028; border:1px solid #262d38; transition:transform .15s,box-shadow .15s; }
 .axp .cap:hover{ transform:translateY(-3px) scale(1.02); box-shadow:0 12px 30px rgba(0,0,0,.5); }
-.axp .cap .art{ aspect-ratio:3/4; display:grid; place-items:center; position:relative; }
+.axp .cap .art{ aspect-ratio:3/4; display:grid; place-items:center; position:relative; background-size:cover!important; background-position:center!important; }
+.axp .cap .art.hasart::after,.bp .tile.hasart::after{ content:""; position:absolute; inset:0; background:linear-gradient(180deg,rgba(0,0,0,0) 40%,rgba(0,0,0,.75)); }
+.axp .cap .art .nm,.bp .tile .nm{ z-index:1; }
+.axp .cap .art.hasart .appicon{ position:absolute; left:10px; top:10px; --s:40px!important; box-shadow:0 4px 14px rgba(0,0,0,.5); z-index:1; }
+.axp .hero.hasart{ background-size:cover!important; background-position:center!important; }
+.bp .tile{ background-size:cover!important; background-position:center!important; overflow:hidden; }
+.bp .tile.hasart .appicon{ position:absolute; left:12px; top:12px; --s:52px!important; z-index:1; }
 .axp .cap .art .appicon,.axp .cap .art .fileicon{ --s:72px; }
 .axp .cap .art .nm{ position:absolute; left:10px; right:10px; bottom:10px; font-weight:700; color:#fff; text-shadow:0 2px 8px rgba(0,0,0,.7); font-size:14px; }
 .axp .cap .meta{ padding:8px 10px; font-size:11.5px; color:#8d96a6; display:flex; justify-content:space-between; }
@@ -830,7 +858,7 @@ body[data-cursor]{ cursor:var(--cur); }
 .bp .tile{ flex:none; width:220px; aspect-ratio:3/4; border-radius:12px; display:grid; place-items:center; position:relative; transition:transform .2s,box-shadow .2s; opacity:.6; }
 .bp .tile .appicon,.bp .tile .fileicon{ --s:96px; }
 .bp .tile.on{ transform:scale(1.12); opacity:1; box-shadow:0 0 0 4px #fff,0 20px 60px rgba(0,0,0,.6); }
-.bp .tile .nm{ position:absolute; bottom:12px; left:12px; right:12px; font-weight:700; font-size:16px; text-shadow:0 2px 8px #000; }
+.bp .tile .nm{ z-index:1; position:absolute; bottom:12px; left:12px; right:12px; font-weight:700; font-size:16px; text-shadow:0 2px 8px #000; }
 .bp .foot{ display:flex; gap:24px; padding:16px 60px; background:rgba(0,0,0,.4); font-size:13px; color:#aaa; align-items:center; }
 .bp .foot b{ display:inline-grid; place-items:center; width:22px; height:22px; border-radius:50%; background:#fff; color:#000; font-size:11px; margin-right:6px; }
 
@@ -1024,6 +1052,7 @@ const GLYPHS = {
   share: '<circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4"/>',
   wand: '<path d="M15 4V2M15 10V8M11 6H9M21 6h-2M18.2 3.8L17 5M18.2 8.2L17 7M3 21l11-11"/>',
   tag: '<path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.3"/>',
+  wave: '<path d="M2 16c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/><path d="M2 20.5c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/><path d="M8 10.5c1-3 3-4.5 5.5-4.5S18 8 18 10.5c-2 1.5-5 1.5-7 0-1 .8-2 .8-3 0z"/><circle cx="15" cy="9.3" r=".7" fill="currentColor"/>',
   dot: '<circle cx="12" cy="12" r="4" fill="currentColor" stroke="none"/>',
 };
 function ic(name, cls = "") { return `<svg class="i ${cls}" viewBox="0 0 24 24">${GLYPHS[name] || GLYPHS.file}</svg>`; }
@@ -1032,7 +1061,9 @@ function appIconHTML(app, size) {
   const st = size ? `--s:${size}px;` : "";
   if (app.iconImg) return `<span class="appicon raw" style="${st}"><img src="${esc(app.iconImg)}" alt=""></span>`;
   const [a, b] = app.colors || ["#5b8cff", "#7b5cff"];
-  return `<span class="appicon" style="${st}background:linear-gradient(135deg,${a},${b})">${`<svg viewBox="0 0 24 24">${GLYPHS[app.icon] || GLYPHS.file}</svg>`}</span>`;
+  const lum = c => { const [r, g, bb] = hexToRgb(c).map(v => { v /= 255; return v <= .04 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; }); return .2126 * r + .7152 * g + .0722 * bb; };
+  const dk = (lum(a) + lum(b)) / 2 > .42;
+  return `<span class="appicon${dk ? " dk" : ""}" style="${st}background:linear-gradient(135deg,${a},${b})">${`<svg viewBox="0 0 24 24">${GLYPHS[app.icon] || GLYPHS.file}</svg>`}</span>`;
 }
 /* File-type icons: a page with a colored band + glyph */
 const FILE_TYPES = {
@@ -1102,13 +1133,13 @@ const Sound = {
 /* ---------------- Settings ---------------- */
 const DEFAULT_SETTINGS = {
   setupDone: false, username: "User", password: "", avatar: "", hostname: "axos-pc",
-  theme: "dark", accent: "#4f8cff", wallpaper: "aurora", customWallpaper: "", lockWallpaper: "same",
+  theme: "dark", accent: "#e8679f", wallpaper: "axolotl", preset: "default", customWallpaper: "", lockWallpaper: "same",
   transparency: true, animations: true, highContrast: false, scale: 100, iconScale: 1, desktopIcons: true,
   taskbarAlign: "center", taskbarSearch: true, autoHideTaskbar: false, showSeconds: false, clock24: false,
   sounds: true, volume: 60, muted: false, brightness: 100, nightLight: false, nightStrength: 40,
   dnd: false, wifi: true, bluetooth: false, airplane: false, bootAnim: true, lockOnBoot: true,
   pinned: ["explorer", "browser", "terminal", "settings", "notepad", "store"],
-  startPinned: ["explorer", "browser", "settings", "terminal", "notepad", "calculator", "paint", "photos", "media", "taskmgr", "clock", "store", "weather", "compat", "welcome"],
+  startPinned: ["explorer", "browser", "settings", "terminal", "axplay", "gdash", "lagoon", "notepad", "calculator", "paint", "photos", "media", "taskmgr", "clock", "store", "weather", "compat", "welcome"],
   installed: ["serpent", "tictactoe", "memory"],
   defaultApps: {},
   browser: { mode: "proxy", gateway: "auto", customGateway: "", uvPrefix: "", uvCodec: "xor", search: "ddg", home: "axos://newtab", scripts: true, bookmarksBar: true },
@@ -1131,6 +1162,7 @@ const Settings = {
 Settings.load();
 
 const WALLPAPERS = {
+  axolotl: "radial-gradient(ellipse at 12% 18%,rgba(244,114,182,.55) 0%,transparent 42%),radial-gradient(ellipse at 88% 78%,rgba(168,85,247,.42) 0%,transparent 46%),radial-gradient(ellipse at 62% 112%,rgba(251,113,133,.5) 0%,transparent 50%),radial-gradient(circle at 70% 20%,rgba(255,200,221,.14) 0%,transparent 30%),linear-gradient(140deg,#1b0c1f 0%,#26102c 55%,#1d0d24 100%)",
   aurora: "radial-gradient(ellipse at 20% 15%,#5b7cff 0%,transparent 45%),radial-gradient(ellipse at 85% 30%,#b35cff 0%,transparent 45%),radial-gradient(ellipse at 55% 95%,#00c2c7 0%,transparent 50%),linear-gradient(135deg,#0d1030,#1a0f3a)",
   bloom: "radial-gradient(circle at 50% 120%,#ff9a8b 0%,#ff6a88 25%,#a34fde 55%,#2a1b5c 85%)",
   dune: "linear-gradient(180deg,#f9d29d 0%,#f3a683 38%,#c06c84 70%,#6c5b7b 100%)",
@@ -1784,8 +1816,8 @@ darkMQ.addEventListener?.("change", applyTheme);
 const THEME_KEYS = new Set(["theme", "accent", "scale", "iconScale", "transparency", "animations", "highContrast", "wallpaper", "customWallpaper", "nightLight", "nightStrength", "brightness", "desktopIcons", "taskbarAlign", "volume", "muted", "radius", "titlebarAccent", "buttonStyle", "winShadow", "winAnim", "animSpeed", "taskbarSize", "taskbarStyle", "glassOpacity", "blur", "font", "iconShape", "iconStyle", "cursor", "customCSS", "colorFilter", "slideshowDir", "slideshowInterval"]);
 Bus.on("setting", (k) => { if (THEME_KEYS.has(k)) applyTheme(); });
 
-const AXOS_LOGO = `<svg viewBox="0 0 64 64"><defs><linearGradient id="axlg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6aa8ff"/><stop offset="1" stop-color="#9b5cff"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#axlg)"/><path d="M18 46 30 16h4l12 30h-6l-3-8H27l-3 8zm11-13h6l-3-9z" fill="#fff"/></svg>`;
-const START_LOGO = `<svg class="startlogo" viewBox="0 0 24 24"><defs><linearGradient id="stlg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent-2)"/></linearGradient></defs><rect x="2" y="2" width="9.3" height="9.3" rx="2.4" fill="url(#stlg)"/><rect x="12.7" y="2" width="9.3" height="9.3" rx="2.4" fill="url(#stlg)" opacity=".85"/><rect x="2" y="12.7" width="9.3" height="9.3" rx="2.4" fill="url(#stlg)" opacity=".85"/><rect x="12.7" y="12.7" width="9.3" height="9.3" rx="2.4" fill="url(#stlg)" opacity=".7"/></svg>`;
+const AXOS_LOGO = `<svg viewBox="0 0 64 64"><defs><linearGradient id="axlg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffa3c7"/><stop offset="1" stop-color="#d9468a"/></linearGradient></defs><rect width="64" height="64" rx="16" fill="url(#axlg)"/><g stroke="#fff" stroke-width="4.6" stroke-linecap="round"><path d="M19 30 9 22M18 36H6M19 42l-9 7M45 30l10-8M46 36h12M45 42l9 7"/></g><g fill="#fff"><circle cx="9" cy="22" r="3.4"/><circle cx="6" cy="36" r="3.4"/><circle cx="10" cy="49" r="3.4"/><circle cx="55" cy="22" r="3.4"/><circle cx="58" cy="36" r="3.4"/><circle cx="54" cy="49" r="3.4"/></g><ellipse cx="32" cy="37" rx="15.5" ry="13" fill="#fff"/><circle cx="25.5" cy="35" r="2.8" fill="#3b1530"/><circle cx="38.5" cy="35" r="2.8" fill="#3b1530"/><path d="M28 41.5q4 3 8 0" stroke="#3b1530" stroke-width="2.2" fill="none" stroke-linecap="round"/><ellipse cx="21.5" cy="40.5" rx="2.6" ry="1.6" fill="#ff9cc4"/><ellipse cx="42.5" cy="40.5" rx="2.6" ry="1.6" fill="#ff9cc4"/></svg>`;
+const START_LOGO = `<svg class="startlogo" viewBox="0 0 64 64"><defs><linearGradient id="stlg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent-2)"/></linearGradient></defs><rect width="64" height="64" rx="17" fill="url(#stlg)"/><g stroke="#fff" stroke-width="5.5" stroke-linecap="round"><path d="M19 30 9 22M18 37H6M19 44l-9 7M45 30l10-8M46 37h12M45 44l9 7"/></g><ellipse cx="32" cy="38" rx="16" ry="13.5" fill="#fff"/><circle cx="25.5" cy="36" r="3.2" fill="#2a1626"/><circle cx="38.5" cy="36" r="3.2" fill="#2a1626"/></svg>`;
 
 function avatarHTML(size = 40) {
   const a = Settings.get("avatar"), n = Settings.get("username") || "U";
@@ -4551,7 +4583,8 @@ const CURSORS = {
   cross: ["Crosshair", c => `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"><path d="M12 2v8M12 14v8M2 12h8M14 12h8" stroke="${c}" stroke-width="2.5" stroke-linecap="round"/><circle cx="12" cy="12" r="1.5" fill="${c}"/></svg>`, 12, 12],
 };
 const THEME_PRESETS = {
-  default: { name: "AxOS Default", theme: "dark", accent: "#4f8cff", wallpaper: "aurora", radius: 10, iconStyle: "gradient", iconShape: "squircle", taskbarStyle: "full", buttonStyle: "win", font: "system", titlebarAccent: false, soundScheme: "default", winAnim: "zoom" },
+  default: { name: "AxOS Default", theme: "dark", accent: "#e8679f", wallpaper: "axolotl", radius: 10, iconStyle: "gradient", iconShape: "squircle", taskbarStyle: "full", buttonStyle: "win", font: "system", titlebarAccent: false, soundScheme: "default", winAnim: "zoom" },
+  blue: { name: "Classic Blue", theme: "dark", accent: "#4f8cff", wallpaper: "aurora", radius: 10, iconStyle: "gradient", iconShape: "squircle", taskbarStyle: "full", buttonStyle: "win", font: "system", titlebarAccent: false, soundScheme: "default", winAnim: "zoom" },
   neon: { name: "Midnight Neon", theme: "dark", accent: "#d946ef", wallpaper: "live:stars", radius: 14, iconStyle: "glass", iconShape: "circle", taskbarStyle: "dock", buttonStyle: "win", font: "space", titlebarAccent: false, soundScheme: "glass", winAnim: "pop" },
   sakura: { name: "Sakura", theme: "light", accent: "#ec4899", wallpaper: "sakura", radius: 16, iconStyle: "gradient", iconShape: "circle", taskbarStyle: "dock", buttonStyle: "mac", font: "nunito", titlebarAccent: false, soundScheme: "soft", winAnim: "pop" },
   forest: { name: "Forest", theme: "dark", accent: "#22c55e", wallpaper: "live:fireflies", radius: 12, iconStyle: "flat", iconShape: "rounded", taskbarStyle: "full", buttonStyle: "win", font: "outfit", titlebarAccent: false, soundScheme: "soft", winAnim: "fade" },
@@ -4833,6 +4866,7 @@ const AXPLAY_CATALOG = [
   { id: "gd", title: "Geometry Dash (webport)", kind: "app", app: "gdash", platform: "web", dev: "axolotlpriv", tags: ["Rhythm", "Platformer"], size: "3.6 MB", desc: "Jump, fly and flip through rhythm-based levels. This is your webport from github.com/axolotlpriv/Geometry-Dash-webport, loaded live inside AxOS.", featured: true, colors: ["#facc15", "#ea580c"] },
   { id: "neondrift", title: "Neon Drift", kind: "elf", file: "Neon Drift/NeonDrift.x86_64", platform: "linux", dev: "AxOS Games", tags: ["Arcade", "Racing"], size: "24 KB", desc: "A native Linux arcade racer. Dodge glowing barriers on an endless synthwave highway. Ships as an x86-64 ELF binary and runs through the AxPlay Linux Runtime.", colors: ["#ff2bd6", "#00e5ff"] },
   { id: "orbital", title: "Orbital", kind: "exe", file: "Orbital/Orbital.exe", platform: "windows", dev: "AxOS Games", tags: ["Arcade", "Space"], size: "26 KB", desc: "A Windows game about staying in orbit. Switch between rings to dodge incoming rocks. Runs on AxOS through AxCompat's Proton-style compatibility layer.", colors: ["#0ea5e9", "#1e1b4b"] },
+  { id: "lagoon", title: "Lagoon Merge", kind: "app", app: "lagoon", platform: "axos", dev: "AxOS Games", tags: ["Puzzle", "Merge"], size: "18 KB", desc: "Slide sea creatures across a 5×5 lagoon, merge matching pairs and grow them all the way up to the legendary axolotl. Rocks wash in and block the way. Merge next to them to break them apart.", colors: ["#38bdf8", "#0f4c5c"] },
   { id: "serpent", title: "Serpent", kind: "app", app: "serpent", platform: "axos", dev: "AxOS", tags: ["Arcade", "Classic"], size: "12 KB", desc: "Guide the serpent, eat the glowing fruit and don't bite your own tail.", colors: ["#a3e635", "#15803d"] },
   { id: "memory", title: "Memory Match", kind: "app", app: "memory", platform: "axos", dev: "AxOS", tags: ["Puzzle"], size: "9 KB", desc: "Flip the cards and find all the pairs in as few moves as you can.", colors: ["#fdba74", "#c2410c"] },
   { id: "tictactoe", title: "Tic-Tac-Toe", kind: "app", app: "tictactoe", platform: "axos", dev: "AxOS", tags: ["Board"], size: "8 KB", desc: "Three in a row against an unbeatable AI or a friend.", colors: ["#fb7185", "#7c3aed"] },
@@ -4877,8 +4911,19 @@ const WEB_GAMES = [
   ["gridgarden", "Grid Garden", "https://cssgridgarden.com/", "Codepip", "learn", ["CSS", "Puzzle"], "grid3", ["#86efac", "#3f6212"], "Water your carrot garden by writing CSS grid code."],
   ["keybr", "Keybr", "https://www.keybr.com/", "keybr.com", "learn", ["Typing"], "keyboard", ["#a78bfa", "#1e1b4b"], "Adaptive touch-typing trainer that finds your weakest letters and drills them."],
 ];
+const GAME_LOGOS = {"mcclassic":{"l":null,"a":null,"s":0},"hexgl":{"l":"http://hexgl.bkcore.com/favicon.png","a":"http://hexgl.bkcore.com/image.png","s":32},"krunker":{"l":"https://krunker.io/img/pwa/icon1024x1024.png","a":"https://assets.krunker.io/promo/og_1200x630.jpg","s":1024},"shellshock":{"l":"https://shellshock.io/favicon192.png","a":"https://www.shellshock.io/img/previewImage_shellShockers.webp","s":192},"smashkarts":{"l":"https://smashkarts.io/images/icon-144.png","a":"https://smashkarts.io/images/icon-144.png","s":180},"slither":{"l":"http://slither.io/s/favicon.png","a":"http://slither.io/s/fbthumb5.jpg","s":32},"diep":{"l":"https://diep.io/assets/favicon/favicon-96x96.png","a":null,"s":96},"territorial":{"l":"https://territorial.io/favicon.ico","a":null,"s":16},"skribbl":{"l":"https://skribbl.io/favicon.png","a":"https://skribbl.io/img/thumbnail.png","s":32},"q1k3":{"l":null,"a":null,"s":0},"underrun":{"l":null,"a":null,"s":0},"xtype":{"l":"https://phoboslab.org/xtype/media/icon-128.png","a":null,"s":180},"biolab":{"l":"https://playbiolab.com/favicon.ico","a":null,"s":32},"ztype":{"l":"https://zty.pe/media/favicon.png","a":"https://zty.pe/media/ztype-card.png","s":32},"radiusraid":{"l":"https://jackrugile.com/radius-raid/images/favicon.ico","a":null,"s":32},"spacehuggers":{"l":"https://killedbyapixel.github.io/SpaceHuggers/favicon.ico","a":null,"s":32},"astray":{"l":null,"a":null,"s":0},"hextris":{"l":null,"a":null,"s":0},"untrusted":{"l":"https://untrustedgame.com/favicon.ico","a":null,"s":32},"minesweeper":{"l":"https://minesweeper.online/img/icons2/favicon.svg","a":"https://minesweeper.online/img/og_image.png","s":256},"littlealchemy2":{"l":"https://littlealchemy2.com/static/img/icon-256x256.png","a":"https://littlealchemy2.com/static/img/little-alchemy-2-fb-thumbnail.jpg","s":256},"worldle":{"l":"https://worldle.teuteuf.fr/logo192.png","a":"https://worldle.teuteuf.fr/og-image.jpg","s":180},"solitr":{"l":null,"a":null,"s":0},"adarkroom":{"l":"https://adarkroom.doublespeakgames.com/favicon.ico","a":"https://adarkroom.doublespeakgames.com/img/adr.png","s":32},"paperclips":{"l":null,"a":null,"s":0},"candybox2":{"l":"https://candybox2.github.io/favicon.png","a":null,"s":32},"particleclicker":{"l":"https://particle-clicker.web.cern.ch/assets/mobile/icon.png","a":"https://avatars2.githubusercontent.com/u/8345868","s":180},"bitburner":{"l":"https://bitburner-official.github.io/dist/safari-pinned-tab.svg","a":null,"s":256},"gridland":{"l":"https://glmedia.doublespeakgames.com/img/badge.png","a":"https://glmedia.doublespeakgames.com/img/badge.png","s":180},"sandspiel":{"l":"https://sandspiel.club/assets/safari-pinned-tab.svg","a":null,"s":256},"townscaper":{"l":"https://oskarstalberg.com/Townscaper/TemplateData/favicon.ico","a":null,"s":32},"trust":{"l":"https://ncase.me/trust/favicon.png","a":"http://ncase.me/trust/social/thumbnail.png","s":32},"elevatorsaga":{"l":null,"a":null,"s":0},"flexboxfroggy":{"l":"https://flexboxfroggy.com/favicon.ico","a":"https://flexboxfroggy.com/images/screenshot.png","s":16},"gridgarden":{"l":"https://cssgridgarden.com/favicon.ico","a":"https://cssgridgarden.com/images/screenshot.png","s":16},"keybr":{"l":"https://www.keybr.com/assets/934c99d37fc250c3.png","a":"https://www.keybr.com/cover.png","s":96},"gd":{"l":"https://cdn.jsdelivr.net/gh/Ale7208/geometry-dash-wasm@main/ref/favicon.ico","a":"https://cdn.jsdelivr.net/gh/Ale7208/geometry-dash-wasm@main/ref/preview.png","s":32}};
 const STORE_CATS = [["action", "ACTION & ARCADE"], ["multi", "MULTIPLAYER"], ["puzzle", "PUZZLE & BRAIN"], ["idle", "IDLE & INCREMENTAL"], ["sandbox", "SANDBOX & CREATIVE"], ["learn", "PLAY & LEARN"]];
-for (const [id, title, url, dev, cat, tags, icon, colors, desc] of WEB_GAMES) AXPLAY_CATALOG.push({ id, title, kind: "url", url, platform: "web", dev, cat, tags, icon, size: "Web", desc: desc + ` Plays from ${new URL(url).hostname}; needs internet.`, colors });
+for (const [id, title, url, dev, cat, tags, icon, colors, desc] of WEB_GAMES) AXPLAY_CATALOG.push({ id, title, kind: "url", url, platform: "web", dev, cat, tags, icon, size: "Web", desc: desc + ` Plays from ${new URL(url).hostname}; needs internet.`, colors, logo: GAME_LOGOS[id]?.l || null, logoPx: (GAME_LOGOS[id]?.s || 128) <= 32, art: GAME_LOGOS[id]?.a || null });
+{ const gd = AXPLAY_CATALOG.find(c => c.id === "gd"); if (gd && GAME_LOGOS.gd) { gd.logo = GAME_LOGOS.gd.l; gd.logoPx = true; gd.art = GAME_LOGOS.gd.a; } }
+/* Catalog data refreshes logos/art on games already in the library */
+function catalogInfo(g) { const c = AXPLAY_CATALOG.find(x => x.id === g.id); return c ? { ...g, logo: c.logo, logoPx: c.logoPx, art: c.art, icon: g.icon || c.icon } : g; }
+function gameLogoHTML(g, size) {
+  g = catalogInfo(g); const fbIcon = g.kind === "app" && Apps[g.app] ? Apps[g.app] : { icon: g.icon || "gamepad", colors: g.colors || ["#e8679f", "#3b1530"] };
+  if (!g.logo) return appIconHTML(fbIcon, size);
+  const fb = appIconHTML(fbIcon); const [a, b] = fbIcon.colors || g.colors || ["#e8679f", "#3b1530"];
+  return `<span class="appicon raw glogo${g.logoPx ? " px" : ""}" style="${size ? `--s:${size}px;` : ""}--fbg:linear-gradient(135deg,${a},${b})"><img src="${esc(g.logo)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentElement.classList.add('fail')"><span class="fb">${fb.replace('class="appicon', 'style="--s:100%;box-shadow:none" class="appicon')}</span></span>`;
+}
+function gameArtStyle(g, colors) { g = catalogInfo(g); const [a, b] = colors || g.colors || ["#e8679f", "#3b1530"]; return g.art ? `background:url('${encodeURI(g.art)}') center/cover,linear-gradient(160deg,${a},${b})` : `background:linear-gradient(160deg,${a},${b})`; }
 const PLATFORM = { web: ["Web", "globe", "web"], linux: ["Native Linux", "tux", "lx"], windows: ["Windows · Proton-style", "winlogo", "wn"], axos: ["AxOS", "apps", "web"] };
 const COMPAT_TOOLS = { auto: "Default for this game", proton: "AxCompat Proton-style layer 9.0 (stable)", protonexp: "AxCompat Proton-style layer — Experimental", native: "None (run natively)" };
 const AxPlay = {
@@ -4928,7 +4973,7 @@ const AxPlay = {
     const t0 = Date.now(); let win = null; const tool = g.compat === "auto" ? (g.kind === "exe" ? "proton" : "native") : g.compat;
     if (g.kind === "app") win = launch(g.app);
     else if (g.kind === "url") {
-      win = WM.create({ app: "axplay", title: g.title, w: g.w || 1040, h: g.h || 660, iconHTML: g.icon ? appIconHTML({ icon: g.icon, colors: g.colors }) : appIconHTML({ icon: "gamepad", colors: g.colors }) }); win.customIcon = true;
+      win = WM.create({ app: "axplay", title: g.title, w: g.w || 1040, h: g.h || 660, iconHTML: gameLogoHTML(g) }); win.customIcon = true;
       win.extra.innerHTML = `<button class="ibtn g-rl" data-tip="Reload" style="width:30px;height:30px">${ic("refresh")}</button><button class="ibtn g-fs" data-tip="Full screen" style="width:30px;height:30px">${ic("maximize")}</button><button class="ibtn g-br" data-tip="Open in AxBrowser" style="width:30px;height:30px">${ic("external")}</button>`;
       const mk = () => { win.body.innerHTML = ""; if (!navigator.onLine) { win.body.innerHTML = `<div class="empty-state">${ic("wifiOff")}<div>${esc(g.title)} needs an internet connection.</div></div>`; return; } const f = document.createElement("iframe"); f.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-pointer-lock allow-popups allow-modals allow-downloads"); f.setAttribute("allow", "fullscreen; autoplay; gamepad; clipboard-write"); f.setAttribute("allowfullscreen", ""); f.style.cssText = "flex:1;border:0;width:100%;height:100%;background:#000"; f.src = g.url; win.body.appendChild(f); };
       mk(); $(".g-rl", win.extra).onclick = mk; $(".g-fs", win.extra).onclick = () => ($("iframe", win.body) || win.body).requestFullscreen?.(); $(".g-br", win.extra).onclick = () => launch("browser", { url: g.url });
@@ -4961,7 +5006,7 @@ registerApp("axplay", {
     AxPlay.scan();
     B.innerHTML = `<div class="axp"><div class="top"><button class="tab" data-t="store">STORE</button><button class="tab" data-t="library">LIBRARY</button><button class="tab" data-t="downloads">DOWNLOADS</button><span class="grow"></span><button class="btn sm bpb">${ic("maximize")} Big Picture</button><span class="row" style="font-size:12.5px;color:#9aa3b2">${avatarHTML(24)} ${esc(Settings.get("username"))}</span></div><div class="body"></div></div>`;
     const body = $(".body", B);
-    const icon = g => { if (g.path && FS.exists(g.path)) { const r = g.kind === "html" ? null : Compat.info(g.path); if (r?.icon) return `<span class="appicon raw"><img src="${r.icon}"></span>`; } if (g.kind === "app" && Apps[g.app]) return appIconHTML(g.app); if (g.icon) return appIconHTML({ icon: g.icon, colors: g.colors }); return appIconHTML({ icon: g.platform === "linux" ? "tux" : g.platform === "windows" ? "winlogo" : "gamepad", colors: g.colors || ["#3b82f6", "#1e1b4b"] }); };
+    const icon = g => { if (catalogInfo(g).logo) return gameLogoHTML(g); if (g.path && FS.exists(g.path)) { const r = g.kind === "html" ? null : Compat.info(g.path); if (r?.icon) return `<span class="appicon raw"><img src="${r.icon}"></span>`; } if (g.kind === "app" && Apps[g.app]) return appIconHTML(g.app); if (g.icon) return appIconHTML({ icon: g.icon, colors: g.colors }); return appIconHTML({ icon: g.platform === "linux" ? "tux" : g.platform === "windows" ? "winlogo" : "gamepad", colors: g.colors || ["#3b82f6", "#1e1b4b"] }); };
     const games = () => AxPlay.get().games.filter(g => (!q || g.title.toLowerCase().includes(q)) && (filter === "all" || (filter === "installed" ? AxPlay.installed(g) && !g.uninstalled : g.platform === filter)));
     const badge = g => { const [n, i, c] = PLATFORM[g.platform] || PLATFORM.web; return `<span class="badge ${c}">${ic(i)} ${n}</span>`; };
     const render = () => {
@@ -4992,7 +5037,7 @@ registerApp("axplay", {
         return;
       }
       const inst = AxPlay.installed(g) && !g.uninstalled; const dl = AxPlay.downloads.find(d => d.id === g.id && d.p < 1);
-      main.innerHTML = `<div class="hero" style="background:linear-gradient(120deg,${g.colors?.[0] || "#3b82f6"},${g.colors?.[1] || "#1e1b4b"})"><div class="in">${icon(g)}<div><h1>${esc(g.title)}</h1><div style="color:#e5e7eb;opacity:.85;font-size:13px">${esc(g.dev || "")}</div></div></div></div>
+      main.innerHTML = `<div class="hero${catalogInfo(g).art ? " hasart" : ""}" style="${gameArtStyle(g)}"><div class="in">${icon(g)}<div><h1>${esc(g.title)}</h1><div style="color:#e5e7eb;opacity:.85;font-size:13px">${esc(g.dev || "")}</div></div></div></div>
         <div class="bar"><button class="play ${dl ? "inst" : inst ? "" : "inst"}">${ic(inst ? "play" : "download")} ${dl ? "INSTALLING " + Math.round(dl.p * 100) + "%" : inst ? "PLAY" : "INSTALL"}</button>
           <div class="stat"><div class="k">Last played</div><div class="v">${g.last ? timeAgo(g.last) : "Never"}</div></div><div class="stat"><div class="k">Play time</div><div class="v">${fmtPlay(g.playtime)}</div></div><div class="stat"><div class="k">Platform</div><div class="v">${badge(g)}</div></div>
           <span class="grow"></span><button class="ibtn gear" style="color:#c6ccd6" data-tip="Manage">${ic("gear")}</button><button class="ibtn fav" style="color:${g.fav ? "#facc15" : "#c6ccd6"}" data-tip="Favorite">${ic(g.fav ? "starFill" : "star")}</button></div>
@@ -5002,7 +5047,7 @@ registerApp("axplay", {
       $(".gear", main).onclick = e => { const r = e.currentTarget.getBoundingClientRect(); gameMenu(g, r.left, r.bottom + 4); };
       $(".fav", main).onclick = () => { AxPlay.update(g.id, { fav: !g.fav }); };
     };
-    const cap = g => `<div class="cap" data-id="${g.id}"><div class="art" style="background:linear-gradient(160deg,${g.colors?.[0] || "#3b82f6"},${g.colors?.[1] || "#1e1b4b"})">${icon(g)}<div class="nm">${esc(g.title)}</div></div><div class="meta"><span>${(PLATFORM[g.platform] || PLATFORM.web)[0]}</span><span>${g.playtime ? fmtPlay(g.playtime) : AxPlay.installed(g) && !g.uninstalled ? "Installed" : "Not installed"}</span></div></div>`;
+    const cap = g => `<div class="cap" data-id="${g.id}"><div class="art${catalogInfo(g).art ? " hasart" : ""}" style="${gameArtStyle(g)}">${icon(g)}<div class="nm">${esc(g.title)}</div></div><div class="meta"><span>${(PLATFORM[g.platform] || PLATFORM.web)[0]}</span><span>${g.playtime ? fmtPlay(g.playtime) : AxPlay.installed(g) && !g.uninstalled ? "Installed" : "Not installed"}</span></div></div>`;
     const gameMenu = (g, x, y) => Menu.show(x, y, [
       { label: "Play", icon: "play", disabled: !AxPlay.installed(g) || g.uninstalled, action: () => AxPlay.play(g) },
       { label: "Properties…", icon: "gear", action: () => props(g) },
@@ -5022,13 +5067,13 @@ registerApp("axplay", {
       const feat = AXPLAY_CATALOG.find(c => c.featured);
       if (storeSel) {
         const c = AXPLAY_CATALOG.find(x => x.id === storeSel);
-        body.innerHTML = `<div class="main"><div class="hero" style="background:linear-gradient(120deg,${c.colors[0]},${c.colors[1]})"><div class="in">${c.app ? appIconHTML(c.app) : appIconHTML({ icon: c.icon || PLATFORM[c.platform][1], colors: c.colors })}<div><h1>${esc(c.title)}</h1><div style="color:#e5e7eb;opacity:.85;font-size:13px">${esc(c.dev)} · ${esc(c.size)}</div></div></div></div><div class="bar"><button class="btn sm back">${ic("chevL")} Store</button><button class="play ${owned(c.id) ? "" : "inst"}">${ic(owned(c.id) ? "play" : "download")} ${owned(c.id) ? "PLAY" : "FREE — INSTALL"}</button>${badge(c)}</div><div class="sect"><div class="card2"><p style="color:#b9c0cc;line-height:1.6">${esc(c.desc)}</p><div class="row" style="gap:6px">${c.tags.map(t => `<span class="badge">${esc(t)}</span>`).join("")}</div></div></div></div>`;
+        body.innerHTML = `<div class="main"><div class="hero${c.art ? " hasart" : ""}" style="${gameArtStyle(c)}"><div class="in">${c.logo ? gameLogoHTML(c) : c.app ? appIconHTML(c.app) : appIconHTML({ icon: c.icon || PLATFORM[c.platform][1], colors: c.colors })}<div><h1>${esc(c.title)}</h1><div style="color:#e5e7eb;opacity:.85;font-size:13px">${esc(c.dev)} · ${esc(c.size)}</div></div></div></div><div class="bar"><button class="btn sm back">${ic("chevL")} Store</button><button class="play ${owned(c.id) ? "" : "inst"}">${ic(owned(c.id) ? "play" : "download")} ${owned(c.id) ? "PLAY" : "FREE — INSTALL"}</button>${badge(c)}</div><div class="sect"><div class="card2"><p style="color:#b9c0cc;line-height:1.6">${esc(c.desc)}</p><div class="row" style="gap:6px">${c.tags.map(t => `<span class="badge">${esc(t)}</span>`).join("")}</div></div></div></div>`;
         $(".back", body).onclick = () => { storeSel = null; render(); };
         $(".play", body).onclick = () => { if (owned(c.id)) AxPlay.play(AxPlay.game(c.id)); else { AxPlay.update(c.id, { uninstalled: false }); AxPlay.install(c); tab = "downloads"; render(); } };
         return;
       }
-      const shelf = (t, items) => items.length ? `<div class="navhead" style="padding-left:0;color:#9aa3b2;margin-top:18px">${t}</div><div class="shelf">${items.map(c => `<div class="cap" data-sid="${c.id}"><div class="art" style="background:linear-gradient(160deg,${c.colors[0]},${c.colors[1]})">${c.app ? appIconHTML(c.app) : appIconHTML({ icon: c.icon || PLATFORM[c.platform][1], colors: c.colors })}<div class="nm">${esc(c.title)}</div></div><div class="meta"><span>${PLATFORM[c.platform][0]}</span><span>${owned(c.id) ? "In library" : "Free"}</span></div></div>`).join("")}</div>` : "";
-      body.innerHTML = `<div class="main"><div class="sect">${feat ? `<div class="hero" data-sid="${feat.id}" style="border-radius:12px;height:240px;background:linear-gradient(120deg,${feat.colors[0]},${feat.colors[1]});cursor:pointer"><div class="in">${appIconHTML(feat.app)}<div><div class="badge" style="margin-bottom:8px">FEATURED</div><h1>${esc(feat.title)}</h1><div style="color:#fff;opacity:.9;font-size:13px;max-width:520px">${esc(feat.desc)}</div></div></div></div>` : ""}
+      const shelf = (t, items) => items.length ? `<div class="navhead" style="padding-left:0;color:#9aa3b2;margin-top:18px">${t}</div><div class="shelf">${items.map(c => `<div class="cap" data-sid="${c.id}"><div class="art${c.art ? " hasart" : ""}" style="${gameArtStyle(c)}">${c.logo ? gameLogoHTML(c) : c.app ? appIconHTML(c.app) : appIconHTML({ icon: c.icon || PLATFORM[c.platform][1], colors: c.colors })}<div class="nm">${esc(c.title)}</div></div><div class="meta"><span>${PLATFORM[c.platform][0]}</span><span>${owned(c.id) ? "In library" : "Free"}</span></div></div>`).join("")}</div>` : "";
+      body.innerHTML = `<div class="main"><div class="sect">${feat ? `<div class="hero${feat.art ? " hasart" : ""}" data-sid="${feat.id}" style="border-radius:12px;height:240px;${gameArtStyle(feat)};cursor:pointer"><div class="in">${gameLogoHTML(feat)}<div><div class="badge" style="margin-bottom:8px">FEATURED</div><h1>${esc(feat.title)}</h1><div style="color:#fff;opacity:.9;font-size:13px;max-width:520px">${esc(feat.desc)}</div></div></div></div>` : ""}
         <div class="row" style="margin-top:16px"><input class="input ssq" placeholder="Search ${AXPLAY_CATALOG.length} games" value="${esc(sq)}" style="max-width:340px;flex:1"><span style="color:#8d96a6;font-size:12px">All games are free.</span><span class="grow"></span><button class="btn sm addall">${ic("plus")} Add all web games to library</button></div>${sq ? shelf("SEARCH RESULTS", AXPLAY_CATALOG.filter(c => (c.title + " " + c.tags.join(" ") + " " + c.dev).toLowerCase().includes(sq))) : STORE_CATS.map(([k, n]) => shelf(n, AXPLAY_CATALOG.filter(c => c.cat === k))).join("") + shelf("NATIVE LINUX", AXPLAY_CATALOG.filter(c => c.platform === "linux"))}${sq ? "" : shelf("WINDOWS · PROTON-STYLE COMPATIBLE", AXPLAY_CATALOG.filter(c => c.platform === "windows"))}${sq ? "" : shelf("AXOS GAMES", AXPLAY_CATALOG.filter(c => !c.cat && (c.platform === "web" || c.platform === "axos")))}</div></div>`;
       $$("[data-sid]", body).forEach(c => c.onclick = () => { storeSel = c.dataset.sid; render(); });
       const si = $(".ssq", body); si.oninput = () => { sq = si.value.trim().toLowerCase(); const ps = si.selectionStart; render(); const n = $(".ssq", body); n.focus(); n.setSelectionRange(ps, ps); }; si.onkeydown = e => e.stopPropagation();
@@ -5043,7 +5088,7 @@ registerApp("axplay", {
     let bpi = 0, gpRaf = 0, gpPrev = {};
     const renderBP = () => {
       $(".bp", B)?.remove(); const list = AxPlay.get().games.filter(g => AxPlay.installed(g) && !g.uninstalled); bpi = clamp(bpi, 0, Math.max(0, list.length - 1));
-      const el = h(`<div class="bp"><div class="row" style="padding:26px 60px 0;justify-content:space-between"><div style="font-size:26px;font-weight:700">AxPlay <span style="opacity:.5;font-weight:400">Big Picture</span></div><div style="font-size:20px">${fmtTime(new Date())}</div></div><div class="row1">${list.map((g, i) => `<div class="tile${i === bpi ? " on" : ""}" style="background:linear-gradient(160deg,${g.colors?.[0] || "#3b82f6"},${g.colors?.[1] || "#1e1b4b"})" data-i="${i}">${icon(g)}<div class="nm">${esc(g.title)}</div></div>`).join("") || `<div style="opacity:.7">No installed games.</div>`}</div><div class="foot"><span><b>A</b>Play</span><span><b>B</b>Exit</span><span>◀ ▶ Browse</span><span class="grow"></span><span>${list[bpi] ? esc(list[bpi].title) + " · " + fmtPlay(list[bpi].playtime) : ""}</span></div></div>`);
+      const el = h(`<div class="bp"><div class="row" style="padding:26px 60px 0;justify-content:space-between"><div style="font-size:26px;font-weight:700">AxPlay <span style="opacity:.5;font-weight:400">Big Picture</span></div><div style="font-size:20px">${fmtTime(new Date())}</div></div><div class="row1">${list.map((g, i) => `<div class="tile${i === bpi ? " on" : ""}${catalogInfo(g).art ? " hasart" : ""}" style="${gameArtStyle(g)}" data-i="${i}">${icon(g)}<div class="nm">${esc(g.title)}</div></div>`).join("") || `<div style="opacity:.7">No installed games.</div>`}</div><div class="foot"><span><b>A</b>Play</span><span><b>B</b>Exit</span><span>◀ ▶ Browse</span><span class="grow"></span><span>${list[bpi] ? esc(list[bpi].title) + " · " + fmtPlay(list[bpi].playtime) : ""}</span></div></div>`);
       $(".axp", B).appendChild(el); const on = $(".tile.on", el); on && on.scrollIntoView({ inline: "center", block: "nearest" });
       $$(".tile", el).forEach(t => { t.onclick = () => { bpi = +t.dataset.i; renderBP(); }; t.ondblclick = () => AxPlay.play(list[+t.dataset.i]); });
       el._list = list;
@@ -5061,6 +5106,82 @@ registerApp("axplay", {
 </script>
 <script>
 /* =====================================================================
+   Lagoon Merge — an original slide-and-merge puzzle for AxOS.
+   5×5 lagoon, creatures evolve when two of a kind collide, rocks wash in
+   and act as walls (merge beside them to break them), pearls remove tiles.
+   ===================================================================== */
+const LAGOON_TIERS = [["🫧", "Bubble", "#7dd3fc", "#0284c7"], ["🦐", "Shrimp", "#fda4af", "#e11d48"], ["🐟", "Fish", "#93c5fd", "#2563eb"], ["🐠", "Reef fish", "#fde68a", "#d97706"], ["🐡", "Puffer", "#fcd34d", "#b45309"], ["🦀", "Crab", "#fb923c", "#c2410c"], ["🦑", "Squid", "#f9a8d4", "#be185d"], ["🐙", "Octopus", "#c4b5fd", "#7c3aed"], ["🐢", "Turtle", "#86efac", "#15803d"], ["🐬", "Dolphin", "#67e8f9", "#0e7490"], ["🐋", "Whale", "#a5b4fc", "#3730a3"], ["🦎", "Axolotl", "#ffb3cf", "#db2777"]];
+registerApp("lagoon", {
+  name: "Lagoon Merge", icon: "wave", colors: ["#38bdf8", "#0f4c5c"], w: 520, h: 700, minW: 360, minH: 520, category: "Games", keywords: "puzzle merge game lagoon axolotl tiles",
+  desc: "Slide, merge and evolve sea creatures up to the axolotl.",
+  launch(win) {
+    const B = win.body, N = 5; let grid, score, moves, pearls, best = +(localStorage.getItem("axos.lagoonBest") || 0), bestTier = +(localStorage.getItem("axos.lagoonTier") || 0), over, won, targeting = false, nid = 1, tilesEl = new Map(), history = null;
+    B.innerHTML = `<div class="lagoon"><div class="hud"><div class="pill"><span>Score</span><b class="sc">0</b></div><div class="pill"><span>Best</span><b class="bs">0</b></div><div class="pill"><span>Pearls</span><b class="pl">0</b></div><div class="pill"><span>Tide</span><b class="td">8</b></div></div>
+      <div class="board"></div><div class="ladder"></div>
+      <div class="row" style="gap:8px"><button class="btn sm up">${ic("undo")} Undo</button><button class="btn sm pr">🫧 Use pearl</button><button class="btn sm nw">${ic("refresh")} New game</button><button class="btn sm hp">${ic("help")} How to play</button></div></div>`;
+    const board = $(".board", B);
+    const cellPos = (i) => { const pad = 8, gap = 7, inner = board.clientWidth - pad * 2, sz = (inner - gap * (N - 1)) / N; return { x: pad + (i % N) * (sz + gap), y: pad + Math.floor(i / N) * (sz + gap), sz }; };
+    const empties = () => grid.map((c, i) => c ? -1 : i).filter(i => i >= 0);
+    const spawn = (rock = false) => { const e = empties(); if (!e.length) return; const i = e[Math.floor(Math.random() * e.length)]; grid[i] = rock ? { id: nid++, rock: true, fresh: true } : { id: nid++, t: Math.random() < .14 ? 1 : 0, fresh: true }; };
+    const reset = () => { grid = Array(N * N).fill(null); score = 0; moves = 0; pearls = 0; over = false; won = false; history = null; tilesEl.forEach(e => e.remove()); tilesEl.clear(); spawn(); spawn(); render(); };
+    const lines = (dir) => { const L = []; for (let a = 0; a < N; a++) { const l = []; for (let b = 0; b < N; b++) { const r = dir === "up" || dir === "down" ? (dir === "up" ? b : N - 1 - b) : a; const c = dir === "left" || dir === "right" ? (dir === "left" ? b : N - 1 - b) : a; l.push(r * N + c); } L.push(l); } return L; };
+    const neighbors = i => [i - N, i + N, i % N ? i - 1 : -1, i % N < N - 1 ? i + 1 : -1].filter(j => j >= 0 && j < N * N);
+    const canMove = () => { if (empties().length) return true; for (let i = 0; i < N * N; i++) { const c = grid[i]; if (!c || c.rock) continue; if (i % N < N - 1 && grid[i + 1] && !grid[i + 1].rock && grid[i + 1].t === c.t) return true; if (i + N < N * N && grid[i + N] && !grid[i + N].rock && grid[i + N].t === c.t) return true; } return false; };
+    const move = (dir) => {
+      if (over || targeting) return; const snapshot = { grid: grid.map(c => c && { ...c }), score, moves, pearls };
+      let changed = false; const mergedAt = [];
+      grid.forEach(c => c && (delete c.merged, delete c.fresh));
+      for (const line of lines(dir)) {
+        let seg = [];
+        const flush = () => { if (!seg.length) return; const items = seg.map(i => grid[i]).filter(Boolean); const out = []; for (let k = 0; k < items.length; k++) { const it = items[k], nx = items[k + 1]; if (nx && it.t === nx.t && it.t < LAGOON_TIERS.length - 1) { const nt = it.t + 1; out.push({ id: it.id, t: nt, merged: true, gone: nx.id }); score += 2 ** (nt + 1); if (nt >= 5 && pearls < 3) pearls++; if (nt > bestTier) { bestTier = nt; localStorage.setItem("axos.lagoonTier", nt); } if (nt === LAGOON_TIERS.length - 1 && !won) won = true; k++; } else out.push(it); }
+          seg.forEach((cellIdx, k) => { const nv = out[k] || null; if ((grid[cellIdx]?.id || 0) !== (nv?.id || 0) || nv?.merged) changed = true; grid[cellIdx] = nv; if (nv?.merged) mergedAt.push(cellIdx); }); seg = []; };
+        for (const i of line) { if (grid[i]?.rock) flush(); else seg.push(i); }
+        flush();
+      }
+      if (!changed) { const b = board; b.style.transform = "translateX(4px)"; setTimeout(() => b.style.transform = "", 90); return; }
+      history = snapshot;
+      for (const i of mergedAt) for (const j of neighbors(i)) if (grid[j]?.rock) { const el = tilesEl.get(grid[j].id); el && (el.style.transform = "scale(0)"); grid[j] = null; score += 25; }
+      moves++; spawn(); if (moves % 8 === 0) spawn(true);
+      if (score > best) { best = score; localStorage.setItem("axos.lagoonBest", best); }
+      if (!canMove() && !pearls) over = true;
+      Sound.play(mergedAt.length ? "click" : "click"); render();
+      if (won === true) { won = "shown"; Sound.play("ding"); showMsg(`<div style="font-size:64px">🦎</div><h2 style="margin:0">You raised an axolotl!</h2><div style="opacity:.8">Score ${score.toLocaleString()} in ${moves} moves</div><button class="btn primary kc">Keep playing</button>`); }
+      else if (over) showMsg(`<div style="font-size:48px">🌊</div><h2 style="margin:0">The lagoon is full</h2><div style="opacity:.8">Score ${score.toLocaleString()} · best creature ${LAGOON_TIERS[bestTier][0]} ${LAGOON_TIERS[bestTier][1]}</div><button class="btn primary kc">Play again</button>`, reset);
+    };
+    const showMsg = (html, after) => { const m = h(`<div class="msg">${html}</div>`); board.appendChild(m); $(".kc", m).onclick = () => { m.remove(); after && after(); win.el.focus(); }; };
+    const render = () => {
+      $(".sc", B).textContent = score.toLocaleString(); $(".bs", B).textContent = best.toLocaleString(); $(".pl", B).textContent = "🫧".repeat(pearls) || "0"; $(".td", B).textContent = 8 - (moves % 8);
+      $(".up", B).disabled = !history; $(".pr", B).disabled = !pearls; $(".pr", B).classList.toggle("primary", targeting);
+      if (!$(".cellbg", board)) for (let i = 0; i < N * N; i++) board.appendChild(h(`<div class="cellbg" data-c="${i}"></div>`));
+      $$(".cellbg", board).forEach(c => { const p = cellPos(+c.dataset.c); Object.assign(c.style, { left: p.x + "px", top: p.y + "px", width: p.sz + "px", height: p.sz + "px" }); });
+      const alive = new Set();
+      grid.forEach((c, i) => {
+        if (!c) return; alive.add(c.id); let el = tilesEl.get(c.id); const p = cellPos(i);
+        if (!el) { el = h(`<div class="t new"><span class="e"></span><span class="n"></span></div>`); board.appendChild(el); tilesEl.set(c.id, el); el.onclick = () => { if (!targeting) return; const idx = grid.findIndex(x => x && x.id === c.id); if (idx < 0) return; history = { grid: grid.map(x => x && { ...x }), score, moves, pearls }; grid[idx] = null; pearls--; targeting = false; el.remove(); tilesEl.delete(c.id); over = false; Sound.play("trash"); render(); }; }
+        else el.classList.remove("new");
+        if (c.gone) { const g = tilesEl.get(c.gone); if (g) { Object.assign(g.style, { left: p.x + "px", top: p.y + "px", zIndex: 0 }); setTimeout(() => g.remove(), 130); tilesEl.delete(c.gone); } delete c.gone; }
+        el.classList.toggle("rock", !!c.rock); el.classList.toggle("merged", !!c.merged); el.classList.toggle("target", targeting);
+        const T = c.rock ? ["🪨", "Rock"] : LAGOON_TIERS[c.t]; $(".e", el).textContent = T[0]; $(".n", el).textContent = T[1];
+        if (!c.rock) el.style.background = `linear-gradient(160deg,${T[2]},${T[3]})`;
+        Object.assign(el.style, { left: p.x + "px", top: p.y + "px", width: p.sz + "px", height: p.sz + "px", zIndex: 1 });
+      });
+      tilesEl.forEach((el, id) => { if (!alive.has(id)) { el.remove(); tilesEl.delete(id); } });
+      $(".ladder", B).innerHTML = LAGOON_TIERS.map((t, i) => `<span class="${i <= bestTier ? "got" : ""}" title="${t[1]}">${t[0]}</span>`).join("→");
+    };
+    win.el.tabIndex = -1;
+    win.el.addEventListener("keydown", e => { const d = { ArrowUp: "up", ArrowDown: "down", ArrowLeft: "left", ArrowRight: "right", w: "up", s: "down", a: "left", d: "right" }[e.key]; if (d) { e.preventDefault(); move(d); } else if (e.key === "Escape" && targeting) { targeting = false; render(); } else if ((e.ctrlKey || e.metaKey) && e.key === "z") $(".up", B).click(); });
+    let sx = null, sy = null; board.addEventListener("pointerdown", e => { sx = e.clientX; sy = e.clientY; }); board.addEventListener("pointerup", e => { if (sx == null) return; const dx = e.clientX - sx, dy = e.clientY - sy; sx = null; if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return; move(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? "right" : "left") : (dy > 0 ? "down" : "up")); });
+    $(".nw", B).onclick = () => { reset(); win.el.focus(); };
+    $(".up", B).onclick = () => { if (!history) return; grid = history.grid; score = history.score; moves = history.moves; pearls = history.pearls; history = null; over = false; tilesEl.forEach(e => e.remove()); tilesEl.clear(); render(); win.el.focus(); };
+    $(".pr", B).onclick = () => { if (!pearls) return; targeting = !targeting; render(); };
+    $(".hp", B).onclick = () => Dialog.alert("How to play Lagoon Merge", "• Swipe or use the arrow keys to slide every creature.\n• Two identical creatures that bump into each other evolve: 🫧 → 🦐 → 🐟 → 🐠 → 🐡 → 🦀 → 🦑 → 🐙 → 🐢 → 🐬 → 🐋 → 🦎.\n• Every 8 moves the tide washes in a 🪨 rock. Rocks never move and block sliding. Merge right next to a rock to smash it (+25).\n• Evolving a Crab or better earns a pearl (max 3). Use a pearl, then tap any tile or rock to remove it.\n• Raise an axolotl to win, then keep going for a high score.", { icon: "help" });
+    win.on("resize", debounce(() => grid && render(), 60));
+    reset(); setTimeout(() => win.el.focus(), 50);
+  },
+});
+</script>
+<script>
+/* =====================================================================
    Boot
    ===================================================================== */
 window.addEventListener("error", e => { console.error(e.error || e.message); if (!Shell.started || /ResizeObserver|Script error/.test(e.message)) return; const k = String(e.message); if (Shell._lastErr === k) return; Shell._lastErr = k; notify("Something went wrong", k.slice(0, 160), "taskmgr", { silent: true }); });
@@ -5070,6 +5191,7 @@ window.addEventListener("unhandledrejection", e => console.warn("Unhandled:", e.
   if (!localStorage.getItem("axos.installed")) localStorage.setItem("axos.installed", String(Date.now()));
   await bootSequence();
   if (!localStorage.getItem("axos.migr2")) { localStorage.setItem("axos.migr2", "1"); const sp = Settings.get("startPinned"); ["axplay", "gdash"].forEach(a => { if (!sp.includes(a)) sp.splice(4, 0, a); }); Settings.set("startPinned", sp); const tp = Settings.get("pinned"); if (!tp.includes("axplay")) Settings.set("pinned", [...tp, "axplay"]); FS.mkdir(FS.home + "/Games", true); }
+  if (!localStorage.getItem("axos.migr3")) { localStorage.setItem("axos.migr3", "1"); if (Settings.get("accent") === "#4f8cff" && Settings.get("wallpaper") === "aurora") { Settings.set("accent", "#e8679f"); Settings.set("wallpaper", "axolotl"); Settings.set("preset", "default"); } const sp = Settings.get("startPinned"); if (!sp.includes("lagoon")) { sp.splice(6, 0, "lagoon"); Settings.set("startPinned", sp); } const d = AxPlay.get(); if (d.games.length && !d.games.find(g => g.id === "lagoon")) { d.games.push({ ...AXPLAY_CATALOG.find(c => c.id === "lagoon"), added: Date.now(), playtime: 0, compat: "auto", opts: "" }); AxPlay.save(d); } }
   Taskbar.init(); Desktop.init(); Widgets.render(); ScreenSaver.init(); applyTheme();
   if (!Settings.get("setupDone")) { await runOOBE(); Desktop.render(); Taskbar.renderApps(); Sound.play("startup"); }
   else if (Settings.get("lockOnBoot") || Settings.get("password")) await Lock.show();
