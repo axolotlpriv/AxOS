@@ -1,86 +1,63 @@
-# NetTools
+# AxOS
 
-A Wi-Fi network toolkit for Android. Connect to your network and get a full
-picture of what's on it — every device, signal quality, open ports, latency,
-and more. Built with Kotlin + Jetpack Compose and packaged by GitHub Actions.
+A desktop operating system that runs in your browser from **one file**: `index.html`. You don't need a server or a build step. Open the file and it boots.
 
-## Features
+## Running it
 
-1. **Connection dashboard** — SSID, your IP, gateway, subnet, netmask, DNS, AP
-   BSSID, link speed, signal (dBm), and frequency at a glance.
-2. **Network scanner** — parallel sweep of your `/24` subnet + ARP-table read to
-   list every reachable device with IP, MAC, hostname, and vendor.
-3. **Device fingerprinting** — MAC-to-vendor lookup from a bundled OUI table,
-   reverse-DNS hostnames, and gateway/self detection.
-4. **Intruder alerts** — mark devices as trusted; anything new on the network is
-   flagged as **New** so you can spot a device you don't recognize.
-5. **Port scanner** — TCP connect scan of 35 common service ports per device,
-   with friendly service names (SSH, HTTP, RTSP, Plex, printers, cameras…).
-6. **Wi-Fi analyzer** — nearby access points sorted by signal, with band,
-   channel, security, and a per-AP signal bar to find the least crowded channel.
-7. **Internet speed test** — measured download throughput.
-8. **Latency / ping monitor** — live latency graph to any host or your router,
-   with min/avg/max/last stats.
-9. **Wake-on-LAN** — send a magic packet to power on your own machines.
-10. **Router controls with auto-detection** — the app fingerprints your gateway
-    (MAC OUI + HTTP probe of the admin page) to identify the vendor and model —
-    e.g. a TP-Link Archer / TL-… / Deco — then gives you **Block** and
-    **Throttle** buttons per device that jump straight to the right admin screen
-    with model-specific steps and the target MAC ready to paste, all inside an
-    in-app browser.
+- **Locally:** double-click `index.html`, or drag it into Chrome, Edge or Firefox.
+- **Hosted:** put `index.html` on any static host, such as GitHub Pages.
 
-## Blocking & throttling devices
+Your files and settings are saved in the browser (IndexedDB and localStorage), so they're still there after a reload. To move AxOS to another browser, use **Settings → System → Storage → Back up AxOS**.
 
-Tap any device in the scanner and choose **Block** or **Throttle**. NetTools
-detects your router (TP-Link is recognised down to the firmware family) and
-opens its admin page with tailored instructions:
+## What's included
 
-- **Block** → the router's Access Control / MAC filter drops the device from the
-  network (this is the legitimate "kick it off" — enforced by the router you own).
-- **Throttle** → the router's QoS / Bandwidth Control caps that device's speed,
-  which is a real, repeatable way to "lag" a device for testing.
+| Area | Features |
+| --- | --- |
+| **Shell** | Boot screen, first-run setup, lock screen with optional password, desktop icons (drag, rubber-band select, rename, drop files from your computer), right-click menus, taskbar with window previews and pinning, Start menu with search, quick settings, calendar and notification center, Task View, window switcher, Run dialog |
+| **Windows** | Drag, resize from all edges, maximize, minimize, snap to halves or quarters (drag to an edge or press Alt+Arrow), always-on-top, animations |
+| **File Explorer** | Breadcrumb address bar, search, grid and details views, preview pane, cut/copy/paste, drag and drop, Recycle Bin, upload and download, properties |
+| **AxBrowser** | Tabs, bookmarks, history, downloads saved to `~/Downloads`, reader mode, zoom, and three connection modes (see below) |
+| **Terminal** | Bash-like shell with pipes, redirects, `&&`/`||`, `$(...)`, variables, tab completion and 100+ commands. Type `cmd` for a Command Prompt that runs `.bat` files |
+| **AxCompat** | Opens Windows `.exe` (PE32/PE32+) and Linux ELF programs (see below) |
+| **Settings** | Wallpapers, accent color, dark/light/auto theme, night light, brightness, scale, taskbar, accounts, default apps, network/proxy, accessibility, backup and restore, factory reset |
+| **Apps** | Notepad (with Markdown preview), Calculator, Paint, Photos, Media Player, Task Manager, Clock, Weather, AxOS Store |
+| **Store extras** | Serpent, Tic-Tac-Toe, Memory Match, Sticky Notes. Install them from the Store or with `apt install` |
 
-### Deco direct control (experimental)
+## How the browser loads websites
 
-For TP-Link **Deco** mesh (which is app-managed and has no real web panel), the
-Router tab has a **Deco direct control** card: enter your Deco's IP and **admin
-password** and NetTools logs into the Deco's local encrypted API (the same
-RSA+AES handshake the Deco app uses) to list clients and **Block / Unblock /
-Lag** them from inside this app — no Deco app hand-off. Because Deco firmware
-varies, the block/throttle command is best-effort and the app keeps the device's
-raw reply for troubleshooting; connection + client listing are the stable core.
+Most sites refuse to be shown inside an iframe, so AxBrowser has three connection modes:
 
-Because these run through the router you administer, they only affect *your*
-network. NetTools deliberately does **not** ship ARP-spoofing or 802.11 deauth
-"cut" attacks: those forge packets against every device on whatever network
-you're attached to (including ones you don't own), need root / injection-capable
-hardware, and are the reason such apps get pulled from the Play Store.
+- **AxProxy (default):** fetches each page through a public CORS gateway (Jina Reader, AllOrigins, CodeTabs, cors.lol), rewrites links, forms and pop-ups so they stay inside AxBrowser, and renders the page in a sandbox. It works well for most content sites. Logins and heavy web apps may not work.
+- **Direct:** a plain iframe, for sites that allow embedding.
+- **Ultraviolet / Scramjet:** Ultraviolet needs a service worker and a Bare/Wisp backend running on a real server, so it can't be packed into a single HTML file. If you host one, enter its prefix (for example `https://your-host/service/`) under **Settings → Network & Browser**. AxBrowser encodes URLs with UV's XOR codec, or with Base64 or plain URL encoding.
 
-## Building
+## How .exe and Linux programs work
 
-### GitHub Actions (recommended)
-Every push builds a debug APK. Grab it from the **Actions** run's artifacts
-(`NetTools-debug-apk`), or from the rolling `latest-debug` GitHub Release.
+AxCompat reads the real structure of each executable:
 
-### Locally
-Requires JDK 17 and the Android SDK (platform 35, build-tools 34).
+- **Windows:** headers, sections, imported DLLs and functions, version info, and the icon (shown in Explorer and on the taskbar). It also detects installers and .NET programs.
+- **Linux:** the interpreter, shared libraries, glibc version and GUI toolkit.
 
-```bash
-./gradlew assembleDebug
-# output: app/build/outputs/apk/debug/app-debug.apk
-```
+A browser tab can't run native x86 or ARM machine code. Here is what happens when you open each kind of program:
 
-## Installing
+| Program | What happens |
+| --- | --- |
+| Executables with an embedded **AxOS payload** | Run for real. Try `~/Projects/AxDemo.exe` (a valid Win32 PE) and `~/Projects/axhello` (a valid x86-64 ELF) |
+| Windows installers | Run through a simulated setup wizard that installs onto AxCompat's virtual `C:` drive |
+| Windows GUI programs | Open in a simulated Win32-style window showing their real metadata |
+| Windows console programs and Linux CLI programs | Run in the Terminal in simulation mode |
 
-The APK is a **debug** build (unsigned for release). On your phone, enable
-"Install unknown apps" for your browser/file manager, then open the APK. Grant
-Location when asked — Android requires it to scan Wi-Fi and read network info.
+## Keyboard shortcuts
 
-## Notes & limitations
-
-- Everything works on a **non-rooted** phone. Some vendors throttle background
-  Wi-Fi scans to a few per minute (Android's scan-throttling), so AP lists may
-  refresh slowly.
-- `isReachable` (ICMP) is restricted on Android, so the scanner also uses TCP
-  probes; a very quiet device with no open ports and no ARP entry may not show.
-- Reverse-DNS hostnames depend on your router publishing them.
+| Shortcut | Action |
+| --- | --- |
+| Ctrl+Esc or Win | Start menu |
+| Alt+R | Run dialog |
+| Alt+\` | Switch windows |
+| Ctrl+Alt+Tab | Task View |
+| Alt+W | Close window |
+| Alt+Arrows | Snap window |
+| Ctrl+Alt+T / E / B / S / N | Terminal / Explorer / Browser / Settings / Notepad |
+| Ctrl+Alt+L | Lock |
+| Ctrl+Alt+D | Show desktop |
+| Ctrl+Shift+Esc | Task Manager |
