@@ -10,6 +10,6 @@
 <details>
 <summary>give up?</summary>
 
-an axolotl 🦎 (which is also why this thing is called AxOS)
+an axolotl :D (which is also why this thing is called AxOS)
 
 </details>
