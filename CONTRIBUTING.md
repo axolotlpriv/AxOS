@@ -99,11 +99,34 @@ Web games need an internet connection. Each game window has buttons to reload, g
 
 ## How the browser loads websites
 
-Most sites refuse to be shown inside an iframe, so AxBrowser has three connection modes:
+Most sites refuse to be shown inside an iframe, so AxBrowser has three connection modes.
 
-- **AxProxy (default):** fetches each page through a public CORS gateway (Jina Reader, AllOrigins, CodeTabs, cors.lol), rewrites links, forms and pop-ups so they stay inside AxBrowser, and renders the page in a sandbox. It works well for most content sites. Logins and heavy web apps may not work.
-- **Direct:** a plain iframe, for sites that allow embedding.
-- **Ultraviolet / Scramjet:** Ultraviolet needs a service worker and a Bare/Wisp backend running on a real server, so it can't be packed into a single HTML file. If you host one, enter its prefix (for example `https://your-host/service/`) under **Settings → Network & Browser**. AxBrowser encodes URLs with UV's XOR codec, or with Base64 or plain URL encoding.
+### AxProxy (default)
+
+AxProxy fetches each page through a gateway, rewrites it so links, forms and pop-ups stay inside AxBrowser, and renders it in a sandbox.
+
+- **Racing:** it starts the fastest working gateway, adds another one if the first is slow, and uses whichever answers first. It remembers each gateway's speed and failures, so dead ones get skipped.
+- **Caching:** recently visited pages are cached, so going back or forward is instant. **Reload** always fetches a fresh copy.
+- **Compatibility layer:** sandboxed pages normally crash because `localStorage`, cookies, `history.pushState` and IndexedDB all throw security errors there. AxProxy injects replacements:
+  - Storage and cookies are saved for each site.
+  - The address bar follows the page's own URL changes.
+  - `fetch` and `XMLHttpRequest` calls that fail because of cross-site restrictions are retried through AxProxy.
+- **Personal gateway (recommended):** the free public gateways are shared and rate-limited. **Settings → Network & Browser** has a copy-and-paste Cloudflare Worker you can deploy in a minute. With it you get no rate limits, real POST forms, and cookies that make logins work.
+  - Pages can only send cookies to their own site through the gateway.
+  - You can protect your gateway with a key.
+
+### Direct
+
+A plain iframe, for sites that allow embedding.
+
+### Ultraviolet / Scramjet
+
+Ultraviolet and Scramjet need a service worker and a backend server, so they can't be packed into a single HTML file.
+
+- **Saving servers:** **Settings → Network & Browser** saves Ultraviolet and Scramjet servers as presets.
+- **Templates:** there are starting points for self-hosted Ultraviolet-App and Scramjet, on the internet or on your own computer.
+- **Using a server:** pick one there, or from the connection-mode button in the address bar.
+- **Trust:** only use servers you trust, because whoever runs one can see everything you type through it.
 
 ## How .exe and Linux programs work
 

@@ -3311,12 +3311,55 @@ registerApp("explorer", {
    AxBrowser — tabbed web browser with a built-in rewriting proxy (AxProxy),
    direct mode, and support for Ultraviolet / Scramjet style proxy servers.
    ===================================================================== */
+/* Public CORS gateways. kind: raw = body passthrough, json = AllOrigins envelope, jina = rendered HTML (GET only) */
 const GATEWAYS = {
-  jina: { name: "Jina Reader (renders JavaScript)", build: u => `https://r.jina.ai/${u}`, headers: { "X-Return-Format": "html" } },
-  allorigins: { name: "AllOrigins", build: u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`, json: true },
-  codetabs: { name: "CodeTabs", build: u => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(u)}`, raw: true },
-  corslol: { name: "cors.lol", build: u => `https://api.cors.lol/?url=${encodeURIComponent(u)}`, raw: true },
-  alloriginsRaw: { name: "AllOrigins (raw)", build: u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`, raw: true },
+  jina: { name: "Jina Reader", kind: "jina", build: u => `https://r.jina.ai/${u}`, headers: { "X-Return-Format": "html" }, hedge: 1800 },
+  allorigins: { name: "AllOrigins", kind: "json", build: u => `https://api.allorigins.win/get?url=${encodeURIComponent(u)}`, hedge: 2500 },
+  corslol: { name: "cors.lol", kind: "raw", build: u => `https://api.cors.lol/?url=${encodeURIComponent(u)}`, hedge: 1500 },
+  corseu: { name: "cors.eu.org", kind: "raw", build: u => `https://cors.eu.org/${u}`, hedge: 1500 },
+  codetabs: { name: "CodeTabs", kind: "raw", build: u => `https://api.codetabs.com/v1/proxy/?quest=${encodeURIComponent(u)}`, hedge: 2000 },
+  alloriginsRaw: { name: "AllOrigins (raw)", kind: "raw", build: u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`, hedge: 2500 },
+};
+/* Source for a personal Cloudflare Worker gateway (no rate limits, real POST, cookies) */
+const AXPROXY_WORKER = `// AxProxy personal gateway — paste into a Cloudflare Worker and deploy.
+// Optional: set KEY to a secret and enter the same key in AxOS Settings.
+const KEY = "";
+const CORS = { "access-control-allow-origin": "*", "access-control-allow-methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS", "access-control-allow-headers": "*", "access-control-expose-headers": "*", "access-control-max-age": "86400" };
+const DROP = /^(content-security-policy(-report-only)?|x-frame-options|set-cookie|content-encoding|content-length|transfer-encoding|strict-transport-security|cross-origin-.*|permissions-policy)$/i;
+export default {
+  async fetch(req) {
+    if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
+    const target = new URL(req.url).searchParams.get("url");
+    if (!target || !/^https?:\\/\\//i.test(target)) return new Response("AxProxy gateway is running. Request ?url=https://example.com", { headers: CORS });
+    if (KEY && req.headers.get("x-ax-key") !== KEY) return new Response("Forbidden", { status: 403, headers: CORS });
+    const h = new Headers();
+    for (const [k, v] of req.headers) if (k.startsWith("x-ax-h-")) h.set(k.slice(7), v);
+    const ck = req.headers.get("x-ax-cookie"); if (ck) h.set("cookie", ck);
+    if (!h.has("user-agent")) h.set("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36");
+    if (!h.has("accept-language")) h.set("accept-language", req.headers.get("accept-language") || "en-US,en;q=0.9");
+    const init = { method: req.method, headers: h, redirect: "follow" };
+    if (!["GET", "HEAD"].includes(req.method)) init.body = await req.arrayBuffer();
+    let r; try { r = await fetch(target, init); } catch (e) { return new Response("Upstream error: " + e.message, { status: 502, headers: CORS }); }
+    const out = new Headers(CORS);
+    for (const [k, v] of r.headers) if (!DROP.test(k)) out.set(k, v);
+    const sc = r.headers.getSetCookie ? r.headers.getSetCookie() : []; if (sc.length) out.set("x-ax-set-cookie", JSON.stringify(sc));
+    out.set("x-ax-final-url", r.url); out.set("x-ax-status", String(r.status));
+    return new Response(r.body, { status: r.status === 304 ? 200 : r.status, headers: out });
+  },
+};`;
+/* Ultraviolet / Scramjet server templates (you supply the host) */
+const UV_TEMPLATES = [
+  { name: "Ultraviolet-App (self-hosted)", prefix: "https://YOUR-HOST/uv/service/", codec: "xor", note: "Default prefix of titaniumnetwork-dev/Ultraviolet-App" },
+  { name: "Ultraviolet-App on this computer", prefix: "http://localhost:8080/uv/service/", codec: "xor", note: "npm start in Ultraviolet-App, default port 8080" },
+  { name: "Scramjet (self-hosted)", prefix: "https://YOUR-HOST/scramjet/", codec: "plain", note: "Default prefix of MercuryWorkshop/scramjet-app" },
+  { name: "Scramjet on this computer", prefix: "http://localhost:1337/scramjet/", codec: "plain", note: "Scramjet demo app, default port 1337" },
+  { name: "Classic /service/ layout", prefix: "https://YOUR-HOST/service/", codec: "xor", note: "Older Ultraviolet deployments" },
+];
+const UVPresets = {
+  list() { const b = Settings.get("browser"); let l = b.uvPresets; if (!Array.isArray(l)) { l = b.uvPrefix ? [{ id: uid(), name: "My server", prefix: b.uvPrefix, codec: b.uvCodec || "xor" }] : []; Settings.patch("browser", { uvPresets: l, uvActive: l[0]?.id || null }); } return l; },
+  active() { const l = this.list(); return l.find(p => p.id === Settings.get("browser").uvActive) || l[0] || null; },
+  save(l, active) { Settings.patch("browser", { uvPresets: l, uvActive: active !== undefined ? active : Settings.get("browser").uvActive }); },
+  url(target, preset = this.active()) { if (!preset) return null; return preset.prefix + (UV_CODECS[preset.codec] || UV_CODECS.xor)(target); },
 };
 const SEARCH_ENGINES = { ddg: ["DuckDuckGo", "https://html.duckduckgo.com/html/?q="], bing: ["Bing", "https://www.bing.com/search?q="], google: ["Google", "https://www.google.com/search?q="], brave: ["Brave Search", "https://search.brave.com/search?q="], wiki: ["Wikipedia", "https://en.wikipedia.org/w/index.php?search="] };
 const UV_CODECS = {
@@ -3326,42 +3369,176 @@ const UV_CODECS = {
   none: s => s,
 };
 const AxProxy = {
-  last: localStorage.getItem("axos.gw") || null,
-  order(raw = false) {
-    const B = Settings.get("browser"); if (B.gateway === "custom" && B.customGateway) return [{ id: "custom", name: "Custom gateway", build: u => B.customGateway.includes("{url}") ? B.customGateway.replace("{url}", encodeURIComponent(u)) : B.customGateway + encodeURIComponent(u), raw: true }];
-    let ids = Object.keys(GATEWAYS); if (B.gateway && B.gateway !== "auto" && GATEWAYS[B.gateway]) ids = [B.gateway, ...ids.filter(i => i !== B.gateway)];
-    else if (this.last && GATEWAYS[this.last]) ids = [this.last, ...ids.filter(i => i !== this.last)];
-    if (raw) ids = ids.filter(i => GATEWAYS[i].raw);
-    return ids.map(id => ({ id, ...GATEWAYS[id] }));
+  cache: new Map(),
+  health: (() => { try { return JSON.parse(localStorage.getItem("axos.gwHealth")) || {}; } catch (e) { return {}; } })(),
+  jar: (() => { try { return JSON.parse(localStorage.getItem("axos.pxCookies")) || {}; } catch (e) { return {}; } })(),
+  worker() { const b = Settings.get("browser"); return b.workerUrl ? { id: "worker", name: "My AxProxy gateway", kind: "worker", base: b.workerUrl.replace(/\/?(\?.*)?$/, "/"), key: b.workerKey || "", hedge: 5000 } : null; },
+  order({ binary = false, method = "GET", data = false } = {}) {
+    const B = Settings.get("browser"); const out = []; const w = this.worker(); if (w) out.push(w);
+    if (B.gateway === "custom" && B.customGateway) out.push({ id: "custom", name: "Custom gateway", kind: "raw", hedge: 3000, build: u => B.customGateway.includes("{url}") ? B.customGateway.replace("{url}", encodeURIComponent(u)) : B.customGateway + encodeURIComponent(u) });
+    if (method !== "GET" && method !== "HEAD") return out.length ? out : this.order({ binary, data });
+    let ids = Object.keys(GATEWAYS).filter(id => !(binary || data) || GATEWAYS[id].kind !== "jina");
+    const now = Date.now(); const score = id => { const hh = this.health[id] || {}; const down = hh.streak >= 2 && now - hh.last < 120000; return (down ? 1e6 : 0) + (hh.ms || (GATEWAYS[id].kind === "jina" ? 900 : 2500)) * (1 + (hh.streak || 0)); };
+    if (B.gateway && B.gateway !== "auto" && GATEWAYS[B.gateway]) ids = [B.gateway, ...ids.filter(i => i !== B.gateway)]; else ids.sort((x, y) => score(x) - score(y));
+    return out.concat(ids.map(id => ({ id, ...GATEWAYS[id] })));
   },
-  async fetch(url, { binary = false, signal, onTry } = {}) {
-    let lastErr = new Error("No proxy gateway available");
-    for (const g of this.order(binary)) {
-      if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-      onTry && onTry(g);
-      const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), binary ? 60000 : 20000); const ab = () => ctl.abort(); signal?.addEventListener("abort", ab);
-      try {
-        const res = await fetch(g.build(url), { signal: ctl.signal, headers: g.headers || {} });
-        if (g.json) {
-          const j = await res.json(); if (j.contents == null) throw new Error("Empty response");
-          const code = j.status?.http_code; if (code && code >= 500) throw new Error("Upstream HTTP " + code);
-          this.ok(g.id); return { text: j.contents, type: j.status?.content_type || "", finalUrl: j.status?.url || url, status: code || 200, via: g.name };
-        }
-        if (res.status === 429 || res.status === 401 || res.status === 403 && g.id !== "custom" || res.status >= 500) throw new Error(`${g.name}: HTTP ${res.status}`);
-        const type = res.headers.get("content-type") || "";
-        if (binary) { const buf = await res.arrayBuffer(); this.ok(g.id); return { buffer: buf, type, finalUrl: url, status: res.status, via: g.name }; }
-        const text = await res.text(); if (!text && res.status !== 204) throw new Error("Empty response");
-        this.ok(g.id); return { text, type, finalUrl: url, status: res.status, via: g.name };
-      } catch (e) { lastErr = e.name === "AbortError" && !signal?.aborted ? new Error(`${g.name} timed out`) : e; if (signal?.aborted) throw e; }
-      finally { clearTimeout(t); signal?.removeEventListener("abort", ab); }
+  note(id, ok, ms) { const hh = this.health[id] || {}; if (ok) { hh.ms = hh.ms ? Math.round(hh.ms * .7 + ms * .3) : Math.round(ms); hh.streak = 0; } else { hh.streak = (hh.streak || 0) + 1; hh.last = Date.now(); } this.health[id] = hh; try { localStorage.setItem("axos.gwHealth", JSON.stringify(this.health)); } catch (e) { } },
+  /* cookie jar shared by proxied pages (document.cookie shim) and the personal gateway */
+  cookies(host) { const j = this.jar[host] || {}; return Object.entries(j).map(([k, v]) => `${k}=${v}`).join("; "); },
+  setCookie(host, str) {
+    const [pair, ...attrs] = String(str).split(";"); const i = pair.indexOf("="); if (i < 1) return; const k = pair.slice(0, i).trim(), v = pair.slice(i + 1).trim();
+    const dead = attrs.some(a => /^\s*max-age\s*=\s*(0|-)/i.test(a) || (/^\s*expires\s*=/i.test(a) && new Date(a.split("=")[1]) < new Date()));
+    const j = this.jar[host] ||= {}; if (dead) delete j[k]; else j[k] = v; clearTimeout(this._jt); this._jt = setTimeout(() => { try { localStorage.setItem("axos.pxCookies", JSON.stringify(this.jar)); } catch (e) { } }, 300);
+  },
+  hostOf(u) { try { return new URL(u).hostname; } catch (e) { return ""; } },
+  /* one attempt through one gateway → normalized result */
+  async one(g, url, { binary, signal, method = "GET", headers = {}, body, cookies = true }) {
+    if (g.kind === "worker") {
+      const hd = {}; const ck = cookies ? this.cookies(this.hostOf(url)) : ""; if (ck) hd["x-ax-cookie"] = ck; if (g.key) hd["x-ax-key"] = g.key;
+      for (const [k, v] of Object.entries(headers)) if (!/^(cookie|host|origin|referer|content-length)$/i.test(k)) hd["x-ax-h-" + k.toLowerCase()] = v;
+      const res = await fetch(g.base + "?url=" + encodeURIComponent(url), { method, headers: hd, body: method === "GET" || method === "HEAD" ? undefined : body, signal });
+      if (res.status === 403 && !res.headers.get("x-ax-status")) throw new Error("Gateway key rejected");
+      const fin = res.headers.get("x-ax-final-url") || url; const sc = cookies ? res.headers.get("x-ax-set-cookie") : null; if (sc) { try { JSON.parse(sc).forEach(c => this.setCookie(this.hostOf(fin), c)); } catch (e) { } }
+      const st = +(res.headers.get("x-ax-status") || res.status); const type = res.headers.get("content-type") || "";
+      const hdrs = {}; res.headers.forEach((v, k) => { if (!/^(access-control|x-ax-)/.test(k)) hdrs[k] = v; });
+      return binary ? { buffer: await res.arrayBuffer(), type, finalUrl: fin, status: st, headers: hdrs, via: g.name } : { text: await res.text(), type, finalUrl: fin, status: st, headers: hdrs, via: g.name };
     }
-    throw lastErr;
+    const res = await fetch(g.build(url), { signal, headers: g.headers || {} });
+    if (g.kind === "json") {
+      const j = await res.json(); if (j.contents == null) throw new Error("Empty response"); const code = j.status?.http_code; if (code && code >= 500) throw new Error("Upstream HTTP " + code);
+      const type = j.status?.content_type || ""; let text = j.contents;
+      if (binary) { let buf; if (/^data:[^,]*;base64,/.test(text)) { const bin = atob(text.split(",")[1]); buf = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i); buf = buf.buffer; } else buf = new TextEncoder().encode(text).buffer; return { buffer: buf, type, finalUrl: j.status?.url || url, status: code || 200, headers: { "content-type": type }, via: g.name }; }
+      return { text, type, finalUrl: j.status?.url || url, status: code || 200, headers: { "content-type": type }, via: g.name };
+    }
+    if ([401, 403, 407, 429].includes(res.status) || res.status >= 500) throw new Error(`${g.name}: HTTP ${res.status}`);
+    const type = res.headers.get("content-type") || "";
+    if (binary) return { buffer: await res.arrayBuffer(), type, finalUrl: url, status: res.status, headers: { "content-type": type }, via: g.name };
+    const text = await res.text(); if (!text && res.status !== 204) throw new Error("Empty response"); if (g.kind === "jina" && /^\s*\{"(code|name)":/.test(text)) throw new Error("Jina: " + text.slice(0, 120));
+    return { text, type: g.kind === "jina" ? "text/html" : type, finalUrl: url, status: res.status, headers: { "content-type": type }, via: g.name };
   },
-  ok(id) { this.last = id; try { localStorage.setItem("axos.gw", id); } catch (e) { } },
+  /* Hedged race: start the healthiest gateway, add another whenever one is slow or fails */
+  fetch(url, { binary = false, signal, onTry, method = "GET", headers = {}, body, fresh = false, data = false, cookies = true } = {}) {
+    const key = (binary ? "b:" : data ? "d:" : "t:") + url; const get = method === "GET";
+    if (get && !fresh) { const c = this.cache.get(key); if (c && Date.now() - c.t < 5 * 60000) return Promise.resolve({ ...c.r, cached: true }); }
+    const list = this.order({ binary, method, data }); if (!list.length) return Promise.reject(new Error("No proxy gateway available"));
+    return new Promise((resolve, reject) => {
+      let idx = 0, active = 0, done = false; const errs = [], timers = [], ctls = [];
+      const finish = (ok, v) => { if (done) return; done = true; timers.forEach(clearTimeout); ctls.forEach(c => c.abort()); ok ? resolve(v) : reject(v); };
+      const next = () => {
+        if (done || active >= 3) return;
+        if (idx >= list.length) { if (!active) finish(false, errs.length ? new Error(errs.map(e => e.message).slice(-3).join(" · ")) : new Error("All gateways failed")); return; }
+        const g = list[idx++]; active++; onTry && onTry(g); const ctl = new AbortController(); ctls.push(ctl); const t0 = performance.now();
+        const to = setTimeout(() => ctl.abort(), binary ? 90000 : 20000);
+        this.one(g, url, { binary, signal: ctl.signal, method, headers, body, cookies }).then(r => {
+          clearTimeout(to); if (done) return; this.note(g.id, true, performance.now() - t0);
+          if (get) { this.cache.set(key, { t: Date.now(), r }); if (this.cache.size > 40) this.cache.delete(this.cache.keys().next().value); }
+          finish(true, r);
+        }).catch(e => { clearTimeout(to); active--; if (done) return; if (!ctl.signal.aborted || !signal?.aborted) this.note(g.id, false); errs.push(e.name === "AbortError" ? new Error(`${g.name} timed out`) : e); next(); });
+        timers.push(setTimeout(next, g.hedge ?? 1500));
+      };
+      signal?.addEventListener("abort", () => finish(false, new DOMException("Aborted", "AbortError")));
+      next();
+    });
+  },
+  /* fetch() / XHR calls made by scripts inside proxied pages */
+  async request({ url, method = "GET", headers = {}, body, sameSite = false }) {
+    const r = await this.fetch(url, { binary: true, data: true, method, headers, body, fresh: method !== "GET", cookies: sameSite });
+    return { buf: r.buffer.slice(0), status: r.status || 200, headers: r.headers || { "content-type": r.type || "" }, url: r.finalUrl || url };
+  },
   async reader(url, signal) {
     const res = await fetch("https://r.jina.ai/" + url, { signal }); if (!res.ok) throw new Error("Reader HTTP " + res.status); return res.text();
   },
 };
+/* Runs inside each proxied page: replaces the browser APIs that throw in a sandboxed
+   frame (storage, cookies, history URLs) and routes blocked fetch/XHR through AxProxy. */
+function axPageShim(ID, HOST, PAGE, STORE, JAR) {
+  var P = parent;
+  function abs(u) { try { return new URL(u, document.baseURI).href; } catch (e) { return String(u); } }
+  function mkStore(init, persist) {
+    var m = new Map(Object.entries(init || {}));
+    var save = function () { if (persist) P.postMessage({ axb: ID, type: "store", data: Object.fromEntries(m) }, "*"); };
+    var api = { getItem: function (k) { k = String(k); return m.has(k) ? m.get(k) : null; }, setItem: function (k, v) { m.set(String(k), String(v)); save(); }, removeItem: function (k) { m.delete(String(k)); save(); }, clear: function () { m.clear(); save(); }, key: function (i) { return Array.from(m.keys())[i] || null; } };
+    Object.defineProperty(api, "length", { get: function () { return m.size; } });
+    return new Proxy(api, {
+      get: function (o, k) { if (k in o) return o[k]; return typeof k === "string" && m.has(k) ? m.get(k) : undefined; },
+      set: function (o, k, v) { if (k in o) { o[k] = v; return true; } o.setItem(k, v); return true; },
+      deleteProperty: function (o, k) { o.removeItem(k); return true; },
+      has: function (o, k) { return k in o || m.has(k); },
+      ownKeys: function () { return Array.from(m.keys()); },
+      getOwnPropertyDescriptor: function (o, k) { return m.has(k) ? { value: m.get(k), enumerable: true, configurable: true, writable: true } : undefined; },
+    });
+  }
+  try { Object.defineProperty(window, "localStorage", { value: mkStore(STORE, true), configurable: true }); } catch (e) { }
+  try { Object.defineProperty(window, "sessionStorage", { value: mkStore({}, false), configurable: true }); } catch (e) { }
+  try { Object.defineProperty(window, "indexedDB", { value: undefined, configurable: true }); } catch (e) { }
+  var jar = JAR || {};
+  try {
+    Object.defineProperty(document, "cookie", {
+      configurable: true,
+      get: function () { return Object.keys(jar).map(function (k) { return k + "=" + jar[k]; }).join("; "); },
+      set: function (v) { var pair = String(v).split(";")[0], i = pair.indexOf("="); if (i < 1) return; var k = pair.slice(0, i).trim(); if (/max-age\s*=\s*(0|-)/i.test(v)) delete jar[k]; else jar[k] = pair.slice(i + 1).trim(); P.postMessage({ axb: ID, type: "cookie", str: String(v) }, "*"); },
+    });
+  } catch (e) { }
+  /* history.pushState with a URL throws in about:srcdoc; keep state, report the URL to the address bar */
+  var vurl = PAGE;
+  function setUrl(u) { if (u == null) return; try { vurl = new URL(u, vurl).href; } catch (e) { return; } P.postMessage({ axb: ID, type: "url", url: vurl }, "*"); }
+  var hp = history.pushState, hr = history.replaceState;
+  history.pushState = function (st, t, u) { try { hp.call(history, st, t); } catch (e) { } setUrl(u); };
+  history.replaceState = function (st, t, u) { try { hr.call(history, st, t); } catch (e) { } setUrl(u); };
+  /* fetch / XHR: try the network directly (works for CORS-enabled APIs), fall back to AxProxy */
+  var rid = 0, pend = {}, viaProxyHosts = {};
+  addEventListener("message", function (e) { var d = e.data; if (e.source !== P || !d || d.axr == null) return; var p = pend[d.axr]; if (!p) return; delete pend[d.axr]; if (d.err) p[1](new TypeError("AxProxy: " + d.err)); else p[0](d); });
+  function rpc(q) { return new Promise(function (res, rej) { var id = ++rid; pend[id] = [res, rej]; q.axb = ID; q.type = "fetch"; q.id = id; P.postMessage(q, "*"); }); }
+  var nativeFetch = window.fetch && window.fetch.bind(window);
+  window.fetch = function (input, init) {
+    init = init || {}; var isReq = typeof Request !== "undefined" && input instanceof Request;
+    var url = abs(isReq ? input.url : input); var method = String(init.method || (isReq ? input.method : "GET")).toUpperCase();
+    if (!/^https?:/i.test(url)) return nativeFetch(input, init);
+    var host = ""; try { host = new URL(url).host; } catch (e) { }
+    var viaProxy = function () {
+      return Promise.resolve(init.body != null ? init.body : (isReq && method !== "GET" && method !== "HEAD" ? input.clone().arrayBuffer() : undefined)).then(function (b) {
+        if (typeof FormData !== "undefined" && b instanceof FormData) return new URLSearchParams(b).toString();
+        if (b instanceof URLSearchParams) return b.toString();
+        if (b && typeof b !== "string" && !(b instanceof ArrayBuffer)) return new Response(b).arrayBuffer();
+        return b;
+      }).then(function (b) { var hd = {}; try { new Headers(init.headers || (isReq ? input.headers : {})).forEach(function (v, k) { hd[k] = v; }); } catch (e) { } return rpc({ url: url, method: method, headers: hd, body: b }); }).then(function (r) {
+        var st = r.status >= 200 && r.status <= 599 ? r.status : 200;
+        var resp = new Response([101, 204, 205, 304].indexOf(st) >= 0 ? null : r.buf, { status: st, headers: r.headers || {} });
+        try { Object.defineProperty(resp, "url", { value: r.url || url }); } catch (e) { } return resp;
+      });
+    };
+    if (viaProxyHosts[host] || !nativeFetch) return viaProxy();
+    return nativeFetch(input, init).catch(function (e) { if (init.signal && init.signal.aborted) throw e; viaProxyHosts[host] = 1; return viaProxy(); });
+  };
+  class AXHR extends EventTarget {
+    constructor() { super(); this.readyState = 0; this.status = 0; this.statusText = ""; this.response = null; this.responseText = ""; this.responseType = ""; this.responseURL = ""; this.timeout = 0; this.withCredentials = false; this.upload = new EventTarget(); this._h = {}; }
+    open(m, u) { this._m = String(m || "GET").toUpperCase(); this._u = u; this.readyState = 1; this._fire("readystatechange"); }
+    setRequestHeader(k, v) { this._h[k] = v; }
+    getResponseHeader(k) { return this._rh ? this._rh.get(k) : null; }
+    getAllResponseHeaders() { var s = ""; if (this._rh) this._rh.forEach(function (v, k) { s += k + ": " + v + "\r\n"; }); return s; }
+    overrideMimeType() { }
+    abort() { this._aborted = true; this.readyState = 0; this._fire("abort"); }
+    send(body) {
+      var x = this; x._fire("loadstart");
+      window.fetch(x._u, { method: x._m, headers: x._h, body: x._m === "GET" || x._m === "HEAD" ? undefined : body }).then(function (r) {
+        if (x._aborted) return; x.status = r.status; x.statusText = r.statusText || ""; x._rh = r.headers; x.responseURL = r.url || abs(x._u); x.readyState = 2; x._fire("readystatechange");
+        var rt = x.responseType; return (rt === "arraybuffer" ? r.arrayBuffer() : rt === "blob" ? r.blob() : r.text()).then(function (v) {
+          if (rt === "" || rt === "text") { x.responseText = v; x.response = v; } else if (rt === "json") { x.responseText = v; try { x.response = JSON.parse(v); } catch (e) { x.response = null; } } else x.response = v;
+          x.readyState = 4; x._fire("readystatechange"); x._fire("load"); x._fire("loadend");
+        });
+      }).catch(function () { if (x._aborted) return; x.readyState = 4; x._fire("readystatechange"); x._fire("error"); x._fire("loadend"); });
+    }
+    _fire(n) { var e = new Event(n); this.dispatchEvent(e); var h = this["on" + n]; if (typeof h === "function") h.call(this, e); }
+  }
+  ["UNSENT", "OPENED", "HEADERS_RECEIVED", "LOADING", "DONE"].forEach(function (k, i) { AXHR[k] = i; AXHR.prototype[k] = i; });
+  window.XMLHttpRequest = AXHR;
+  try { navigator.serviceWorker && Object.defineProperty(navigator, "serviceWorker", { value: undefined, configurable: true }); } catch (e) { }
+}
+const PxStore = {
+  get(host) { try { return JSON.parse(localStorage.getItem("axos.pxStore." + host)) || {}; } catch (e) { return {}; } },
+  set(host, data) { try { const s = JSON.stringify(data); if (s.length < 600000) localStorage.setItem("axos.pxStore." + host, s); } catch (e) { } },
+};
+function shimTag(t, pageUrl) { const host = AxProxy.hostOf(pageUrl); return `<script>(${axPageShim.toString()})(${JSON.stringify(t.id)},${JSON.stringify(host)},${JSON.stringify(pageUrl)},${JSON.stringify(PxStore.get(host))},${JSON.stringify(AxProxy.jar[host] || {})});<\/script>`; }
 const BrowserData = {
   get(k, d) { try { return JSON.parse(localStorage.getItem("axos." + k)) ?? d; } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem("axos." + k, JSON.stringify(v)); } catch (e) { } },
@@ -3437,7 +3614,7 @@ registerApp("browser", {
       if (/^localhost(:\d+)?(\/|$)/.test(s) || /^[\w-]+(\.[\w-]+)+(:\d+)?(\/\S*)?$/.test(s) && !/\s/.test(s)) return "https://" + s;
       return SEARCH_ENGINES[BS().search]?.[1] + encodeURIComponent(s);
     };
-    const nav = (t, input, { push = true, mode } = {}) => {
+    const nav = (t, input, { push = true, mode, post = null, fresh = false } = {}) => {
       let url = decodeRedirect(toURL(input)); if (mode) t.mode = mode;
       if (push) { t.hist = t.hist.slice(0, t.idx + 1); if (t.hist[t.idx] !== url) { t.hist.push(url); t.idx++; } }
       t.url = url; t.ctl?.abort(); t.ctl = new AbortController(); t.html = null; t.el.innerHTML = ""; t.frame = null; t.el.style.zoom = t.zoom;
@@ -3448,7 +3625,7 @@ registerApp("browser", {
       const m = modeOf(t);
       if (m === "direct") return direct(t, url);
       if (m === "uv") return uv(t, url);
-      return proxied(t, url);
+      return proxied(t, url, { post, fresh });
     };
     const setLoading = (t, on) => { t.loading = on; renderTabs(); if (t === cur) syncBar(); let bar = $(".br-load", t.el); if (on && !bar) t.el.appendChild(h(`<div class="br-load"><i></i></div>`)); if (!on && bar) bar.remove(); };
     const mkFrame = (t, sandbox) => { const f = document.createElement("iframe"); if (sandbox != null) f.setAttribute("sandbox", sandbox); f.setAttribute("allow", "fullscreen; autoplay; clipboard-write"); f.setAttribute("referrerpolicy", "no-referrer"); t.el.appendChild(f); t.frame = f; return f; };
@@ -3460,15 +3637,16 @@ registerApp("browser", {
       BrowserData.addHistory(url, new URL(url).hostname);
     };
     const uv = (t, url) => {
-      const pre = BS().uvPrefix; if (!pre) return errorPage(t, url, new Error("No Ultraviolet server is configured."), { uv: true });
-      setLoading(t, true); const f = mkFrame(t, "allow-scripts allow-forms allow-same-origin allow-popups allow-modals allow-downloads"); f.src = pre + (UV_CODECS[BS().uvCodec] || UV_CODECS.xor)(url);
+      const pr = UVPresets.active(); if (!pr || /YOUR-HOST/.test(pr.prefix)) return errorPage(t, url, new Error(pr ? `Preset "${pr.name}" still has YOUR-HOST in its address. Edit it in Settings.` : "No Ultraviolet server is configured."), { uv: true });
+      setLoading(t, true); const f = mkFrame(t, "allow-scripts allow-forms allow-same-origin allow-popups allow-modals allow-downloads"); f.src = UVPresets.url(url, pr); t.via = pr.name;
       f.onload = () => { setLoading(t, false); t.title = new URL(url).hostname; renderTabs(); }; BrowserData.addHistory(url, new URL(url).hostname);
     };
-    const proxied = async (t, url) => {
+    const proxied = async (t, url, { post = null, fresh = false } = {}) => {
       setLoading(t, true); const ctl = t.ctl;
+      let method = "GET", body; if (post != null) { if (AxProxy.worker()) { method = "POST"; body = post; } else { url += (url.includes("?") ? "&" : "?") + post; t.url = url; } }
       const st = h(`<div class="br-err" style="background:var(--surface)"><div class="in" style="text-align:center"><div class="spinner" style="margin:0 auto 16px"></div><div class="muted gw">Connecting through AxProxy…</div></div></div>`); t.el.appendChild(st);
       try {
-        const r = await AxProxy.fetch(url, { signal: ctl.signal, onTry: g => { const e = $(".gw", st); if (e) e.textContent = `Connecting through AxProxy · ${g.name}…`; } });
+        const tried = []; const r = await AxProxy.fetch(url, { signal: ctl.signal, fresh: fresh || method !== "GET", method, body, headers: method === "POST" ? { "content-type": "application/x-www-form-urlencoded" } : {}, onTry: g => { tried.push(g.name); const e = $(".gw", st); if (e) e.textContent = `Connecting through ${tried.join(" + ")}…`; } });
         if (ctl.signal.aborted) return; st.remove();
         const type = (r.type || "").toLowerCase(); const text = r.text;
         t.finalUrl = r.finalUrl || url; t.via = r.via;
@@ -3480,11 +3658,11 @@ registerApp("browser", {
         if (ctl.signal.aborted) return; st.remove(); errorPage(t, url, e);
       }
     };
-    const injector = (t, pageUrl) => `<script>(function(){var P=parent,ID=${JSON.stringify(t.id)},PAGE=${JSON.stringify(pageUrl)};function abs(u){try{return new URL(u,document.baseURI).href}catch(e){return null}}
+    const injector = (t, pageUrl) => shimTag(t, pageUrl) + `<script>(function(){var P=parent,ID=${JSON.stringify(t.id)},PAGE=${JSON.stringify(pageUrl)};function abs(u){try{return new URL(u,document.baseURI).href}catch(e){return null}}
 function go(u,nt){if(!u)return;P.postMessage({axb:ID,type:"nav",url:u,newTab:!!nt},"*")}
 document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[href]");if(!a||e.defaultPrevented&&!a.getAttribute("href"))return;var h=a.getAttribute("href");if(!h||/^javascript:/i.test(h))return;if(h.charAt(0)==="#"){e.preventDefault();var id=decodeURIComponent(h.slice(1)),el=document.getElementById(id)||document.getElementsByName(id)[0];if(el)el.scrollIntoView({behavior:"smooth"});return}var u=abs(h);if(!u)return;if(/^(mailto|tel):/i.test(u))return;var p=u.split("#");if(p[0]===PAGE.split("#")[0]&&p[1]){e.preventDefault();var el2=document.getElementById(decodeURIComponent(p[1]));if(el2)el2.scrollIntoView({behavior:"smooth"});return}e.preventDefault();go(u,e.ctrlKey||e.metaKey||e.shiftKey||a.target==="_blank")},true);
 document.addEventListener("auxclick",function(e){if(e.button!==1)return;var a=e.target.closest&&e.target.closest("a[href]");if(a){e.preventDefault();go(abs(a.getAttribute("href")),true)}},true);
-document.addEventListener("submit",function(e){var f=e.target;e.preventDefault();var act=f.getAttribute("action");var base=act?abs(act):PAGE;var fd=new FormData(f);if(e.submitter&&e.submitter.name)fd.append(e.submitter.name,e.submitter.value||"");var qs=new URLSearchParams(fd).toString();var u=new URL(base);var m=(f.getAttribute("method")||"get").toLowerCase();if(m==="get"){u.search=qs}else{u.search=u.search?(u.search+"&"+qs):qs}go(u.href,f.target==="_blank")},true);
+document.addEventListener("submit",function(e){var f=e.target;e.preventDefault();var act=f.getAttribute("action");var base=act?abs(act):PAGE;var fd=new FormData(f);if(e.submitter&&e.submitter.name)fd.append(e.submitter.name,e.submitter.value||"");var qs=new URLSearchParams(fd).toString();var u=new URL(base);var m=(f.getAttribute("method")||"get").toLowerCase();if(m==="get"){u.search=qs;go(u.href,f.target==="_blank")}else{P.postMessage({axb:ID,type:"nav",url:u.href,post:qs,newTab:f.target==="_blank"},"*")}},true);
 window.open=function(u){go(abs(u||""),true);return null};
 var lh="";document.addEventListener("mouseover",function(e){var a=e.target.closest&&e.target.closest("a[href]");var u=a?abs(a.getAttribute("href")):"";if(u!==lh){lh=u;P.postMessage({axb:ID,type:"hover",url:u},"*")}});
 function meta(){var ic=document.querySelector("link[rel~=icon]");P.postMessage({axb:ID,type:"meta",title:document.title,icon:ic?abs(ic.getAttribute("href")):""},"*")}
@@ -3504,7 +3682,7 @@ try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch
           const head = doc.head || doc.documentElement.insertBefore(doc.createElement("head"), doc.body);
           const bEl = doc.createElement("base"); bEl.href = baseHref; head.prepend(bEl);
           if (!doc.querySelector("meta[charset]")) { const mc = doc.createElement("meta"); mc.setAttribute("charset", "utf-8"); head.prepend(mc); }
-          const tmp = doc.createElement("template"); tmp.innerHTML = injector(t, base); head.insertBefore(tmp.content.firstChild, bEl.nextSibling);
+          const tmp = doc.createElement("template"); tmp.innerHTML = injector(t, base); [...tmp.content.childNodes].reverse().forEach(n => head.insertBefore(n, bEl.nextSibling));
           t.title = doc.title || new URL(base).hostname; renderTabs();
           out = "<!DOCTYPE html>" + doc.documentElement.outerHTML;
         } catch (e) { console.warn(e); }
@@ -3589,7 +3767,17 @@ try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch
     /* ---- messages from pages ---- */
     const onMsg = e => {
       const d = e.data; if (!d || !d.axb) return; const t = tabs.find(x => x.id === d.axb); if (!t || !t.frame || e.source !== t.frame.contentWindow) return;
-      if (d.type === "nav" && d.url) { const u = decodeRedirect(d.url); if (d.newTab) newTab(u, false); else nav(t, u); }
+      const pageHost = AxProxy.hostOf(t.finalUrl || t.url);
+      if (d.type === "nav" && d.url) { const u = decodeRedirect(d.url); if (d.newTab) newTab(u, false); else nav(t, u, { post: d.post ?? null }); }
+      else if (d.type === "fetch") {
+        const src = e.source; const tgtHost = AxProxy.hostOf(d.url);
+        AxProxy.request({ url: d.url, method: d.method, headers: d.headers || {}, body: d.body, sameSite: tgtHost === pageHost || tgtHost.endsWith("." + pageHost) || pageHost.endsWith("." + tgtHost) })
+          .then(r => src.postMessage({ axr: d.id, status: r.status, headers: r.headers, buf: r.buf, url: r.url }, "*", [r.buf]))
+          .catch(err => src.postMessage({ axr: d.id, err: err.message || String(err) }, "*"));
+      }
+      else if (d.type === "url" && d.url) { try { const u = new URL(d.url); if (/^https?:$/.test(u.protocol)) { t.url = u.href; t.hist[t.idx] = u.href; if (t === cur) syncBar(); BrowserData.addHistory(t.url, t.title); } } catch (er) { } }
+      else if (d.type === "cookie" && pageHost) AxProxy.setCookie(pageHost, d.str);
+      else if (d.type === "store" && pageHost && d.data && typeof d.data === "object") PxStore.set(pageHost, d.data);
       else if (d.type === "meta") { if (d.title) t.title = String(d.title).slice(0, 200); if (d.icon && /^https?:/.test(d.icon)) t.fav = d.icon; renderTabs(); BrowserData.addHistory(t.url, t.title); }
       else if (d.type === "hover" && t === cur) { hov.textContent = d.url ? decodeRedirect(d.url) : ""; hov.classList.toggle("hidden", !d.url); }
       else if (d.type === "key") keys({ key: d.key, ctrlKey: d.ctrl, metaKey: false, altKey: d.alt, shiftKey: d.shift, preventDefault() { } });
@@ -3598,7 +3786,7 @@ try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch
     /* ---- toolbar ---- */
     $(".bk", B).onclick = () => { const t = cur; if (t.idx > 0) { t.idx--; nav(t, t.hist[t.idx], { push: false }); } };
     $(".fw", B).onclick = () => { const t = cur; if (t.idx < t.hist.length - 1) { t.idx++; nav(t, t.hist[t.idx], { push: false }); } };
-    $(".rl", B).onclick = () => { const t = cur; if (t.loading) { t.ctl?.abort(); setLoading(t, false); } else nav(t, t.url, { push: false }); };
+    $(".rl", B).onclick = () => { const t = cur; if (t.loading) { t.ctl?.abort(); setLoading(t, false); } else nav(t, t.url, { push: false, fresh: true }); };
     $(".hm", B).onclick = () => nav(cur, BS().home || "axos://newtab");
     $(".br-newtab", win.extra).onclick = () => newTab();
     $(".star", B).onclick = () => { const t = cur; if (t.url.startsWith("axos:")) return; const all = BrowserData.bookmarks; const i = all.findIndex(b => b.url === t.url); if (i >= 0) all.splice(i, 1); else all.push({ url: t.url, title: (t.title || t.url).slice(0, 60) }); BrowserData.setBookmarks(all); if (i < 0) notify("Bookmark added", t.title, "browser", { silent: true, timeout: 2500 }); };
@@ -3606,7 +3794,7 @@ try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch
     modeEl.onclick = e => { const t = cur; Menu.at(e.currentTarget, [
       { label: "AxProxy (built-in)", checked: modeOf(t) === "proxy", action: () => nav(t, t.url, { push: false, mode: "proxy" }) },
       { label: "Direct (iframe)", checked: modeOf(t) === "direct", action: () => nav(t, t.url, { push: false, mode: "direct" }) },
-      { label: "Ultraviolet server", checked: modeOf(t) === "uv", action: () => nav(t, t.url, { push: false, mode: "uv" }) },
+      { label: "Ultraviolet / Scramjet", checked: modeOf(t) === "uv", sub: () => { const l = UVPresets.list(), a = UVPresets.active(); return (l.length ? l.map(p => ({ label: p.name, checked: modeOf(t) === "uv" && a?.id === p.id, action: () => { Settings.patch("browser", { uvActive: p.id }); nav(t, t.url, { push: false, mode: "uv" }); } })) : [{ label: "No servers yet", disabled: true }]).concat(["-", { label: "Manage servers…", icon: "gear", action: () => launch("settings", { page: "network" }) }]); } },
       "-", { label: "Reader mode", icon: "fileText", disabled: t.url.startsWith("axos:"), action: () => readerMode(t, t.url) },
       { label: "Page scripts", checked: BS().scripts, action: () => { Settings.patch("browser", { scripts: !BS().scripts }); nav(t, t.url, { push: false }); } },
       { label: "Proxy settings…", icon: "gear", action: () => launch("settings", { page: "network" }) },
@@ -3773,9 +3961,12 @@ registerApp("settings", {
       network: () => { const b = S("browser"); const c = navigator.connection; return `<h1>Network & Browser</h1><div class="st-hero"><div style="width:64px;height:64px;border-radius:50%;background:rgba(var(--accent-rgb),.15);display:grid;place-items:center;color:var(--accent)">${ic(navigator.onLine && S("wifi") ? "wifi" : "wifiOff").replace('class="i ', 'style="width:32px;height:32px" class="i ')}</div><div class="grow"><div style="font-size:18px;font-weight:600">${navigator.onLine && S("wifi") && !S("airplane") ? "AxNet-5G" : "Not connected"}</div><div class="muted">${navigator.onLine ? "Connected, secured" : "No internet access"}${c?.effectiveType ? ` · ${c.effectiveType.toUpperCase()}${c.downlink ? " · ~" + c.downlink + " Mbps" : ""}` : ""}</div></div></div>
         ${row("wifi", "Wi-Fi", "", sw("wifi"))}${row("plane", "Airplane mode", "", sw("airplane"))}
         <h3>AxBrowser connection</h3>${row("shield", "Connection mode", "How AxBrowser loads websites", sel("b.mode", [["proxy", "AxProxy (built-in rewriting proxy)"], ["direct", "Direct (plain iframe)"], ["uv", "Ultraviolet / Scramjet server"]], b.mode))}
-        ${row("network", "AxProxy gateway", "Public CORS gateway used to fetch pages. Auto tries each one in turn.", sel("b.gateway", [["auto", "Automatic (recommended)"], ...Object.entries(GATEWAYS).map(([k, g]) => [k, g.name]), ["custom", "Custom…"]], b.gateway))}
+        ${row("activity", "Gateway health", Object.keys(GATEWAYS).map(k => { const hh = AxProxy.health[k]; return `${GATEWAYS[k].name}: ${hh ? (hh.streak ? `<span style="color:var(--danger)">failing</span>` : `<span style="color:var(--ok)">${hh.ms} ms</span>`) : "untested"}`; }).join(" · ") + (AxProxy.worker() ? ` · <b>Personal gateway in use</b>` : ""), `<button class="btn sm gwreset">Reset</button>`)}${row("network", "AxProxy gateway", "Public CORS gateway used to fetch pages. Auto tries each one in turn.", sel("b.gateway", [["auto", "Automatic (recommended)"], ...Object.entries(GATEWAYS).map(([k, g]) => [k, g.name]), ["custom", "Custom…"]], b.gateway))}
         <div class="srow stack ${b.gateway === "custom" ? "" : "hidden"}"><div class="t">Custom gateway URL</div><div class="d muted" style="font-size:12px;margin:4px 0 8px">The page address is appended (URL-encoded), or substituted for <code>{url}</code>.</div><input class="input" data-btext="customGateway" value="${esc(b.customGateway)}" placeholder="https://my-cors-proxy.example/?url="></div>
-        <div class="srow stack"><div class="t">Ultraviolet / Scramjet server</div><div class="d muted" style="font-size:12px;margin:4px 0 8px">UV needs a service worker and a Bare/Wisp backend running on a web server, so it can't be bundled into this single file. Host one and enter its service prefix here, e.g. <code>https://proxy.example.com/service/</code>.</div><div class="row"><input class="input grow" data-btext="uvPrefix" value="${esc(b.uvPrefix)}" placeholder="https://your-uv-host/service/">${sel("b.uvCodec", [["xor", "XOR (UV default)"], ["base64", "Base64"], ["plain", "URL-encoded (Scramjet)"], ["none", "None"]], b.uvCodec)}</div></div>
+        <h3>Personal AxProxy gateway (recommended)</h3><div class="srow stack"><div class="d muted" style="font-size:12.5px;line-height:1.55">Public gateways are shared and rate-limited, so they're slow and fail often. A free Cloudflare Worker gives you your own gateway: faster, no rate limits, real form posts, and logins that keep cookies.<ol style="margin:8px 0 10px 18px;padding:0"><li>Click <b>Copy gateway code</b>.</li><li>Open the Cloudflare dashboard → <b>Workers &amp; Pages</b> → <b>Create</b> → <b>Create Worker</b> → <b>Deploy</b>.</li><li>Click <b>Edit code</b>, replace everything with the copied code, then <b>Deploy</b>.</li><li>Paste the worker's address (like <code>https://axproxy.you.workers.dev</code>) below.</li></ol></div><div class="row" style="flex-wrap:wrap"><button class="btn wcopy">${ic("copy")} Copy gateway code</button><button class="btn wcf">${ic("external")} Open Cloudflare</button></div><div class="row" style="margin-top:10px;flex-wrap:wrap"><input class="input grow" data-btext="workerUrl" value="${esc(b.workerUrl || "")}" placeholder="https://axproxy.your-name.workers.dev" style="min-width:220px"><input class="input" data-btext="workerKey" value="${esc(b.workerKey || "")}" placeholder="Key (optional)" style="width:150px"><button class="btn wtest">Test</button></div><div class="wres dim" style="font-size:12px;margin-top:6px"></div></div>
+        <h3>Ultraviolet / Scramjet servers</h3><div class="srow stack"><div class="d muted" style="font-size:12.5px;margin-bottom:10px;line-height:1.5">Ultraviolet and Scramjet run as a server with a service worker, so they can't live inside this file. Add the servers you run or trust, pick one, and switch AxBrowser's connection mode to Ultraviolet. Only use servers you trust: whoever runs one can see everything you type through it, including passwords.</div>
+          ${UVPresets.list().map(pr => `<div class="row" style="padding:8px 10px;border-radius:8px;background:var(--surface-3);margin-bottom:6px;flex-wrap:wrap"><span class="switch${UVPresets.active()?.id === pr.id ? " on" : ""}" data-uvuse="${pr.id}" data-tip="Use this server"></span><div class="grow" style="min-width:160px"><div>${esc(pr.name)}</div><div class="dim mono ellipsis" style="font-size:11.5px">${esc(pr.prefix)} · ${esc(pr.codec)}</div></div><button class="btn sm" data-uvtest="${pr.id}">Test</button><button class="btn sm" data-uvedit="${pr.id}">Edit</button><button class="btn sm" data-uvdel="${pr.id}">${ic("trash")}</button></div>`).join("") || `<div class="dim" style="font-size:12.5px;margin-bottom:8px">No servers yet.</div>`}
+          <div class="row" style="flex-wrap:wrap;margin-top:4px"><button class="btn primary uvadd">${ic("plus")} Add server</button>${UV_TEMPLATES.map((tp, i) => `<button class="btn sm" data-uvtpl="${i}" data-tip="${esc(tp.note)}">${esc(tp.name)}</button>`).join("")}</div><div class="uvres dim" style="font-size:12px;margin-top:6px"></div></div>
         ${row("zap", "Test gateways", "Checks which AxProxy gateways can reach the web right now", `<button class="btn tg">Run test</button>`)}<div class="tgres"></div>
         <h3>Browsing</h3>${row("search", "Search engine", "", sel("b.search", Object.entries(SEARCH_ENGINES).map(([k, v]) => [k, v[0]]), b.search))}${row("home", "Home page", "", `<input class="input" data-btext="home" value="${esc(b.home)}" style="width:240px">`)}${row("code", "Allow page scripts", "Turn off for faster, simpler pages", `<span class="switch${b.scripts ? " on" : ""}" data-bset="scripts"></span>`)}${row("bookmark", "Show bookmarks bar", "", `<span class="switch${b.bookmarksBar ? " on" : ""}" data-bset="bookmarksBar"></span>`)}`; },
       compat: () => `<h1>AxCompat</h1><div class="st-hero">${appIconHTML("compat", 64)}<div class="grow"><div style="font-size:18px;font-weight:600">AxCompat runtime</div><div class="muted" style="line-height:1.5">Runs Windows (.exe, PE32/PE32+) and Linux (ELF) programs on AxOS. AxCompat parses real executable headers, icons, version resources and libraries. AxOS-native payloads embedded in executables run for real; other programs run in simulation mode.</div></div></div>
@@ -3850,9 +4041,26 @@ registerApp("settings", {
       q(".cca", () => { Settings.set("customCSS", $(".ccss", P).value); notify("Custom CSS applied", "", "settings", { silent: true, timeout: 1500 }); });
       q(".ccc", () => { Settings.set("customCSS", ""); render(); });
       q(".rpz", async () => { if (await Dialog.confirm("Reset personalization?", "Wallpaper, colors, fonts, icons, widgets and other appearance settings go back to defaults.", { ok: "Reset" })) { PERSONAL_KEYS.forEach(k => Settings.data[k] = structuredClone(DEFAULT_SETTINGS[k])); Settings.data.preset = "default"; Settings.save(); applyTheme(); Taskbar.renderApps(); Desktop.render(); render(); } });
+      q(".wcopy", async () => { try { await navigator.clipboard.writeText(AXPROXY_WORKER); notify("Copied", "Gateway code copied. Paste it into your Cloudflare Worker.", "browser", { silent: true }); } catch (e) { Dialog.open({ title: "Gateway code", body: `<textarea class="input mono" style="width:100%;height:260px;font-size:11.5px" readonly>${esc(AXPROXY_WORKER)}</textarea>`, wide: true }); } });
+      q(".wcf", () => launch("browser", { url: "https://dash.cloudflare.com/?to=/:account/workers-and-pages/create" }));
+      q(".wtest", async () => { const out = $(".wres", P); const w = AxProxy.worker(); if (!w) { out.textContent = "Enter your gateway address first."; return; } out.textContent = "Testing…"; const t0 = performance.now(); try { const r = await AxProxy.one(w, "https://example.com/", { binary: false, signal: AbortSignal.timeout ? AbortSignal.timeout(15000) : undefined }); out.innerHTML = /Example Domain/.test(r.text) ? `<span style="color:var(--ok)">✓ Working · ${Math.round(performance.now() - t0)} ms</span>` : `<span style="color:var(--warn)">Responded, but not with the expected page (HTTP ${r.status}). Check the code was pasted fully.</span>`; } catch (e) { out.innerHTML = `<span style="color:var(--danger)">✗ ${esc(e.message)}</span>`; } });
+      const uvEdit = async (pr) => {
+        const body = h(`<div class="col" style="margin-top:10px;gap:10px"><label><div class="muted" style="font-size:12px;margin-bottom:4px">Name</div><input class="input nm" style="width:100%" value="${esc(pr.name)}"></label><label><div class="muted" style="font-size:12px;margin-bottom:4px">Service prefix (the part before the encoded URL)</div><input class="input px mono" style="width:100%" value="${esc(pr.prefix)}" spellcheck="false"></label><label><div class="muted" style="font-size:12px;margin-bottom:4px">URL encoding</div><select class="input cd" style="width:100%">${[["xor", "XOR (Ultraviolet default)"], ["plain", "URL-encoded (Scramjet)"], ["base64", "Base64"], ["none", "None"]].map(([k, l]) => `<option value="${k}"${pr.codec === k ? " selected" : ""}>${l}</option>`).join("")}</select></label></div>`);
+        const ok = await Dialog.open({ title: pr.id ? "Edit server" : "Add server", body, buttons: [{ label: "Cancel", value: false }, { label: "Save", primary: true, value: true }] }); if (!ok) return;
+        let prefix = $(".px", body).value.trim(); if (!/^https?:\/\//i.test(prefix)) return Dialog.alert("Invalid address", "The prefix must start with http:// or https://", { icon: "alert" }); if (!prefix.endsWith("/")) prefix += "/";
+        const l = UVPresets.list().slice(); const np = { id: pr.id || uid(), name: $(".nm", body).value.trim() || "Server", prefix, codec: $(".cd", body).value };
+        const i = l.findIndex(x => x.id === np.id); if (i >= 0) l[i] = np; else l.push(np); UVPresets.save(l, i >= 0 ? undefined : np.id); render();
+      };
+      q(".uvadd", () => uvEdit({ name: "My server", prefix: "https://", codec: "xor" }));
+      $$("[data-uvtpl]", P).forEach(e => e.onclick = () => { const tp = UV_TEMPLATES[+e.dataset.uvtpl]; uvEdit({ name: tp.name, prefix: tp.prefix, codec: tp.codec }); });
+      $$("[data-uvedit]", P).forEach(e => e.onclick = () => uvEdit(UVPresets.list().find(x => x.id === e.dataset.uvedit)));
+      $$("[data-uvdel]", P).forEach(e => e.onclick = () => { const l = UVPresets.list().filter(x => x.id !== e.dataset.uvdel); UVPresets.save(l, l[0]?.id || null); render(); });
+      $$("[data-uvuse]", P).forEach(e => e.onclick = () => { Settings.patch("browser", { uvActive: e.dataset.uvuse, mode: "uv" }); render(); notify("Ultraviolet selected", "AxBrowser now loads sites through this server.", "browser", { silent: true, timeout: 2500 }); });
+      $$("[data-uvtest]", P).forEach(e => e.onclick = async () => { const pr = UVPresets.list().find(x => x.id === e.dataset.uvtest); const out = $(".uvres", P); if (/YOUR-HOST/.test(pr.prefix)) { out.textContent = "Replace YOUR-HOST with your server's address first."; return; } out.textContent = "Checking " + new URL(pr.prefix).host + "…"; const t0 = performance.now(); try { await fetch(new URL(pr.prefix).origin + "/", { mode: "no-cors", cache: "no-store", signal: AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined }); out.innerHTML = `<span style="color:var(--ok)">✓ Server reachable · ${Math.round(performance.now() - t0)} ms</span>. Open a site in AxBrowser to confirm the proxy itself works.`; } catch (er) { out.innerHTML = `<span style="color:var(--danger)">✗ Couldn't reach the server.</span>`; } });
+      q(".gwreset", () => { AxProxy.health = {}; localStorage.removeItem("axos.gwHealth"); AxProxy.cache.clear(); render(); });
       q(".tg", async () => {
-        const out = $(".tgres", P); out.innerHTML = Object.entries(GATEWAYS).map(([k, g]) => `<div class="srow" data-g="${k}"><span class="spinner" style="width:16px;height:16px;border-width:2px"></span><div class="tx"><div class="t">${esc(g.name)}</div><div class="d">Testing…</div></div></div>`).join("");
-        await Promise.all(Object.entries(GATEWAYS).map(async ([k, g]) => { const t0 = performance.now(); let ok = false, msg = ""; try { const ctl = new AbortController(); setTimeout(() => ctl.abort(), 15000); const r = await fetch(g.build("https://example.com/"), { signal: ctl.signal, headers: g.headers || {} }); const txt = await r.text(); ok = r.ok && /Example Domain/i.test(txt); msg = ok ? `${Math.round(performance.now() - t0)} ms` : `HTTP ${r.status}`; } catch (e) { msg = e.name === "AbortError" ? "Timed out" : "Unreachable"; } const el = $(`[data-g="${k}"]`, out); if (el) { el.firstElementChild.outerHTML = `<span style="color:${ok ? "var(--ok)" : "var(--danger)"}">${ic(ok ? "checkC" : "errorC")}</span>`; $(".d", el).textContent = ok ? "Working · " + msg : msg; } }));
+        const out = $(".tgres", P); out.innerHTML = [...(AxProxy.worker() ? [["worker", AxProxy.worker()]] : []), ...Object.entries(GATEWAYS)].map(([k, g]) => `<div class="srow" data-g="${k}"><span class="spinner" style="width:16px;height:16px;border-width:2px"></span><div class="tx"><div class="t">${esc(g.name)}</div><div class="d">Testing…</div></div></div>`).join("");
+        await Promise.all([...(AxProxy.worker() ? [["worker", AxProxy.worker()]] : []), ...Object.entries(GATEWAYS)].map(async ([k, g]) => { const t0 = performance.now(); let ok = false, msg = ""; if (k === "worker") { try { const r = await AxProxy.one(g, "https://example.com/", {}); ok = /Example Domain/.test(r.text); msg = ok ? `${Math.round(performance.now() - t0)} ms` : "Unexpected response"; } catch (e) { msg = e.message; } } else try { const ctl = new AbortController(); setTimeout(() => ctl.abort(), 15000); const r = await fetch(g.build("https://example.com/"), { signal: ctl.signal, headers: g.headers || {} }); const txt = await r.text(); ok = r.ok && /Example Domain/i.test(txt); msg = ok ? `${Math.round(performance.now() - t0)} ms` : `HTTP ${r.status}`; } catch (e) { msg = e.name === "AbortError" ? "Timed out" : "Unreachable"; } const el = $(`[data-g="${k}"]`, out); if (el) { el.firstElementChild.outerHTML = `<span style="color:${ok ? "var(--ok)" : "var(--danger)"}">${ic(ok ? "checkC" : "errorC")}</span>`; $(".d", el).textContent = ok ? "Working · " + msg : msg; } }));
       });
       q(".oc", () => { FS.mkdir("/opt/axcompat/drive_c/Program Files", true); FS.mkdir("/opt/axcompat/drive_c/Windows/System32", true); launch("explorer", { path: "/opt/axcompat/drive_c" }); });
       q(".rp", async () => { const p = await FilePicker.open({ title: "Run a program", start: FS.home + "/Downloads" }); if (p) Compat.launch(p); });
