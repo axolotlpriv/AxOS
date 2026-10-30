@@ -127,6 +127,11 @@ Ultraviolet and Scramjet need a service worker and a backend server, so they can
 - **Templates:** there are starting points for self-hosted Ultraviolet-App and Scramjet, on the internet or on your own computer.
 - **Using a server:** pick one there, or from the connection-mode button in the address bar.
 - **Trust:** only use servers you trust, because whoever runs one can see everything you type through it.
+- **Public servers:** the same page lists community-run proxy sites, with a status check:
+  - **InvisiProxy** (formerly Holy Unblocker) refuses to load inside other pages, so it opens in a real browser tab.
+  - **Nebula** opens inside AxBrowser.
+
+  Public servers come and go, so expect some to be down at any given time.
 
 ## How .exe and Linux programs work
 

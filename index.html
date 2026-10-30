@@ -3355,6 +3355,16 @@ const UV_TEMPLATES = [
   { name: "Scramjet on this computer", prefix: "http://localhost:1337/scramjet/", codec: "plain", note: "Scramjet demo app, default port 1337" },
   { name: "Classic /service/ layout", prefix: "https://YOUR-HOST/service/", codec: "xor", note: "Older Ultraviolet deployments" },
 ];
+/* Public community servers. They come and go; embed:false means the site refuses to load inside
+   another page, so it opens in a real browser tab instead. */
+const PUBLIC_UV = [
+  { name: "InvisiProxy (formerly Holy Unblocker)", home: "https://invisiproxy.com/", engine: "Scramjet", embed: false },
+  { name: "Nebula", home: "https://nebulaproxy.io/", engine: "Ultraviolet / Scramjet", embed: true },
+];
+function openPublicUV(srv, inTab) {
+  if (!srv.embed) { window.open(srv.home, "_blank", "noopener"); notify(srv.name, "Opened in a new browser tab. This site doesn't allow being shown inside AxOS.", "browser", { silent: true }); return; }
+  launch("browser", { url: srv.home, mode: "direct" });
+}
 const UVPresets = {
   list() { const b = Settings.get("browser"); let l = b.uvPresets; if (!Array.isArray(l)) { l = b.uvPrefix ? [{ id: uid(), name: "My server", prefix: b.uvPrefix, codec: b.uvCodec || "xor" }] : []; Settings.patch("browser", { uvPresets: l, uvActive: l[0]?.id || null }); } return l; },
   active() { const l = this.list(); return l.find(p => p.id === Settings.get("browser").uvActive) || l[0] || null; },
@@ -3558,7 +3568,7 @@ const DL_EXT = /\.(exe|msi|zip|7z|rar|gz|tgz|xz|bz2|deb|rpm|appimage|dmg|iso|img
 
 registerApp("browser", {
   name: "AxBrowser", icon: "globe", colors: ["#38bdf8", "#2563eb"], w: 1080, h: 700, minW: 480, minH: 300, single: true, keywords: "web internet chrome edge firefox proxy ultraviolet",
-  onReopen(win, a) { if (a.url || a.file || a.path) win.browserOpen({ url: a.url, file: a.file || a.path }); },
+  onReopen(win, a) { if (a.url || a.file || a.path) win.browserOpen({ url: a.url, file: a.file || a.path, mode: a.mode }); },
   launch(win, args) {
     const B = win.body; $(".ttl", win.el).style.display = "none"; win.extra.style.flex = "1"; win.extra.style.minWidth = "0"; win.tbar.style.paddingLeft = "6px"; win.tbar.style.height = "40px";
     win.extra.innerHTML = `<div class="br-tabs"></div><button class="ibtn br-newtab" data-tip="New tab (Ctrl+T)" style="width:28px;height:28px">${ic("plus")}</button>`;
@@ -3569,8 +3579,8 @@ registerApp("browser", {
     const tabsEl = $(".br-tabs", win.extra), view = $(".br-view", B), omni = $(".br-omni input", B), modeEl = $(".mode", B), hov = $(".statusbar", B);
     let tabs = [], cur = null;
     const BS = () => Settings.get("browser");
-    const newTab = (url, activate = true) => {
-      const t = { id: uid(), url: "", title: "New Tab", fav: "", hist: [], idx: -1, loading: false, zoom: 1, mode: null, el: h(`<div style="position:absolute;inset:0"></div>`) };
+    const newTab = (url, activate = true, mode = null) => {
+      const t = { id: uid(), url: "", title: "New Tab", fav: "", hist: [], idx: -1, loading: false, zoom: 1, mode, el: h(`<div style="position:absolute;inset:0"></div>`) };
       view.appendChild(t.el); tabs.push(t); if (activate) select(t); else t.el.style.display = "none";
       nav(t, url || BS().home || "axos://newtab"); renderTabs(); return t;
     };
@@ -3794,7 +3804,7 @@ try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch
     modeEl.onclick = e => { const t = cur; Menu.at(e.currentTarget, [
       { label: "AxProxy (built-in)", checked: modeOf(t) === "proxy", action: () => nav(t, t.url, { push: false, mode: "proxy" }) },
       { label: "Direct (iframe)", checked: modeOf(t) === "direct", action: () => nav(t, t.url, { push: false, mode: "direct" }) },
-      { label: "Ultraviolet / Scramjet", checked: modeOf(t) === "uv", sub: () => { const l = UVPresets.list(), a = UVPresets.active(); return (l.length ? l.map(p => ({ label: p.name, checked: modeOf(t) === "uv" && a?.id === p.id, action: () => { Settings.patch("browser", { uvActive: p.id }); nav(t, t.url, { push: false, mode: "uv" }); } })) : [{ label: "No servers yet", disabled: true }]).concat(["-", { label: "Manage servers…", icon: "gear", action: () => launch("settings", { page: "network" }) }]); } },
+      { label: "Ultraviolet / Scramjet", checked: modeOf(t) === "uv", sub: () => { const l = UVPresets.list(), a = UVPresets.active(); return (l.length ? l.map(p => ({ label: p.name, checked: modeOf(t) === "uv" && a?.id === p.id, action: () => { Settings.patch("browser", { uvActive: p.id }); nav(t, t.url, { push: false, mode: "uv" }); } })) : [{ label: "No servers yet", disabled: true }]).concat(["-", { label: "Public servers", icon: "globe", sub: PUBLIC_UV.map(srv => ({ label: srv.name + (srv.embed ? "" : " ↗"), action: () => openPublicUV(srv) })) }, { label: "Manage servers…", icon: "gear", action: () => launch("settings", { page: "network" }) }]); } },
       "-", { label: "Reader mode", icon: "fileText", disabled: t.url.startsWith("axos:"), action: () => readerMode(t, t.url) },
       { label: "Page scripts", checked: BS().scripts, action: () => { Settings.patch("browser", { scripts: !BS().scripts }); nav(t, t.url, { push: false }); } },
       { label: "Proxy settings…", icon: "gear", action: () => launch("settings", { page: "network" }) },
@@ -3847,9 +3857,9 @@ try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch
     };
     win.el.addEventListener("keydown", keys);
     win.on("close", () => { window.removeEventListener("message", onMsg); offBM(); tabs.forEach(t => t.ctl?.abort()); closeSug(); });
-    win.browserOpen = (a) => { if (a.file) newTab("file://" + a.file); else if (a.url) newTab(a.url); else newTab(); };
+    win.browserOpen = (a) => { if (a.file) newTab("file://" + a.file); else if (a.url) newTab(a.url, true, a.mode || null); else newTab(); };
     const first = args.file || args.path ? "file://" + (args.file || args.path) : args.url || null;
-    newTab(first);
+    newTab(first, true, args.mode || null);
   },
 });
 /* Tiny markdown renderer (Notepad preview & reader mode) */
@@ -3967,6 +3977,9 @@ registerApp("settings", {
         <h3>Ultraviolet / Scramjet servers</h3><div class="srow stack"><div class="d muted" style="font-size:12.5px;margin-bottom:10px;line-height:1.5">Ultraviolet and Scramjet run as a server with a service worker, so they can't live inside this file. Add the servers you run or trust, pick one, and switch AxBrowser's connection mode to Ultraviolet. Only use servers you trust: whoever runs one can see everything you type through it, including passwords.</div>
           ${UVPresets.list().map(pr => `<div class="row" style="padding:8px 10px;border-radius:8px;background:var(--surface-3);margin-bottom:6px;flex-wrap:wrap"><span class="switch${UVPresets.active()?.id === pr.id ? " on" : ""}" data-uvuse="${pr.id}" data-tip="Use this server"></span><div class="grow" style="min-width:160px"><div>${esc(pr.name)}</div><div class="dim mono ellipsis" style="font-size:11.5px">${esc(pr.prefix)} · ${esc(pr.codec)}</div></div><button class="btn sm" data-uvtest="${pr.id}">Test</button><button class="btn sm" data-uvedit="${pr.id}">Edit</button><button class="btn sm" data-uvdel="${pr.id}">${ic("trash")}</button></div>`).join("") || `<div class="dim" style="font-size:12.5px;margin-bottom:8px">No servers yet.</div>`}
           <div class="row" style="flex-wrap:wrap;margin-top:4px"><button class="btn primary uvadd">${ic("plus")} Add server</button>${UV_TEMPLATES.map((tp, i) => `<button class="btn sm" data-uvtpl="${i}" data-tip="${esc(tp.note)}">${esc(tp.name)}</button>`).join("")}</div><div class="uvres dim" style="font-size:12px;margin-top:6px"></div></div>
+        <h3>Public servers</h3><div class="srow stack"><div class="d muted" style="font-size:12.5px;margin-bottom:10px;line-height:1.5">Community-run proxy sites. They appear and disappear often, and their operators can see your traffic, so don't sign in to anything important through them. Sites marked ↗ refuse to load inside other pages, so they open in a real browser tab.</div>
+          ${PUBLIC_UV.map((srv, i) => `<div class="row" style="padding:8px 10px;border-radius:8px;background:var(--surface-3);margin-bottom:6px;flex-wrap:wrap"><span class="pubst" data-i="${i}" style="width:10px;height:10px;border-radius:50%;background:var(--text-3);flex:none" data-tip="Not checked yet"></span><div class="grow" style="min-width:160px"><div>${esc(srv.name)}${srv.embed ? "" : " ↗"}</div><div class="dim ellipsis" style="font-size:11.5px">${esc(new URL(srv.home).host)} · ${esc(srv.engine)}</div></div><button class="btn sm" data-pubopen="${i}">Open</button></div>`).join("")}
+          <div class="row" style="margin-top:4px"><button class="btn sm pubcheck">${ic("refresh")} Check status</button></div></div>
         ${row("zap", "Test gateways", "Checks which AxProxy gateways can reach the web right now", `<button class="btn tg">Run test</button>`)}<div class="tgres"></div>
         <h3>Browsing</h3>${row("search", "Search engine", "", sel("b.search", Object.entries(SEARCH_ENGINES).map(([k, v]) => [k, v[0]]), b.search))}${row("home", "Home page", "", `<input class="input" data-btext="home" value="${esc(b.home)}" style="width:240px">`)}${row("code", "Allow page scripts", "Turn off for faster, simpler pages", `<span class="switch${b.scripts ? " on" : ""}" data-bset="scripts"></span>`)}${row("bookmark", "Show bookmarks bar", "", `<span class="switch${b.bookmarksBar ? " on" : ""}" data-bset="bookmarksBar"></span>`)}`; },
       compat: () => `<h1>AxCompat</h1><div class="st-hero">${appIconHTML("compat", 64)}<div class="grow"><div style="font-size:18px;font-weight:600">AxCompat runtime</div><div class="muted" style="line-height:1.5">Runs Windows (.exe, PE32/PE32+) and Linux (ELF) programs on AxOS. AxCompat parses real executable headers, icons, version resources and libraries. AxOS-native payloads embedded in executables run for real; other programs run in simulation mode.</div></div></div>
@@ -4057,6 +4070,13 @@ registerApp("settings", {
       $$("[data-uvdel]", P).forEach(e => e.onclick = () => { const l = UVPresets.list().filter(x => x.id !== e.dataset.uvdel); UVPresets.save(l, l[0]?.id || null); render(); });
       $$("[data-uvuse]", P).forEach(e => e.onclick = () => { Settings.patch("browser", { uvActive: e.dataset.uvuse, mode: "uv" }); render(); notify("Ultraviolet selected", "AxBrowser now loads sites through this server.", "browser", { silent: true, timeout: 2500 }); });
       $$("[data-uvtest]", P).forEach(e => e.onclick = async () => { const pr = UVPresets.list().find(x => x.id === e.dataset.uvtest); const out = $(".uvres", P); if (/YOUR-HOST/.test(pr.prefix)) { out.textContent = "Replace YOUR-HOST with your server's address first."; return; } out.textContent = "Checking " + new URL(pr.prefix).host + "…"; const t0 = performance.now(); try { await fetch(new URL(pr.prefix).origin + "/", { mode: "no-cors", cache: "no-store", signal: AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined }); out.innerHTML = `<span style="color:var(--ok)">✓ Server reachable · ${Math.round(performance.now() - t0)} ms</span>. Open a site in AxBrowser to confirm the proxy itself works.`; } catch (er) { out.innerHTML = `<span style="color:var(--danger)">✗ Couldn't reach the server.</span>`; } });
+      $$("[data-pubopen]", P).forEach(e => e.onclick = () => openPublicUV(PUBLIC_UV[+e.dataset.pubopen]));
+      q(".pubcheck", () => $$(".pubst", P).forEach(async dot => {
+        const srv = PUBLIC_UV[+dot.dataset.i]; dot.style.background = "var(--warn)"; dot.dataset.tip = "Checking…";
+        try { const r = await AxProxy.one({ id: "allorigins", ...GATEWAYS.allorigins }, srv.home, { signal: AbortSignal.timeout ? AbortSignal.timeout(20000) : undefined }); const up = r.status && r.status < 400; dot.style.background = up ? "var(--ok)" : "var(--danger)"; dot.dataset.tip = up ? `Online (HTTP ${r.status})` : `Down right now (HTTP ${r.status})`; }
+        catch (er) { dot.style.background = /Upstream HTTP (\d+)/.test(er.message) ? "var(--danger)" : "var(--text-3)"; dot.dataset.tip = /Upstream HTTP (\d+)/.test(er.message) ? "Down right now (" + er.message.replace("Upstream ", "") + ")" : "Unknown: status check service didn't answer"; }
+      }));
+      if ($(".pubcheck", P) && !P._pubChecked) { P._pubChecked = true; $(".pubcheck", P).click(); }
       q(".gwreset", () => { AxProxy.health = {}; localStorage.removeItem("axos.gwHealth"); AxProxy.cache.clear(); render(); });
       q(".tg", async () => {
         const out = $(".tgres", P); out.innerHTML = [...(AxProxy.worker() ? [["worker", AxProxy.worker()]] : []), ...Object.entries(GATEWAYS)].map(([k, g]) => `<div class="srow" data-g="${k}"><span class="spinner" style="width:16px;height:16px;border-width:2px"></span><div class="tx"><div class="t">${esc(g.name)}</div><div class="d">Testing…</div></div></div>`).join("");
