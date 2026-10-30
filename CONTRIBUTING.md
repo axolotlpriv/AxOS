@@ -14,7 +14,8 @@ Your files and settings are saved in the browser (IndexedDB and localStorage), s
 | Area | Features |
 | --- | --- |
 | **Shell** | Boot screen, first-run setup, lock screen with optional password, desktop icons (drag, rubber-band select, rename, drop files from your computer), right-click menus, taskbar with window previews and pinning, Start menu with search, quick settings, calendar and notification center, Task View, window switcher, Run dialog |
-| **Windows** | Drag, resize from all edges, maximize, minimize, snap to halves or quarters (drag to an edge or press Alt+Arrow), always-on-top, animations |
+| **Windows** | Drag, resize from all edges, maximize, minimize, snap to halves, thirds or quarters (drag to an edge, press Alt+Arrow, or hover the maximize button for snap layouts), always-on-top |
+| **Phones & tablets** | Windows open full-screen on small screens, the taskbar compacts itself to fit, apps adapt to their window size, long-press opens context menus, and a single tap opens icons |
 | **File Explorer** | Breadcrumb address bar, search, grid and details views, preview pane, cut/copy/paste, drag and drop, Recycle Bin, upload and download, properties |
 | **AxBrowser** | Tabs, bookmarks, history, downloads saved to `~/Downloads`, reader mode, zoom, and three connection modes (see below) |
 | **Terminal** | Bash-like shell with pipes, redirects, `&&`/`||`, `$(...)`, variables, tab completion and 100+ commands. Type `cmd` for a Command Prompt that runs `.bat` files |

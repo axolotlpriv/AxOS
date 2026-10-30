@@ -941,6 +941,58 @@ body.taskview-on .win{ transition:transform calc(.7s * var(--spd)) var(--spring-
 @keyframes vtIn{ from{ opacity:0; filter:blur(10px); transform:scale(1.015); } }
 .reduce-motion ::view-transition-old(root),.reduce-motion ::view-transition-new(root){ animation:none; }
 
+/* ---- adaptive taskbar ---- */
+#taskbar.tb-compact .tb-search{ width:40px; padding:0; justify-content:center; border-radius:10px; }
+#taskbar.tb-compact .tb-search span{ display:none; }
+#taskbar.tb-compact .tb-clock .td{ display:none; }
+#taskbar.tb-force-left .tb-center{ left:6px; transform:none; }
+#taskbar.tb-force-left ~ #startmenu{ left:10px; margin-left:0; }
+#taskbar.tb-xs #tv-btn,#taskbar.tb-xs #tray-up,#taskbar.tb-xs .t-bat,#taskbar.tb-xs #tb-search{ display:none; }
+#taskbar.tb-xs .tb-apps{ overflow-x:auto; overflow-y:hidden; scrollbar-width:none; min-width:0; }
+#taskbar.tb-xs .tb-apps::-webkit-scrollbar{ display:none; }
+#taskbar.tb-xs .tray-btn{ padding:0 5px; }
+/* ---- snap layouts popup ---- */
+.snap-pop{ position:fixed; z-index:9650; display:grid; grid-template-columns:repeat(3,92px); gap:10px; padding:12px; border-radius:14px; background:var(--glass-2); backdrop-filter:blur(var(--blur)) saturate(1.5); -webkit-backdrop-filter:blur(var(--blur)) saturate(1.5); border:1px solid var(--border); box-shadow:var(--shadow); animation:ctxIn calc(.5s * var(--spd)) var(--spring) both; transform-origin:50% 0; }
+.snap-pop.out{ animation:ctxOut calc(.15s * var(--spd)) var(--ease-in) forwards; }
+.snap-pop .lay{ display:grid; grid-template-rows:repeat(2,1fr); gap:3px; height:58px; padding:3px; border-radius:8px; border:1px solid var(--border-2); }
+.snap-pop button{ border:0; border-radius:4px; background:var(--surface-4); transition:background .15s,transform .4s var(--spring-bouncy); }
+.snap-pop button:hover{ background:var(--accent); transform:scale(.96); }
+/* ---- components adapt to their own window size ---- */
+.fx,.st,.axp,.tm,.clockapp{ container-type:inline-size; }
+@container (max-width:620px){
+  .fx .sidebar{ display:none; } .fx .srch{ width:130px; } .fx .preview-pane{ display:none; }
+  .fx .toolbar .btn.sm span,.fx .toolbar .upl{ display:none; }
+  .fx .list .fi,.fx .list .lh{ grid-template-columns:minmax(120px,1fr) 80px; } .fx .list .fi > span:nth-child(2),.fx .list .fi > span:nth-child(3),.fx .list .lh span:nth-child(2),.fx .list .lh span:nth-child(3){ display:none; }
+}
+@container (max-width:680px){
+  .st .sidebar,.tm .sidebar,.clockapp .sidebar{ width:56px; padding:10px 6px; }
+  .st .sidebar .navitem span,.st .who .tx,.st .sfind,.tm .sidebar .navitem span,.clockapp .sidebar .navitem span{ display:none; }
+  .st .who{ padding:4px 0 12px; justify-content:center; } .st .who .avatar{ width:40px; height:40px; font-size:16px; }
+  .st .page{ padding:18px 16px 30px; } .srow{ flex-wrap:wrap; padding:12px 14px; } .srow .tx{ min-width:150px; }
+  .st-hero .mon{ width:140px; }
+}
+@container (max-width:720px){
+  .axp .lib{ display:none; } .axp .hero{ height:180px; padding:16px; } .axp .hero h1{ font-size:22px; } .axp .bar,.axp .sect{ padding-left:16px; padding-right:16px; }
+  .axp .sect[style*="grid-template-columns"]{ grid-template-columns:1fr!important; }
+  .axp .shelf{ grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; }
+  .axp .top .bpb{ display:none; }
+}
+.st-hero{ flex-wrap:wrap; }
+/* ---- phones ---- */
+@media (max-width:700px){
+  #oobe .panel{ grid-template-columns:1fr; min-height:0; max-height:92vh; overflow:auto; }
+  #oobe .side{ padding:24px 24px 16px; } #oobe .side h1{ font-size:24px; margin:10px 0 4px; } #oobe .side p{ display:none; } #oobe .main{ padding:20px 24px 24px; }
+  #startmenu .sm-search{ padding:14px 14px 4px; } #startmenu .sm-body{ padding:8px 12px; } #startmenu .sm-foot{ padding:0 18px; }
+  .sm-rec{ grid-template-columns:1fr; } .search-results > div[style]{ display:block!important; } .search-results .best{ display:none; }
+  #toasts{ left:12px; right:12px; width:auto; }
+  #calendar-fly,#quick-fly{ left:8px; right:8px; width:auto; }
+  .win .tbar{ height:44px; } .win .tbar .tctl button{ width:48px; }
+  .win .rz{ display:none; }
+  .dialog .dbody{ padding:18px; } .dialog .dfoot{ flex-wrap:wrap; }
+  .lagoon .board{ width:min(420px,100%); }
+  #lock .login .pw{ width:min(290px,84vw); }
+}
+
 @media (max-width:760px){
   #startmenu{ left:6px; right:6px; margin-left:0; width:auto; }
   .sm-grid{ grid-template-columns:repeat(4,1fr); }
@@ -1634,12 +1686,32 @@ function pickHostFiles(destDir, accept = "") {
 }
 </script>
 <script>
+/* Touch support: long-press opens context menus everywhere */
+const Touch = {
+  lastType: "mouse", timer: null, fired: false,
+  init() {
+    document.addEventListener("pointerdown", e => {
+      this.lastType = e.pointerType; this.fired = false; clearTimeout(this.timer);
+      if (e.pointerType !== "touch" || e.target.closest("input,textarea,[contenteditable],iframe,canvas")) return;
+      const sx = e.clientX, sy = e.clientY, tgt = e.target;
+      const cancel = ev => { if (!ev || Math.hypot(ev.clientX - sx, ev.clientY - sy) > 10) { clearTimeout(this.timer); document.removeEventListener("pointermove", cancel, true); } };
+      document.addEventListener("pointermove", cancel, true); document.addEventListener("pointerup", () => { clearTimeout(this.timer); document.removeEventListener("pointermove", cancel, true); }, { once: true, capture: true });
+      this.timer = setTimeout(() => { this.fired = true; navigator.vibrate?.(12); tgt.dispatchEvent(new MouseEvent("contextmenu", { bubbles: true, cancelable: true, clientX: sx, clientY: sy, button: 2 })); }, 520);
+    }, true);
+    document.addEventListener("click", e => { if (this.fired) { e.stopPropagation(); e.preventDefault(); this.fired = false; } }, true);
+  },
+  get touch() { return this.lastType === "touch" || this.lastType === "pen"; },
+};
+Touch.init();
+</script>
+<script>
 /* =====================================================================
    Window manager
    ===================================================================== */
 const WM = {
   wins: new Map(), z: 100, active: null, cascade: 0, pid: 1000,
   area() { const r = $("#windows").getBoundingClientRect(); return { w: r.width, h: r.height }; },
+  compact() { return innerWidth < 700 || innerHeight < 480; },
   ordered() { return [...this.wins.values()].sort((a, b) => a.z - b.z); },
   topVisible() { return this.ordered().filter(w => !w.minimized).pop() || null; },
   create(o) { const w = new Win(o); this.wins.set(w.id, w); Bus.emit("wm"); return w; },
@@ -1677,7 +1749,7 @@ class Win {
     this.el.classList.remove("opening"); if (typeof Motion !== "undefined") Motion.open(this);
     this._wire();
     this.focus();
-    if (max) this.maximize(false);
+    if (max || (maximizable && resizable && WM.compact())) this.maximize(false);
   }
   on(ev, fn) { this.handlers[ev].push(fn); return this; }
   emit(ev, ...a) { this.handlers[ev].forEach(f => { try { f(...a); } catch (e) { console.error(e); } }); }
@@ -1731,7 +1803,7 @@ class Win {
       { label: "Restore", icon: "restore", disabled: !(this.maxed || this.snapped), action: () => this.unmaximize() },
       { label: "Minimize", icon: "minus", action: () => this.minimize() },
       { label: "Maximize", icon: "square", disabled: this.maxed || !this.maximizable, action: () => this.maximize() },
-      { label: "Snap", icon: "layers", sub: [["Left half", "left"], ["Right half", "right"], ["Top-left quarter", "tl"], ["Top-right quarter", "tr"], ["Bottom-left quarter", "bl"], ["Bottom-right quarter", "br"]].map(([l, s]) => ({ label: l, action: () => this.snap(s) })) },
+      { label: "Snap", icon: "layers", sub: [["Left half", "left"], ["Right half", "right"], ["Left two-thirds", "l23"], ["Right third", "r13"], ["Left third", "l3"], ["Center third", "c3"], ["Right third (of three)", "r3"], ["Top-left quarter", "tl"], ["Top-right quarter", "tr"], ["Bottom-left quarter", "bl"], ["Bottom-right quarter", "br"]].map(([l, s]) => ({ label: l, action: () => this.snap(s) })) },
       { label: "Always on top", checked: !!this.onTop, action: () => { this.onTop = !this.onTop; this.el.style.zIndex = this.onTop ? this.z + 100000 : this.z; } },
       "-",
       { label: "Close", icon: "x", kbd: "Alt+W", action: () => this.close() },
@@ -1741,7 +1813,7 @@ class Win {
     const el = this.el;
     el.addEventListener("pointerdown", () => { if (WM.active !== this) this.focus(); }, true);
     $(".mn", el).onclick = (e) => { e.stopPropagation(); this.minimize(); };
-    const mx = $(".mx", el); if (mx) mx.onclick = (e) => { e.stopPropagation(); this.toggleMax(); };
+    const mx = $(".mx", el); if (mx) { mx.onclick = (e) => { e.stopPropagation(); SnapPop.hide(); this.toggleMax(); }; mx.onpointerenter = (e) => { if (e.pointerType !== "mouse") return; clearTimeout(SnapPop.t); SnapPop.t = setTimeout(() => SnapPop.show(this, mx), 420); }; mx.onpointerleave = () => SnapPop.later(); }
     $(".x", el).onclick = (e) => { e.stopPropagation(); this.close(); };
     $$(".tctl button", el).forEach(b => b.addEventListener("pointerdown", e => e.stopPropagation()));
     this.tbar.addEventListener("dblclick", e => { if (e.target.closest("button,input,.br-tab,.tt")) return; this.toggleMax(); });
@@ -1794,11 +1866,26 @@ class Win {
   }
 }
 function snapRect(where, A) {
-  const hw = Math.round(A.w / 2), hh = Math.round(A.h / 2);
-  return { left: { x: 0, y: 0, w: hw, h: A.h }, right: { x: hw, y: 0, w: A.w - hw, h: A.h }, tl: { x: 0, y: 0, w: hw, h: hh }, tr: { x: hw, y: 0, w: A.w - hw, h: hh }, bl: { x: 0, y: hh, w: hw, h: A.h - hh }, br: { x: hw, y: hh, w: A.w - hw, h: A.h - hh } }[where];
+  const hw = Math.round(A.w / 2), hh = Math.round(A.h / 2), t3 = Math.round(A.w / 3), t23 = Math.round(A.w * 2 / 3);
+  return { left: { x: 0, y: 0, w: hw, h: A.h }, right: { x: hw, y: 0, w: A.w - hw, h: A.h }, tl: { x: 0, y: 0, w: hw, h: hh }, tr: { x: hw, y: 0, w: A.w - hw, h: hh }, bl: { x: 0, y: hh, w: hw, h: A.h - hh }, br: { x: hw, y: hh, w: A.w - hw, h: A.h - hh },
+    l3: { x: 0, y: 0, w: t3, h: A.h }, c3: { x: t3, y: 0, w: t23 - t3, h: A.h }, r3: { x: t23, y: 0, w: A.w - t23, h: A.h }, l23: { x: 0, y: 0, w: t23, h: A.h }, r13: { x: t23, y: 0, w: A.w - t23, h: A.h }, l13: { x: 0, y: 0, w: t3, h: A.h }, r23: { x: t3, y: 0, w: A.w - t3, h: A.h } }[where];
 }
+/* Snap layouts: hover the maximize button to pick a layout */
+const SNAP_LAYOUTS = [[["left", 0, 0, 1, 2], ["right", 1, 0, 1, 2]], [["l23", 0, 0, 2, 2], ["r13", 2, 0, 1, 2]], [["l3", 0, 0, 1, 2], ["c3", 1, 0, 1, 2], ["r3", 2, 0, 1, 2]], [["left", 0, 0, 1, 2], ["tr", 1, 0, 1, 1], ["br", 1, 1, 1, 1]], [["tl", 0, 0, 1, 1], ["tr", 1, 0, 1, 1], ["bl", 0, 1, 1, 1], ["br", 1, 1, 1, 1]], [["l13", 0, 0, 1, 2], ["r23", 1, 0, 2, 2]]];
+const SnapPop = {
+  el: null, t: null,
+  show(win, btn) {
+    this.hide(); if (WM.compact() || !win.resizable) return;
+    const el = this.el = h(`<div class="snap-pop">${SNAP_LAYOUTS.map((L, i) => { const cols = Math.max(...L.map(z => z[1] + z[3])); return `<div class="lay" style="grid-template-columns:repeat(${cols},1fr)">${L.map(([z, c, r, cw, rh]) => `<button data-z="${z}" style="grid-column:${c + 1}/span ${cw};grid-row:${r + 1}/span ${rh}"></button>`).join("")}</div>`; }).join("")}</div>`);
+    document.body.appendChild(el); const r = btn.getBoundingClientRect(); el.style.left = clamp(r.left + r.width / 2 - el.offsetWidth / 2, 6, innerWidth - el.offsetWidth - 6) + "px"; el.style.top = r.bottom + 6 + "px";
+    $$("button", el).forEach(b => { b.onclick = e => { e.stopPropagation(); this.hide(); win.snap(b.dataset.z); }; b.onpointerenter = () => { const A = WM.area(), z = snapRect(b.dataset.z, A), pv = $("#snap-preview"); Object.assign(pv.style, { left: z.x + 8 + "px", top: z.y + 8 + "px", width: z.w - 16 + "px", height: z.h - 16 + "px", zIndex: win.z - 1 }); pv.classList.add("on"); }; b.onpointerleave = () => $("#snap-preview").classList.remove("on"); });
+    el.onpointerenter = () => clearTimeout(this.t); el.onpointerleave = () => this.later();
+  },
+  later() { clearTimeout(this.t); this.t = setTimeout(() => this.hide(), 350); },
+  hide() { clearTimeout(this.t); if (this.el) { const e = this.el; e.classList.add("out"); setTimeout(() => e.remove(), 160); this.el = null; $("#snap-preview")?.classList.remove("on"); } },
+};
 window.addEventListener("resize", debounce(() => {
-  const A = WM.area();
+  const A = WM.area(); if (WM.compact()) WM.wins.forEach(w => { if (!w.maxed && w.maximizable && w.resizable) w.maximize(false); });
   WM.wins.forEach(w => { if (w.maxed) w.setBounds(0, 0, A.w, A.h); else if (w.snapped) { const r = snapRect(w.snapped, A); w.setBounds(r.x, r.y, r.w, r.h); } else w.setBounds(clamp(w.x, -w.w + 80, A.w - 80), clamp(w.y, 0, A.h - 40), w.w, w.h); });
 }, 60));
 
@@ -2263,6 +2350,7 @@ const Desktop = {
     Bus.on("setting:iconScale", () => this.render());
     window.addEventListener("resize", debounce(() => this.render(), 120));
     Bus.on("fs:moved", (src, dst) => { const pos = Settings.get("iconPos"); if (pos[src] && FS.dirname(dst) === this.dir) { pos[dst] = pos[src]; } delete pos[src]; });
+    box.addEventListener("click", e => { const d = e.target.closest(".dicon"); if (d && Touch.touch && !e.target.closest("textarea")) this.open(d._it); });
     box.addEventListener("dblclick", e => { const d = e.target.closest(".dicon"); if (d && !e.target.closest("textarea")) this.open(d._it); });
     box.addEventListener("contextmenu", e => {
       e.preventDefault(); Shell.closeFlyouts(); const d = e.target.closest(".dicon");
@@ -2378,8 +2466,18 @@ const Taskbar = {
     window.addEventListener("online", () => this.tray()); window.addEventListener("offline", () => this.tray());
     if (navigator.getBattery) navigator.getBattery().then(b => { Shell.battery = b; ["levelchange", "chargingchange"].forEach(ev => b.addEventListener(ev, () => this.tray())); this.tray(); }).catch(() => { });
     this.sync(); this.renderApps(); this.tray(); this.clock();
+    window.addEventListener("resize", debounce(() => this.fit(), 80)); Bus.on("setting", k => { if (["taskbarAlign", "taskbarSearch", "taskbarSize", "taskbarStyle", "showSeconds", "clock24"].includes(k)) requestAnimationFrame(() => this.fit()); });
   },
-  sync() { $("#tb-search").classList.toggle("hidden", !Settings.get("taskbarSearch")); },
+  sync() { $("#tb-search").classList.toggle("hidden", !Settings.get("taskbarSearch")); this.fit(); },
+  /* Progressively compact the taskbar until the app cluster no longer collides with the tray */
+  fit() {
+    const tb = $("#taskbar"), c = $("#taskbar .tb-center"), r = $("#taskbar .tb-right"); if (!c || !r) return;
+    const steps = ["tb-compact", "tb-force-left", "tb-xs"]; tb.classList.remove(...steps); c.style.maxWidth = "";
+    if (document.body.classList.contains("tb-dock")) { tb.classList.toggle("tb-xs", tb.scrollWidth > innerWidth - 16); return; }
+    const hit = () => c.getBoundingClientRect().right > r.getBoundingClientRect().left - 6 || c.getBoundingClientRect().left < 0;
+    for (const s of steps) { if (!hit()) break; tb.classList.add(s); }
+    if (hit()) c.style.maxWidth = Math.max(120, r.getBoundingClientRect().left - 12) + "px";
+  },
   renderApps() {
     const box = $("#taskbar .tb-apps"); if (!box) return;
     const pinned = Settings.get("pinned").filter(a => isInstalled(a));
@@ -2399,6 +2497,7 @@ const Taskbar = {
       b.onpointerleave = () => { clearTimeout(this._pt); this._pt = setTimeout(() => { if (!$(".tb-preview:hover")) $$(".tb-preview").forEach(e => e.remove()); }, 250); };
       box.appendChild(b);
     }
+    requestAnimationFrame(() => this.fit());
   },
   click(id, b) {
     $$(".tb-preview").forEach(e => e.remove()); Shell.closeFlyouts();
@@ -3114,6 +3213,7 @@ registerApp("explorer", {
     const si = $(".srch input", B); si.oninput = debounce(() => { st.q = si.value.trim(); st.sel.clear(); render(); }, 200);
     si.onkeydown = e => { e.stopPropagation(); if (e.key === "Escape") { si.value = ""; st.q = ""; render(); C.focus(); } };
     /* content interactions */
+    C.addEventListener("click", e => { const f = e.target.closest(".fi"); if (f && Touch.touch && !e.ctrlKey && !e.shiftKey && !e.target.closest("input")) openItem(f.dataset.p); });
     C.addEventListener("dblclick", e => { const f = e.target.closest(".fi"); if (f && !e.target.closest("input")) openItem(f.dataset.p); });
     C.addEventListener("contextmenu", e => {
       e.preventDefault(); e.stopPropagation(); const f = e.target.closest(".fi");
@@ -5191,7 +5291,7 @@ registerApp("axplay", {
     const toggleBP = (v) => { bp = v; if (bp) { win.maximize(); renderBP(); const poll = () => { gpRaf = requestAnimationFrame(poll); const gp = [...(navigator.getGamepads?.() || [])].find(Boolean); if (!gp) return; const st = { left: gp.buttons[14]?.pressed || gp.axes[0] < -.6, right: gp.buttons[15]?.pressed || gp.axes[0] > .6, a: gp.buttons[0]?.pressed, b: gp.buttons[1]?.pressed }; for (const k in st) if (st[k] && !gpPrev[k]) bpKey(k); gpPrev = st; }; poll(); } else { cancelAnimationFrame(gpRaf); $(".bp", B)?.remove(); } };
     $(".bpb", B).onclick = () => toggleBP(!bp);
     win.el.tabIndex = -1; win.el.addEventListener("keydown", e => { if (!bp) return; const m = { ArrowLeft: "left", ArrowRight: "right", Enter: "a", Escape: "b", Backspace: "b" }[e.key]; if (m) { e.preventDefault(); e.stopPropagation(); bpKey(m); } });
-    $$(".top .tab", B).forEach(t => t.onclick = () => { tab = t.dataset.t; storeSel = null; render(); });
+    $$(".top .tab", B).forEach(t => t.onclick = () => { if (tab === t.dataset.t) sel = null; tab = t.dataset.t; storeSel = null; render(); });
     const off1 = Bus.on("axplay", render), off2 = Bus.on("axplay-dl", () => { if (tab === "downloads") renderDownloads(); else if (tab === "library" && sel) { const b = $(".play", body); const d = AxPlay.downloads.find(x => x.id === sel && x.p < 1); if (b && d) b.innerHTML = `${ic("download")} INSTALLING ${Math.round(d.p * 100)}%`; } }), off3 = Bus.on("store", render);
     win.on("close", () => { off1(); off2(); off3(); cancelAnimationFrame(gpRaf); });
     if (args.page) tab = args.page; render();
