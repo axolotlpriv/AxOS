@@ -1285,7 +1285,7 @@ const DEFAULT_SETTINGS = {
 const Settings = {
   data: null,
   load() { try { this.data = { ...structuredClone(DEFAULT_SETTINGS), ...JSON.parse(localStorage.getItem("axos.settings") || "{}") }; } catch (e) { this.data = structuredClone(DEFAULT_SETTINGS); } this.data.browser = { ...DEFAULT_SETTINGS.browser, ...(this.data.browser || {}) }; },
-  save: debounce(function () { try { localStorage.setItem("axos.settings", JSON.stringify(Settings.data)); } catch (e) { } }, 150),
+  save: debounce(function () { if (window.AXOS_NO_SAVE) return; try { localStorage.setItem("axos.settings", JSON.stringify(Settings.data)); } catch (e) { } }, 150),
   get(k) { return this.data[k]; },
   set(k, v) { this.data[k] = v; this.save(); Bus.emit("setting", k, v); Bus.emit("setting:" + k, v); },
   patch(k, obj) { this.set(k, { ...this.data[k], ...obj }); },
@@ -1435,7 +1435,7 @@ const FS = {
   _dirty: new Set(),
   changed(dir) { this._dirty.add(dir); this._emit(); this.persist(); },
   _emit: debounce(function () { const d = [...FS._dirty]; FS._dirty.clear(); Bus.emit("fs", d); }, 30),
-  persist: debounce(function () { IDB.set("fs", FS.root); }, 400),
+  persist: debounce(function () { if (!window.AXOS_NO_SAVE) IDB.set("fs", FS.root); }, 400),
   async init() {
     await IDB.open();
     const saved = await IDB.get("fs");
@@ -2028,8 +2028,8 @@ function runOOBE() {
     const st = { name: "", pw: "", theme: Settings.get("theme"), accent: Settings.get("accent"), wp: Settings.get("wallpaper") };
     const ACCENTS = ["#4f8cff", "#8b5cf6", "#e1468c", "#ef4444", "#f59e0b", "#10b981", "#06b6d4", "#64748b"];
     const steps = [
-      { side: "A few quick choices and you're ready to go. Everything stays private in your browser.", html: `<h2>Who's going to use this PC?</h2><div><label>Your name</label><input class="input nm" style="width:100%" maxlength="24" placeholder="e.g. Alex" spellcheck="false"></div><div><label>Password (optional)</label><input class="input pw" type="password" style="width:100%" placeholder="Leave empty for no password"></div><div class="dim" style="font-size:12px">Your password only protects the AxOS lock screen on this device.</div>`,
-        mount: m => { $(".nm", m).value = st.name; $(".pw", m).value = st.pw; setTimeout(() => $(".nm", m).focus(), 50); }, valid: m => { st.name = $(".nm", m).value.trim(); st.pw = $(".pw", m).value; if (!st.name) { $(".nm", m).classList.add("shake"); setTimeout(() => $(".nm", m).classList.remove("shake"), 400); return false; } return true; } },
+      { side: "A few quick choices and you're ready to go. Everything stays private in your browser.", html: `<h2>Who's going to use this PC?</h2><div><label>Your name</label><input class="input nm" style="width:100%" maxlength="24" placeholder="e.g. Alex" spellcheck="false"></div><div><label>Password (optional)</label><input class="input pw" type="password" style="width:100%" placeholder="Leave empty for no password"></div><div class="dim" style="font-size:12px">Your password only protects the AxOS lock screen on this device.</div><button class="btn sm ghost cl-oobe" style="align-self:flex-start">${ic("cloud")} Restore from AxOS Cloud…</button>`,
+        mount: m => { $(".cl-oobe", m).onclick = () => Cloud.oobeRestore(); $(".nm", m).value = st.name; $(".pw", m).value = st.pw; setTimeout(() => $(".nm", m).focus(), 50); }, valid: m => { st.name = $(".nm", m).value.trim(); st.pw = $(".pw", m).value; if (!st.name) { $(".nm", m).classList.add("shake"); setTimeout(() => $(".nm", m).classList.remove("shake"), 400); return false; } return true; } },
       { side: "Make it yours. You can change all of this later in Settings → Personalization.", html: `<h2>Pick your style</h2><div><label>Theme</label><div class="themepick"><button data-t="dark"><div class="pv d"></div>Dark</button><button data-t="light"><div class="pv l"></div>Light</button></div></div><div><label>Accent color</label><div class="swatches">${ACCENTS.map(c => `<button data-c="${c}" style="background:${c}"></button>`).join("")}</div></div><div><label>Wallpaper</label><div class="wp-grid" style="grid-template-columns:repeat(5,1fr);gap:6px">${Object.keys(WALLPAPERS).slice(0, 10).map(k => `<button data-w="${k}" style="background:${WALLPAPERS[k]}"></button>`).join("")}</div></div>`,
         mount: m => {
           const sync = () => { $$("[data-t]", m).forEach(b => b.classList.toggle("on", b.dataset.t === st.theme)); $$("[data-c]", m).forEach(b => b.classList.toggle("on", b.dataset.c === st.accent)); $$("[data-w]", m).forEach(b => b.classList.toggle("on", b.dataset.w === st.wp)); };
@@ -2119,7 +2119,7 @@ const Lock = {
 const Power = {
   async closeAll() { for (const w of [...WM.wins.values()]) await w.close(true); },
   async shutdown() {
-    Menu.closeAll(); Shell.closeFlyouts();
+    Menu.closeAll(); Shell.closeFlyouts(); await Cloud.beforeExit();
     const ov = h(`<div class="fullscreen-layer" style="z-index:9890;background:#000;opacity:0;transition:opacity .6s;display:grid;place-items:center;color:#ddd"><div class="col" style="align-items:center;gap:22px"><div class="spinner" style="border-color:rgba(255,255,255,.2);border-top-color:#fff"></div><div>Shutting down</div></div></div>`);
     document.body.appendChild(ov); requestAnimationFrame(() => ov.style.opacity = 1); Sound.play("shutdown");
     await this.closeAll(); IDB.set("fs", FS.root); await sleep(1600);
@@ -2128,7 +2128,7 @@ const Power = {
     document.body.appendChild(off); $("button", off).onclick = () => location.reload();
   },
   async restart() {
-    Menu.closeAll(); Shell.closeFlyouts();
+    Menu.closeAll(); Shell.closeFlyouts(); await Cloud.beforeExit();
     const ov = h(`<div class="fullscreen-layer" style="z-index:9890;background:#000;opacity:0;transition:opacity .6s;display:grid;place-items:center;color:#ddd"><div class="col" style="align-items:center;gap:22px"><div class="spinner" style="border-color:rgba(255,255,255,.2);border-top-color:#fff"></div><div>Restarting</div></div></div>`);
     document.body.appendChild(ov); requestAnimationFrame(() => ov.style.opacity = 1); Sound.play("shutdown");
     await this.closeAll(); await IDB.set("fs", FS.root); await sleep(1400); location.reload();
@@ -2142,7 +2142,7 @@ const Power = {
       document.addEventListener("keydown", wake); ov.addEventListener("pointerdown", wake);
     }, 700);
   },
-  async signOut() { Menu.closeAll(); Shell.closeFlyouts(); await this.closeAll(); Lock.show(); },
+  async signOut() { Menu.closeAll(); Shell.closeFlyouts(); await Cloud.beforeExit(); await this.closeAll(); Lock.show(); },
   lock() { Lock.show(); },
 };
 </script>
@@ -2747,7 +2747,7 @@ document.addEventListener("keyup", e => {
   metaAlone = false;
 });
 document.addEventListener("contextmenu", e => { if (!e.target.closest("input,textarea,[contenteditable],.allow-ctx")) e.preventDefault(); });
-window.addEventListener("beforeunload", () => { try { IDB.set("fs", FS.root); localStorage.setItem("axos.settings", JSON.stringify(Settings.data)); } catch (e) { } });
+window.addEventListener("beforeunload", () => { if (window.AXOS_NO_SAVE) return; try { IDB.set("fs", FS.root); localStorage.setItem("axos.settings", JSON.stringify(Settings.data)); } catch (e) { } });
 </script>
 <script>
 /* =====================================================================
@@ -3321,16 +3321,75 @@ const GATEWAYS = {
   alloriginsRaw: { name: "AllOrigins (raw)", kind: "raw", build: u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`, hedge: 2500 },
 };
 /* Source for a personal Cloudflare Worker gateway (no rate limits, real POST, cookies) */
-const AXPROXY_WORKER = `// AxProxy personal gateway — paste into a Cloudflare Worker and deploy.
-// Optional: set KEY to a secret and enter the same key in AxOS Settings.
+const AXPROXY_WORKER = `// AxOS personal gateway: AxProxy web gateway + AxOS Cloud (accounts and encrypted cloud saves).
+// Paste into a Cloudflare Worker and deploy.
+// For cloud saves, also add a KV namespace binding named AXCLOUD (Settings > Bindings).
+// Optional: set KEY to a secret and enter the same key in AxOS Settings (protects the web gateway).
 const KEY = "";
 const CORS = { "access-control-allow-origin": "*", "access-control-allow-methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS", "access-control-allow-headers": "*", "access-control-expose-headers": "*", "access-control-max-age": "86400" };
 const DROP = /^(content-security-policy(-report-only)?|x-frame-options|set-cookie|content-encoding|content-length|transfer-encoding|strict-transport-security|cross-origin-.*|permissions-policy)$/i;
+const CHUNK = 20000000;
+function json(obj, status) { return new Response(JSON.stringify(obj), { status: status || 200, headers: Object.assign({ "content-type": "application/json" }, CORS) }); }
+function rnd() { const a = new Uint8Array(32); crypto.getRandomValues(a); return Array.from(a, function (b) { return b.toString(16).padStart(2, "0"); }).join(""); }
+async function sha(s) { const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)); return Array.from(new Uint8Array(d), function (b) { return b.toString(16).padStart(2, "0"); }).join(""); }
+async function cloud(req, env, path) {
+  const kv = env.AXCLOUD;
+  if (!kv) return json({ error: "Cloud saves aren't set up on this gateway yet. In Cloudflare, add a KV namespace binding named AXCLOUD to the worker." }, 501);
+  if (path === "signup" || path === "login") {
+    const b = await req.json().catch(function () { return {}; });
+    const user = String(b.user || "").toLowerCase().trim(), auth = String(b.auth || "");
+    if (!/^[a-z0-9_.-]{3,32}$/.test(user) || auth.length !== 64) return json({ error: "Use 3-32 letters, numbers, dots, dashes or underscores for the username." }, 400);
+    const fails = Number(await kv.get("fails:" + user) || 0);
+    if (fails >= 10) return json({ error: "Too many attempts. Try again in 15 minutes." }, 429);
+    const rec = await kv.get("user:" + user, "json");
+    if (path === "signup") {
+      if (rec) return json({ error: "That username is already taken." }, 409);
+      const salt = rnd(); await kv.put("user:" + user, JSON.stringify({ salt: salt, hash: await sha(salt + auth), created: Date.now() }));
+    } else if (!rec || (await sha(rec.salt + auth)) !== rec.hash) {
+      await kv.put("fails:" + user, String(fails + 1), { expirationTtl: 900 });
+      return json({ error: "Wrong username or password." }, 401);
+    }
+    const token = rnd(); await kv.put("token:" + token, user, { expirationTtl: 2592000 });
+    return json({ token: token, user: user, meta: await kv.get("meta:" + user, "json") });
+  }
+  const token = (req.headers.get("authorization") || "").replace("Bearer ", "");
+  const user = token ? await kv.get("token:" + token) : null;
+  if (!user) return json({ error: "You've been signed out. Sign in again." }, 401);
+  const meta = await kv.get("meta:" + user, "json");
+  if (path === "me") return json({ user: user, meta: meta });
+  if (path === "logout") { await kv.delete("token:" + token); return json({ ok: true }); }
+  if (path === "save" && req.method === "GET") {
+    if (!meta) return json({ error: "No cloud save yet." }, 404);
+    const parts = []; let total = 0;
+    for (let i = 0; i < meta.chunks; i++) { const c = new Uint8Array(await kv.get("save:" + user + ":" + i, "arrayBuffer")); parts.push(c); total += c.length; }
+    const out = new Uint8Array(total); let o = 0; for (const c of parts) { out.set(c, o); o += c.length; }
+    return new Response(out, { headers: Object.assign({ "content-type": "application/octet-stream", "x-ax-meta": JSON.stringify(meta) }, CORS) });
+  }
+  if (path === "save" && req.method === "PUT") {
+    if (meta && req.headers.get("x-ax-force") !== "1" && req.headers.get("x-ax-base") !== String(meta.version)) return json({ error: "conflict", meta: meta }, 409);
+    const buf = new Uint8Array(await req.arrayBuffer());
+    if (buf.length > 95000000) return json({ error: "This save is larger than 95 MB." }, 413);
+    const n = Math.max(1, Math.ceil(buf.length / CHUNK));
+    for (let i = 0; i < n; i++) await kv.put("save:" + user + ":" + i, buf.subarray(i * CHUNK, (i + 1) * CHUNK));
+    for (let i = n; meta && i < meta.chunks; i++) await kv.delete("save:" + user + ":" + i);
+    const nm = { version: (meta ? meta.version : 0) + 1, updated: Date.now(), size: buf.length, chunks: n, device: (req.headers.get("x-ax-device") || "").slice(0, 60) };
+    await kv.put("meta:" + user, JSON.stringify(nm));
+    return json(nm);
+  }
+  if (path === "delete" && req.method === "POST") {
+    for (let i = 0; meta && i < meta.chunks; i++) await kv.delete("save:" + user + ":" + i);
+    await kv.delete("meta:" + user); await kv.delete("user:" + user); await kv.delete("token:" + token);
+    return json({ ok: true });
+  }
+  return json({ error: "Not found" }, 404);
+}
 export default {
-  async fetch(req) {
+  async fetch(req, env) {
     if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
-    const target = new URL(req.url).searchParams.get("url");
-    if (!target || !/^https?:\\/\\//i.test(target)) return new Response("AxProxy gateway is running. Request ?url=https://example.com", { headers: CORS });
+    const url = new URL(req.url);
+    if (url.pathname.startsWith("/cloud/")) return cloud(req, env, url.pathname.slice(7));
+    const target = url.searchParams.get("url");
+    if (!target || !/^https?:\\/\\//i.test(target)) return new Response("AxOS gateway is running. Web gateway: ?url=https://example.com · Cloud: " + (env.AXCLOUD ? "ready" : "add a KV binding named AXCLOUD"), { headers: CORS });
     if (KEY && req.headers.get("x-ax-key") !== KEY) return new Response("Forbidden", { status: 403, headers: CORS });
     const h = new Headers();
     for (const [k, v] of req.headers) if (k.startsWith("x-ax-h-")) h.set(k.slice(7), v);
@@ -3893,7 +3952,7 @@ const Backup = {
   export() { const data = JSON.stringify({ axos: AXOS_VERSION, date: Date.now(), settings: Settings.data, fs: this.enc(FS.root), bookmarks: BrowserData.bookmarks }); download(`axos-backup-${new Date().toISOString().slice(0, 10)}.json`, data, "application/json"); },
   import() {
     const inp = document.createElement("input"); inp.type = "file"; inp.accept = ".json,application/json";
-    inp.onchange = () => { const f = inp.files[0]; if (!f) return; const r = new FileReader(); r.onload = async () => { try { const j = JSON.parse(r.result); if (!j.fs || j.fs.type !== "dir") throw new Error("This isn't an AxOS backup file."); if (!(await Dialog.confirm("Restore backup?", `This replaces all files and settings with the backup from ${fmtDate(j.date)}. AxOS will restart.`, { icon: "alert", ok: "Restore", danger: true }))) return; await IDB.set("fs", this.dec(j.fs)); localStorage.setItem("axos.settings", JSON.stringify(j.settings)); if (j.bookmarks) BrowserData.set("bookmarks", j.bookmarks); location.reload(); } catch (e) { Dialog.alert("Couldn't restore", e.message, { icon: "errorC" }); } }; r.readAsText(f); };
+    inp.onchange = () => { const f = inp.files[0]; if (!f) return; const r = new FileReader(); r.onload = async () => { try { const j = JSON.parse(r.result); if (!j.fs || j.fs.type !== "dir") throw new Error("This isn't an AxOS backup file."); if (!(await Dialog.confirm("Restore backup?", `This replaces all files and settings with the backup from ${fmtDate(j.date)}. AxOS will restart.`, { icon: "alert", ok: "Restore", danger: true }))) return; window.AXOS_NO_SAVE = true; await IDB.set("fs", this.dec(j.fs)); localStorage.setItem("axos.settings", JSON.stringify(j.settings)); if (j.bookmarks) BrowserData.set("bookmarks", j.bookmarks); location.reload(); } catch (e) { Dialog.alert("Couldn't restore", e.message, { icon: "errorC" }); } }; r.readAsText(f); };
     inp.click();
   },
 };
@@ -3966,7 +4025,7 @@ registerApp("settings", {
         <h3>Default apps</h3>${Object.keys(da).length ? Object.entries(da).map(([e, a]) => row("file", "." + esc(e), "Opens with " + esc(Apps[a]?.name || a), `<button class="btn sm" data-undef="${esc(e)}">Reset</button>`)).join("") : `<div class="dim" style="font-size:12.5px">No custom defaults. Choose "Always use this app" in an Open with dialog to set one.</div>`}`; },
       accounts: () => `<h1>Accounts</h1><div class="st-hero">${avatarHTML(96)}<div class="grow"><div style="font-size:20px;font-weight:600">${esc(S("username"))}</div><div class="muted">Local account · Administrator</div><div class="row" style="margin-top:10px"><button class="btn sm av">${ic("image")} Choose picture</button>${S("avatar") ? `<button class="btn sm avr">Remove picture</button>` : ""}</div></div></div>
         <h3>Or pick an emoji avatar</h3><div class="srow stack"><div class="emoji-grid">${AVATAR_EMOJI.map(e => `<button data-emoji="${e}">${e}</button>`).join("")}</div></div>
-        ${row("user", "Account name", `Home folder: ${esc(FS.home)}`, `<button class="btn un">Change</button>`)}${row("lock", "Password", S("password") ? "Your account is protected with a password" : "No password — anyone can sign in", `<button class="btn pw">${S("password") ? "Change" : "Add"}</button>${S("password") ? `<button class="btn pwr">Remove</button>` : ""}`)}${row("lock", "Lock now", "Ctrl+Alt+L", `<button class="btn lk">Lock</button>`)}`,
+        ${row("user", "Account name", `Home folder: ${esc(FS.home)}`, `<button class="btn un">Change</button>`)}${row("lock", "Password", S("password") ? "Your account is protected with a password" : "No password — anyone can sign in", `<button class="btn pw">${S("password") ? "Change" : "Add"}</button>${S("password") ? `<button class="btn pwr">Remove</button>` : ""}`)}${row("lock", "Lock now", "Ctrl+Alt+L", `<button class="btn lk">Lock</button>`)}${Cloud.panel()}`,
       time: () => { const tz = Intl.DateTimeFormat().resolvedOptions().timeZone; return `<h1>Time & language</h1><div class="st-hero"><div class="bigtime" style="font-size:48px" data-live-clock></div><div class="grow muted">${new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</div></div>${row("clock", "24-hour clock", "", sw("clock24"))}${row("clock", "Show seconds in taskbar", "", sw("showSeconds"))}${row("globe", "Time zone", esc(tz) + " (synced from your computer)", "")}${row("language", "Display language", esc(navigator.language) + " (from your browser)", "")}`; },
       network: () => { const b = S("browser"); const c = navigator.connection; return `<h1>Network & Browser</h1><div class="st-hero"><div style="width:64px;height:64px;border-radius:50%;background:rgba(var(--accent-rgb),.15);display:grid;place-items:center;color:var(--accent)">${ic(navigator.onLine && S("wifi") ? "wifi" : "wifiOff").replace('class="i ', 'style="width:32px;height:32px" class="i ')}</div><div class="grow"><div style="font-size:18px;font-weight:600">${navigator.onLine && S("wifi") && !S("airplane") ? "AxNet-5G" : "Not connected"}</div><div class="muted">${navigator.onLine ? "Connected, secured" : "No internet access"}${c?.effectiveType ? ` · ${c.effectiveType.toUpperCase()}${c.downlink ? " · ~" + c.downlink + " Mbps" : ""}` : ""}</div></div></div>
         ${row("wifi", "Wi-Fi", "", sw("wifi"))}${row("plane", "Airplane mode", "", sw("airplane"))}
@@ -4037,6 +4096,7 @@ registerApp("settings", {
       });
       q(".pwr", async () => { const old = await Dialog.prompt("Remove password", "Enter your current password:", "", { type: "password" }); if (old === S("password")) { Settings.set("password", ""); render(); } else if (old != null) Dialog.alert("Incorrect password", "", { icon: "errorC" }); });
       q(".lk", () => Power.lock());
+      Cloud.wire(P, render);
       $$("[data-preset]", P).forEach(e => e.onclick = () => { applyPreset(e.dataset.preset); render(); });
       $$("[data-cur]", P).forEach(e => e.onclick = () => { Settings.set("cursor", e.dataset.cur); render(); });
       $$("[data-sch]", P).forEach(e => e.onclick = () => { Settings.set("soundScheme", e.dataset.sch); Settings.data.sounds = true; Sound.play("notify"); render(); });
@@ -4086,7 +4146,7 @@ registerApp("settings", {
       q(".rp", async () => { const p = await FilePicker.open({ title: "Run a program", start: FS.home + "/Downloads" }); if (p) Compat.launch(p); });
       q(".cr", () => { Recents.set({ files: [], apps: [] }); notify("Cleared", "Recent files and apps were cleared.", "settings", { silent: true }); });
       q(".ch", () => { BrowserData.set("history", []); notify("Cleared", "Browsing history was cleared.", "settings", { silent: true }); });
-      q(".rst", async () => { if (!(await Dialog.confirm("Reset this PC?", "All your files, apps and settings will be permanently removed. AxOS will restart and run setup again.", { icon: "alert", ok: "Reset", danger: true }))) return; if (!(await Dialog.confirm("Are you absolutely sure?", "This cannot be undone. Consider exporting a backup first (System → Storage).", { icon: "alert", ok: "Reset everything", danger: true }))) return; await IDB.del("fs"); Object.keys(localStorage).filter(k => k.startsWith("axos.")).forEach(k => localStorage.removeItem(k)); location.reload(); });
+      q(".rst", async () => { if (!(await Dialog.confirm("Reset this PC?", "All your files, apps and settings will be permanently removed. AxOS will restart and run setup again.", { icon: "alert", ok: "Reset", danger: true }))) return; if (!(await Dialog.confirm("Are you absolutely sure?", "This cannot be undone. Consider exporting a backup first (System → Storage).", { icon: "alert", ok: "Reset everything", danger: true }))) return; window.AXOS_NO_SAVE = true; await IDB.del("fs"); Object.keys(localStorage).filter(k => k.startsWith("axos.")).forEach(k => localStorage.removeItem(k)); location.reload(); });
       q(".cu", async () => { const b = $(".cu", P); b.disabled = true; $(".ust", P).textContent = "Checking for updates…"; await sleep(1800); localStorage.setItem("axos.lastUpdate", Date.now()); $(".ust", P).textContent = "You're up to date"; $(".ulc", P).textContent = "Last checked: " + fmtDate(Date.now()); b.disabled = false; });
       if ($(".qm", P) && navigator.storage?.estimate) navigator.storage.estimate().then(e => { const m = $(".qm", P); if (!m) return; m.style.width = Math.max(1, e.usage / e.quota * 100) + "%"; $(".qt", P).textContent = `Browser storage: ${fmtSize(e.usage)} used of ${fmtSize(e.quota)} available to AxOS`; });
       const lc = $("[data-live-clock]", P); if (lc) { const t = () => { if (!document.body.contains(lc)) return clearInterval(iv); lc.textContent = fmtTime(new Date(), true); }; const iv = setInterval(t, 1000); t(); }
@@ -4096,6 +4156,7 @@ registerApp("settings", {
     fi.onkeydown = e => e.stopPropagation();
     const off = Bus.on("setting", k => { if (["wallpaper", "theme", "accent", "customWallpaper"].includes(k) && (["personalization", "system"].includes(page) || page.startsWith("p-"))) { const m = $(".mon", P); if (m) m.style.background = wallpaperCSS(); } });
     win.on("close", off);
+    const offCloud = Bus.on("cloud", () => { if (page === "accounts" && !P.contains(document.activeElement)) render(); }); win.on("close", offCloud);
     render();
   },
 });
@@ -5822,6 +5883,339 @@ const Motion = {
 Motion.init();
 </script>
 <script>
+const AXOS_COMPANION_PY = "#!/usr/bin/env python3\n\"\"\"AxOS Companion: lets AxOS Remote Desktop stream and control this PC.\n\nRun it, then enter the PC ID and secret key it prints into AxOS > Remote Desktop.\n\n    pip install aiortc mss pynput numpy websockets\n    python axos-companion.py\n\nOptional extras: pyperclip (clipboard sync), soundcard (PC audio),\nvgamepad (controller support, Windows), dxcam (faster capture, Windows).\n\nSignaling goes through public WebTorrent trackers. Every signaling message is\nencrypted and authenticated with the secret key, so the trackers only relay\nciphertext. The stream itself is a direct, DTLS-encrypted WebRTC connection.\n\"\"\"\nimport argparse\nimport asyncio\nimport base64\nimport fractions\nimport hashlib\nimport json\nimport os\nimport platform\nimport queue\nimport secrets\nimport sys\nimport threading\nimport time\n\nVERSION = \"1.0.0\"\nTRACKERS = [\"wss://tracker.openwebtorrent.com\", \"wss://tracker.webtorrent.dev\"]\nSTUN = [\"stun:stun.l.google.com:19302\", \"stun:stun.cloudflare.com:3478\"]\nCONFIG_PATH = os.path.join(os.path.expanduser(\"~\"), \".axos-companion.json\")\nB32 = \"ABCDEFGHJKLMNPQRSTUVWXYZ23456789\"  # no 0/O/1/I\n\nMISSING = []\ntry:\n    import numpy as np\n    import av\n    from aiortc import RTCPeerConnection, RTCSessionDescription, RTCConfiguration, RTCIceServer, MediaStreamTrack\n    from aiortc.mediastreams import VideoStreamTrack\n    import aiortc.codecs.h264 as h264mod\n    import aiortc.rtcrtpsender as sendermod\n    from cryptography.hazmat.primitives.ciphers.aead import AESGCM\n    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC\n    from cryptography.hazmat.primitives import hashes\n    import websockets\nexcept ImportError as e:  # pragma: no cover - friendly message for first-time setup\n    MISSING.append(e.name)\ntry:\n    import mss\n    MSS = getattr(mss, \"MSS\", None) or mss.mss\nexcept ImportError:\n    mss = MSS = None\nOPTIONAL = {}\nfor _name in (\"pyperclip\", \"soundcard\", \"vgamepad\", \"dxcam\"):\n    try:\n        OPTIONAL[_name] = __import__(_name)\n    except Exception:\n        OPTIONAL[_name] = None\n\nIS_WIN = platform.system() == \"Windows\"\n\n\ndef log(*a):\n    print(time.strftime(\"%H:%M:%S\"), *a, flush=True)\n\n\n# ---------------------------------------------------------------------------\n# Identity and encryption\n# ---------------------------------------------------------------------------\ndef gen_code(n):\n    return \"\".join(secrets.choice(B32) for _ in range(n))\n\n\ndef load_identity(args):\n    cfg = {}\n    if os.path.exists(CONFIG_PATH):\n        try:\n            with open(CONFIG_PATH) as f:\n                cfg = json.load(f)\n        except Exception:\n            cfg = {}\n    if args.new_key or \"id\" not in cfg:\n        cfg[\"id\"] = cfg.get(\"id\") if not args.new_key and cfg.get(\"id\") else gen_code(4) + \"-\" + gen_code(4)\n        cfg[\"key\"] = gen_code(4) + \"-\" + gen_code(4) + \"-\" + gen_code(4)\n    if args.name:\n        cfg[\"name\"] = args.name\n    cfg.setdefault(\"name\", platform.node() or \"My PC\")\n    with open(CONFIG_PATH, \"w\") as f:\n        json.dump(cfg, f)\n    try:\n        os.chmod(CONFIG_PATH, 0o600)\n    except Exception:\n        pass\n    return cfg\n\n\ndef norm_id(pc_id):\n    return pc_id.upper().replace(\"-\", \"\").replace(\" \", \"\")\n\n\ndef derive_key(pc_id, key):\n    kdf = PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=(\"axos-rd:\" + norm_id(pc_id)).encode(), iterations=150000)\n    return AESGCM(kdf.derive(key.upper().replace(\"-\", \"\").replace(\" \", \"\").encode()))\n\n\ndef info_hash(pc_id):\n    return hashlib.sha1((\"axos-rd:\" + norm_id(pc_id)).encode()).digest().decode(\"latin1\")\n\n\ndef seal(aes, obj):\n    iv = os.urandom(12)\n    return base64.b64encode(iv + aes.encrypt(iv, json.dumps(obj).encode(), None)).decode()\n\n\ndef unseal(aes, text):\n    raw = base64.b64decode(text)\n    return json.loads(aes.decrypt(raw[:12], raw[12:], None))\n\n\n# ---------------------------------------------------------------------------\n# Video: screen capture track + tuned H.264 encoder (hardware when available)\n# ---------------------------------------------------------------------------\nMODES = {\n    \"gaming\": {\"fps\": 60, \"max_height\": 1080, \"min_br\": 3_000_000, \"max_br\": 20_000_000, \"start_br\": 10_000_000, \"preset\": \"ultrafast\"},\n    \"work\": {\"fps\": 30, \"max_height\": 2160, \"min_br\": 2_000_000, \"max_br\": 15_000_000, \"start_br\": 8_000_000, \"preset\": \"veryfast\"},\n}\nSTATE = {\"mode\": \"work\", \"fps\": 30, \"max_height\": 2160, \"max_br\": 15_000_000, \"monitor\": 1, \"encoder\": \"?\"}\n\n\ndef apply_mode(mode, fps=None, max_height=None, max_br=None):\n    m = MODES.get(mode, MODES[\"work\"])\n    STATE.update(mode=mode, fps=int(fps or m[\"fps\"]), max_height=int(max_height or m[\"max_height\"]), max_br=int(max_br or m[\"max_br\"]))\n    h264mod.MIN_BITRATE = m[\"min_br\"]\n    h264mod.MAX_BITRATE = STATE[\"max_br\"]\n    h264mod.DEFAULT_BITRATE = min(m[\"start_br\"], STATE[\"max_br\"])\n    h264mod.MAX_FRAME_RATE = max(30, STATE[\"fps\"])\n\n\ndef encoder_order():\n    names = []\n    s = platform.system()\n    if s == \"Windows\":\n        names = [\"h264_nvenc\", \"h264_qsv\", \"h264_amf\"]\n    elif s == \"Darwin\":\n        names = [\"h264_videotoolbox\"]\n    else:\n        names = [\"h264_nvenc\", \"h264_vaapi\", \"h264_qsv\"]\n    return [n for n in names if n in av.codecs_available] + [\"libx264\"]\n\n\nENCODER_OPTIONS = {\n    \"h264_nvenc\": lambda m: {\"preset\": \"p1\" if m == \"gaming\" else \"p3\", \"tune\": \"ull\", \"zerolatency\": \"1\", \"rc\": \"cbr\", \"delay\": \"0\", \"bf\": \"0\"},\n    \"h264_qsv\": lambda m: {\"preset\": \"veryfast\", \"async_depth\": \"1\", \"look_ahead\": \"0\"},\n    \"h264_amf\": lambda m: {\"usage\": \"ultralowlatency\" if m == \"gaming\" else \"lowlatency\", \"quality\": \"speed\" if m == \"gaming\" else \"balanced\", \"rc\": \"cbr\"},\n    \"h264_videotoolbox\": lambda m: {\"realtime\": \"1\", \"allow_sw\": \"0\"},\n    \"h264_vaapi\": lambda m: {},\n    \"libx264\": lambda m: {\"preset\": MODES[m][\"preset\"], \"tune\": \"zerolatency\", \"level\": \"42\", \"rc-lookahead\": \"0\", \"crf\": \"23\" if m == \"gaming\" else \"19\"},\n}\nBAD_ENCODERS = set()\n\n\nclass AxEncoder(h264mod.H264Encoder):\n    \"\"\"aiortc's H.264 encoder with higher bitrates, 60+ fps and hardware encoders.\"\"\"\n    _fps = None\n\n    def _open(self, frame):\n        for name in encoder_order():\n            if name in BAD_ENCODERS:\n                continue\n            try:\n                c = av.CodecContext.create(name, \"w\")\n                c.width, c.height = frame.width, frame.height\n                c.bit_rate = self.target_bitrate\n                c.pix_fmt = \"nv12\" if name in (\"h264_nvenc\", \"h264_qsv\", \"h264_amf\", \"h264_videotoolbox\") else \"yuv420p\"\n                c.framerate = fractions.Fraction(STATE[\"fps\"], 1)\n                c.time_base = fractions.Fraction(1, STATE[\"fps\"])\n                c.gop_size = STATE[\"fps\"] * 10\n                c.max_b_frames = 0\n                opts = ENCODER_OPTIONS[name](STATE[\"mode\"])\n                if name == \"libx264\":\n                    # Constant quality, capped by the network's bitrate: sharp static text, bounded motion\n                    kbps = max(500, self.target_bitrate // 1000)\n                    opts.update({\"maxrate\": f\"{kbps}k\", \"bufsize\": f\"{max(250, kbps * 2 // STATE['fps'])}k\"})\n                c.options = opts\n                try:\n                    c.profile = \"Constrained Baseline\" if name != \"libx264\" else \"Baseline\"\n                except Exception:\n                    pass\n                c.open()\n                if STATE[\"encoder\"] != name:\n                    log(f\"Video encoder: {name} ({'hardware' if name != 'libx264' else 'CPU'})\")\n                STATE[\"encoder\"] = name\n                return c\n            except Exception as e:\n                BAD_ENCODERS.add(name)\n                if name != \"libx264\":\n                    log(f\"{name} not usable here ({str(e)[:60]}); trying the next encoder\")\n        raise RuntimeError(\"No H.264 encoder available\")\n\n    def _encode_frame(self, frame, force_keyframe):\n        if self.codec and (frame.width != self.codec.width or frame.height != self.codec.height or abs(self.target_bitrate - self.codec.bit_rate) / max(1, self.codec.bit_rate) > 0.35 or self._fps != STATE[\"fps\"]):\n            self.buffer_data, self.buffer_pts, self.codec = b\"\", None, None\n        frame.pict_type = av.video.frame.PictureType.I if force_keyframe else av.video.frame.PictureType.NONE\n        if self.codec is None:\n            self.codec = self._open(frame)\n            self._fps = STATE[\"fps\"]\n        try:\n            data = b\"\".join(bytes(p) for p in self.codec.encode(frame))\n        except Exception as e:\n            if STATE[\"encoder\"] != \"libx264\":\n                log(f\"{STATE['encoder']} failed while encoding ({str(e)[:60]}); falling back\")\n                BAD_ENCODERS.add(STATE[\"encoder\"])\n                self.codec = None\n                return\n            raise\n        if data:\n            yield from self._split_bitstream(data)\n\n\n_orig_get_encoder = sendermod.get_encoder if not MISSING else None\n\n\ndef _get_encoder(codec):\n    if codec.mimeType.lower() == \"video/h264\":\n        return AxEncoder()\n    return _orig_get_encoder(codec)\n\n\nclass ScreenTrack(VideoStreamTrack if not MISSING else object):\n    kind = \"video\"\n\n    def __init__(self, test_pattern=False):\n        super().__init__()\n        self.test = test_pattern\n        self._local = threading.local()\n        self._start = None\n        self._count = 0\n        self._dx = None\n        if IS_WIN and OPTIONAL[\"dxcam\"] and not test_pattern:\n            try:\n                self._dx = OPTIONAL[\"dxcam\"].create(output_color=\"BGRA\")\n                log(\"Capture: DXGI desktop duplication (dxcam)\")\n            except Exception:\n                self._dx = None\n\n    def monitors(self):\n        if self.test or mss is None:\n            return [{\"i\": 1, \"w\": 1920, \"h\": 1080, \"primary\": True}]\n        with MSS() as s:\n            return [{\"i\": i, \"w\": m[\"width\"], \"h\": m[\"height\"], \"primary\": i == 1} for i, m in enumerate(s.monitors) if i > 0]\n\n    def _sct(self):\n        if not hasattr(self._local, \"sct\"):\n            self._local.sct = MSS()\n        return self._local.sct\n\n    def _grab(self):\n        if self.test:\n            w, h = 1280, 720\n            t = time.time()\n            img = np.zeros((h, w, 4), np.uint8)\n            x = int((t * 300) % w)\n            img[:, :, 0] = np.linspace(80, 200, w, dtype=np.uint8)[None, :]\n            img[:, :, 2] = np.linspace(200, 60, h, dtype=np.uint8)[:, None]\n            img[h // 2 - 60:h // 2 + 60, max(0, x - 60):x + 60, :3] = 255\n            return img, w, h\n        if self._dx is not None:\n            arr = self._dx.grab()\n            if arr is None:\n                arr = getattr(self, \"_last\", None)\n                if arr is None:\n                    time.sleep(0.005)\n                    return self._grab()\n            self._last = arr\n            return arr, arr.shape[1], arr.shape[0]\n        sct = self._sct()\n        mons = sct.monitors\n        mon = mons[STATE[\"monitor\"]] if STATE[\"monitor\"] < len(mons) else mons[1]\n        shot = sct.grab(mon)\n        return np.frombuffer(shot.bgra, np.uint8).reshape(shot.height, shot.width, 4), shot.width, shot.height\n\n    async def recv(self):\n        fps = max(5, STATE[\"fps\"])\n        if self._start is None or fps != getattr(self, \"_fps\", fps):\n            self._start, self._count = time.time(), 0\n        self._fps = fps\n        self._count += 1\n        target = self._start + self._count / fps\n        delay = target - time.time()\n        if delay > 0:\n            await asyncio.sleep(delay)\n        elif delay < -0.5:\n            self._start, self._count = time.time(), 0\n        arr, w, h = await asyncio.get_running_loop().run_in_executor(None, self._grab)\n        frame = av.VideoFrame.from_ndarray(arr, format=\"bgra\")\n        mh = STATE[\"max_height\"]\n        if h > mh:\n            nw = int(w * mh / h) // 2 * 2\n            frame = frame.reformat(width=nw, height=mh)\n        elif w % 2 or h % 2:\n            frame = frame.reformat(width=w // 2 * 2, height=h // 2 * 2)\n        frame.pts = int((time.time() - self._start) * 90000)\n        frame.time_base = fractions.Fraction(1, 90000)\n        return frame\n\n\nclass LoopbackAudio(MediaStreamTrack if not MISSING else object):\n    \"\"\"PC audio through the soundcard library's loopback recorder (Windows / Linux PulseAudio).\"\"\"\n    kind = \"audio\"\n\n    def __init__(self, test_tone=False):\n        super().__init__()\n        self.q = queue.Queue(maxsize=50)\n        self.pts = 0\n        self.test = test_tone\n        self.running = True\n        threading.Thread(target=self._run, daemon=True).start()\n\n    def _run(self):\n        rate, n = 48000, 960\n        if self.test:\n            t = 0\n            while self.running:\n                s = (np.sin(2 * np.pi * 440 * (np.arange(n) + t) / rate) * 3000).astype(np.int16)\n                t += n\n                self._put(np.stack([s, s], axis=1))\n                time.sleep(n / rate)\n            return\n        sc = OPTIONAL[\"soundcard\"]\n        try:\n            mic = sc.get_microphone(id=str(sc.default_speaker().name), include_loopback=True)\n            with mic.recorder(samplerate=rate, channels=2, blocksize=n) as rec:\n                while self.running:\n                    data = rec.record(numframes=n)\n                    self._put((np.clip(data, -1, 1) * 32767).astype(np.int16))\n        except Exception as e:\n            log(\"Audio capture stopped:\", str(e)[:80])\n\n    def _put(self, pcm):\n        try:\n            self.q.put_nowait(pcm)\n        except queue.Full:\n            try:\n                self.q.get_nowait()\n            except queue.Empty:\n                pass\n\n    async def recv(self):\n        pcm = await asyncio.get_running_loop().run_in_executor(None, self.q.get)\n        frame = av.AudioFrame.from_ndarray(pcm.reshape(1, -1), format=\"s16\", layout=\"stereo\")\n        frame.sample_rate = 48000\n        frame.pts = self.pts\n        frame.time_base = fractions.Fraction(1, 48000)\n        self.pts += pcm.shape[0]\n        return frame\n\n    def stop(self):\n        self.running = False\n        super().stop()\n\n\n# ---------------------------------------------------------------------------\n# Input injection\n# ---------------------------------------------------------------------------\n# KeyboardEvent.code -> (PC/AT set-1 scancode, extended) for Windows SendInput\nSCAN = {\n    \"Escape\": (0x01, 0), \"Digit1\": (0x02, 0), \"Digit2\": (0x03, 0), \"Digit3\": (0x04, 0), \"Digit4\": (0x05, 0), \"Digit5\": (0x06, 0), \"Digit6\": (0x07, 0), \"Digit7\": (0x08, 0), \"Digit8\": (0x09, 0), \"Digit9\": (0x0A, 0), \"Digit0\": (0x0B, 0),\n    \"Minus\": (0x0C, 0), \"Equal\": (0x0D, 0), \"Backspace\": (0x0E, 0), \"Tab\": (0x0F, 0), \"KeyQ\": (0x10, 0), \"KeyW\": (0x11, 0), \"KeyE\": (0x12, 0), \"KeyR\": (0x13, 0), \"KeyT\": (0x14, 0), \"KeyY\": (0x15, 0), \"KeyU\": (0x16, 0), \"KeyI\": (0x17, 0),\n    \"KeyO\": (0x18, 0), \"KeyP\": (0x19, 0), \"BracketLeft\": (0x1A, 0), \"BracketRight\": (0x1B, 0), \"Enter\": (0x1C, 0), \"ControlLeft\": (0x1D, 0), \"KeyA\": (0x1E, 0), \"KeyS\": (0x1F, 0), \"KeyD\": (0x20, 0), \"KeyF\": (0x21, 0), \"KeyG\": (0x22, 0),\n    \"KeyH\": (0x23, 0), \"KeyJ\": (0x24, 0), \"KeyK\": (0x25, 0), \"KeyL\": (0x26, 0), \"Semicolon\": (0x27, 0), \"Quote\": (0x28, 0), \"Backquote\": (0x29, 0), \"ShiftLeft\": (0x2A, 0), \"Backslash\": (0x2B, 0), \"KeyZ\": (0x2C, 0), \"KeyX\": (0x2D, 0),\n    \"KeyC\": (0x2E, 0), \"KeyV\": (0x2F, 0), \"KeyB\": (0x30, 0), \"KeyN\": (0x31, 0), \"KeyM\": (0x32, 0), \"Comma\": (0x33, 0), \"Period\": (0x34, 0), \"Slash\": (0x35, 0), \"ShiftRight\": (0x36, 0), \"NumpadMultiply\": (0x37, 0), \"AltLeft\": (0x38, 0),\n    \"Space\": (0x39, 0), \"CapsLock\": (0x3A, 0), \"F1\": (0x3B, 0), \"F2\": (0x3C, 0), \"F3\": (0x3D, 0), \"F4\": (0x3E, 0), \"F5\": (0x3F, 0), \"F6\": (0x40, 0), \"F7\": (0x41, 0), \"F8\": (0x42, 0), \"F9\": (0x43, 0), \"F10\": (0x44, 0),\n    \"NumLock\": (0x45, 0), \"ScrollLock\": (0x46, 0), \"Numpad7\": (0x47, 0), \"Numpad8\": (0x48, 0), \"Numpad9\": (0x49, 0), \"NumpadSubtract\": (0x4A, 0), \"Numpad4\": (0x4B, 0), \"Numpad5\": (0x4C, 0), \"Numpad6\": (0x4D, 0), \"NumpadAdd\": (0x4E, 0),\n    \"Numpad1\": (0x4F, 0), \"Numpad2\": (0x50, 0), \"Numpad3\": (0x51, 0), \"Numpad0\": (0x52, 0), \"NumpadDecimal\": (0x53, 0), \"IntlBackslash\": (0x56, 0), \"F11\": (0x57, 0), \"F12\": (0x58, 0),\n    \"NumpadEnter\": (0x1C, 1), \"ControlRight\": (0x1D, 1), \"NumpadDivide\": (0x35, 1), \"PrintScreen\": (0x37, 1), \"AltRight\": (0x38, 1), \"Home\": (0x47, 1), \"ArrowUp\": (0x48, 1), \"PageUp\": (0x49, 1), \"ArrowLeft\": (0x4B, 1),\n    \"ArrowRight\": (0x4D, 1), \"End\": (0x4F, 1), \"ArrowDown\": (0x50, 1), \"PageDown\": (0x51, 1), \"Insert\": (0x52, 1), \"Delete\": (0x53, 1), \"MetaLeft\": (0x5B, 1), \"MetaRight\": (0x5C, 1), \"ContextMenu\": (0x5D, 1),\n}\n\n\nclass WinInput:\n    \"\"\"SendInput with hardware scancodes and raw relative mouse motion, which games read.\"\"\"\n\n    def __init__(self):\n        import ctypes\n        from ctypes import wintypes\n        self.ct = ctypes\n        u = ctypes.WinDLL(\"user32\", use_last_error=True)\n        self.u = u\n        ULONG_PTR = ctypes.c_size_t\n\n        class MOUSEINPUT(ctypes.Structure):\n            _fields_ = [(\"dx\", wintypes.LONG), (\"dy\", wintypes.LONG), (\"mouseData\", wintypes.DWORD), (\"dwFlags\", wintypes.DWORD), (\"time\", wintypes.DWORD), (\"dwExtraInfo\", ULONG_PTR)]\n\n        class KEYBDINPUT(ctypes.Structure):\n            _fields_ = [(\"wVk\", wintypes.WORD), (\"wScan\", wintypes.WORD), (\"dwFlags\", wintypes.DWORD), (\"time\", wintypes.DWORD), (\"dwExtraInfo\", ULONG_PTR)]\n\n        class HARDWAREINPUT(ctypes.Structure):\n            _fields_ = [(\"uMsg\", wintypes.DWORD), (\"wParamL\", wintypes.WORD), (\"wParamH\", wintypes.WORD)]\n\n        class _U(ctypes.Union):\n            _fields_ = [(\"mi\", MOUSEINPUT), (\"ki\", KEYBDINPUT), (\"hi\", HARDWAREINPUT)]\n\n        class INPUT(ctypes.Structure):\n            _anonymous_ = (\"u\",)\n            _fields_ = [(\"type\", wintypes.DWORD), (\"u\", _U)]\n\n        self.INPUT, self.MOUSEINPUT, self.KEYBDINPUT = INPUT, MOUSEINPUT, KEYBDINPUT\n        u.SendInput.argtypes = (wintypes.UINT, ctypes.POINTER(INPUT), ctypes.c_int)\n        try:\n            ctypes.windll.shcore.SetProcessDpiAwareness(2)\n        except Exception:\n            pass\n\n    def _send(self, inp):\n        self.u.SendInput(1, self.ct.byref(inp), self.ct.sizeof(inp))\n\n    def _mouse(self, dx=0, dy=0, data=0, flags=0):\n        inp = self.INPUT(type=0)\n        inp.mi = self.MOUSEINPUT(dx, dy, data & 0xFFFFFFFF, flags, 0, 0)\n        self._send(inp)\n\n    def key(self, code, down):\n        sc = SCAN.get(code)\n        if not sc:\n            return\n        flags = 0x0008 | (0 if down else 0x0002) | (0x0001 if sc[1] else 0)\n        inp = self.INPUT(type=1)\n        inp.ki = self.KEYBDINPUT(0, sc[0], flags, 0, 0)\n        self._send(inp)\n\n    def move_abs(self, nx, ny, mon):\n        # Map onto the virtual desktop in 0..65535 coordinates\n        vx, vy = self.u.GetSystemMetrics(76), self.u.GetSystemMetrics(77)\n        vw, vh = self.u.GetSystemMetrics(78), self.u.GetSystemMetrics(79)\n        px = mon[\"left\"] + nx * mon[\"width\"]\n        py = mon[\"top\"] + ny * mon[\"height\"]\n        self._mouse(int((px - vx) * 65535 / max(1, vw - 1)), int((py - vy) * 65535 / max(1, vh - 1)), 0, 0x0001 | 0x8000 | 0x4000)\n\n    def move_rel(self, dx, dy):\n        self._mouse(int(dx), int(dy), 0, 0x0001)\n\n    def button(self, b, down):\n        flags = {0: (0x0002, 0x0004), 1: (0x0020, 0x0040), 2: (0x0008, 0x0010)}.get(b)\n        if flags:\n            self._mouse(0, 0, 0, flags[0] if down else flags[1])\n        elif b in (3, 4):\n            self._mouse(0, 0, 1 if b == 3 else 2, 0x0080 if down else 0x0100)\n\n    def wheel(self, dx, dy):\n        if dy:\n            self._mouse(0, 0, int(-dy), 0x0800)\n        if dx:\n            self._mouse(0, 0, int(dx), 0x01000)\n\n\nclass PynputInput:\n    def __init__(self):\n        from pynput import keyboard, mouse\n        self.k, self.m = keyboard.Controller(), mouse.Controller()\n        self.Key, self.KeyCode, self.Button = keyboard.Key, keyboard.KeyCode, mouse.Button\n        K = keyboard.Key\n        self.special = {\"Escape\": K.esc, \"Enter\": K.enter, \"NumpadEnter\": K.enter, \"Backspace\": K.backspace, \"Tab\": K.tab, \"Space\": K.space, \"ShiftLeft\": K.shift_l, \"ShiftRight\": K.shift_r,\n                        \"ControlLeft\": K.ctrl_l, \"ControlRight\": K.ctrl_r, \"AltLeft\": K.alt_l, \"AltRight\": K.alt_r, \"MetaLeft\": K.cmd, \"MetaRight\": K.cmd, \"CapsLock\": K.caps_lock,\n                        \"ArrowUp\": K.up, \"ArrowDown\": K.down, \"ArrowLeft\": K.left, \"ArrowRight\": K.right, \"Home\": K.home, \"End\": K.end, \"PageUp\": K.page_up, \"PageDown\": K.page_down,\n                        \"Delete\": K.delete, \"Insert\": getattr(K, \"insert\", K.delete), \"ContextMenu\": getattr(K, \"menu\", K.cmd), \"PrintScreen\": getattr(K, \"print_screen\", K.f12)}\n        for i in range(1, 21):\n            if hasattr(K, f\"f{i}\"):\n                self.special[f\"F{i}\"] = getattr(K, f\"f{i}\")\n        self.chars = {\"Minus\": \"-\", \"Equal\": \"=\", \"BracketLeft\": \"[\", \"BracketRight\": \"]\", \"Backslash\": \"\\\\\", \"Semicolon\": \";\", \"Quote\": \"'\", \"Backquote\": \"`\", \"Comma\": \",\", \"Period\": \".\", \"Slash\": \"/\",\n                      \"NumpadAdd\": \"+\", \"NumpadSubtract\": \"-\", \"NumpadMultiply\": \"*\", \"NumpadDivide\": \"/\", \"NumpadDecimal\": \".\"}\n\n    def _resolve(self, code):\n        if code in self.special:\n            return self.special[code]\n        if code.startswith(\"Key\") and len(code) == 4:\n            return self.KeyCode.from_char(code[3].lower())\n        if code.startswith(\"Digit\"):\n            return self.KeyCode.from_char(code[5:])\n        if code.startswith(\"Numpad\") and code[6:].isdigit():\n            return self.KeyCode.from_char(code[6:])\n        if code in self.chars:\n            return self.KeyCode.from_char(self.chars[code])\n        return None\n\n    def key(self, code, down):\n        k = self._resolve(code)\n        if k is not None:\n            (self.k.press if down else self.k.release)(k)\n\n    def move_abs(self, nx, ny, mon):\n        self.m.position = (int(mon[\"left\"] + nx * mon[\"width\"]), int(mon[\"top\"] + ny * mon[\"height\"]))\n\n    def move_rel(self, dx, dy):\n        self.m.move(int(dx), int(dy))\n\n    def button(self, b, down):\n        btn = {0: self.Button.left, 1: self.Button.middle, 2: self.Button.right}.get(b)\n        if btn:\n            (self.m.press if down else self.m.release)(btn)\n\n    def wheel(self, dx, dy):\n        self.m.scroll(int(dx / 100) if dx else 0, int(-dy / 100) or (-1 if dy > 0 else 1 if dy < 0 else 0))\n\n\nclass Gamepad:\n    \"\"\"Virtual Xbox 360 controller (Windows, needs vgamepad + ViGEmBus).\"\"\"\n\n    def __init__(self):\n        self.pad = None\n        vg = OPTIONAL[\"vgamepad\"]\n        if vg:\n            try:\n                self.pad = vg.VX360Gamepad()\n                self.vg = vg\n                log(\"Controller support: virtual Xbox 360 pad ready\")\n            except Exception as e:\n                log(\"Controller support unavailable:\", str(e)[:60])\n        self.prev = 0\n\n    def update(self, st):\n        if not self.pad:\n            return\n        B = self.vg.XUSB_BUTTON\n        order = [B.XUSB_GAMEPAD_A, B.XUSB_GAMEPAD_B, B.XUSB_GAMEPAD_X, B.XUSB_GAMEPAD_Y, B.XUSB_GAMEPAD_LEFT_SHOULDER, B.XUSB_GAMEPAD_RIGHT_SHOULDER, None, None,\n                 B.XUSB_GAMEPAD_BACK, B.XUSB_GAMEPAD_START, B.XUSB_GAMEPAD_LEFT_THUMB, B.XUSB_GAMEPAD_RIGHT_THUMB, B.XUSB_GAMEPAD_DPAD_UP, B.XUSB_GAMEPAD_DPAD_DOWN, B.XUSB_GAMEPAD_DPAD_LEFT, B.XUSB_GAMEPAD_DPAD_RIGHT, B.XUSB_GAMEPAD_GUIDE]\n        bits = st.get(\"b\", 0)\n        for i, btn in enumerate(order):\n            if btn is None:\n                continue\n            if bits & (1 << i):\n                self.pad.press_button(btn)\n            else:\n                self.pad.release_button(btn)\n        a = st.get(\"a\", [0, 0, 0, 0])\n        self.pad.left_joystick_float(float(a[0]), float(-a[1]))\n        self.pad.right_joystick_float(float(a[2]), float(-a[3]))\n        tr = st.get(\"tr\", [0, 0])\n        self.pad.left_trigger_float(float(tr[0]))\n        self.pad.right_trigger_float(float(tr[1]))\n        self.pad.update()\n\n\nclass Input:\n    def __init__(self, dry=False):\n        self.dry = dry\n        self.impl = None\n        if not dry:\n            try:\n                self.impl = WinInput() if IS_WIN else PynputInput()\n            except Exception as e:\n                log(\"Input control unavailable:\", str(e)[:80], \"(view-only mode)\")\n        self.pad = Gamepad() if not dry else None\n        self.held_keys, self.held_btns = set(), set()\n\n    def monitor(self):\n        if mss is None:\n            return {\"left\": 0, \"top\": 0, \"width\": 1920, \"height\": 1080}\n        with MSS() as s:\n            mons = s.monitors\n            return mons[STATE[\"monitor\"]] if STATE[\"monitor\"] < len(mons) else mons[1]\n\n    def handle(self, m):\n        t = m.get(\"t\")\n        if self.dry:\n            if t not in (\"pos\", \"rel\", \"pad\"):\n                log(\"input\", m)\n            self.last = m\n            return\n        if not self.impl:\n            return\n        try:\n            if t == \"key\":\n                (self.held_keys.add if m[\"d\"] else self.held_keys.discard)(m[\"c\"])\n                self.impl.key(m[\"c\"], bool(m[\"d\"]))\n            elif t == \"pos\":\n                self.impl.move_abs(min(1, max(0, m[\"x\"])), min(1, max(0, m[\"y\"])), self._mon())\n            elif t == \"rel\":\n                self.impl.move_rel(m[\"x\"], m[\"y\"])\n            elif t == \"btn\":\n                (self.held_btns.add if m[\"d\"] else self.held_btns.discard)(m[\"b\"])\n                self.impl.button(int(m[\"b\"]), bool(m[\"d\"]))\n            elif t == \"wheel\":\n                self.impl.wheel(m.get(\"x\", 0), m.get(\"y\", 0))\n            elif t == \"pad\" and self.pad:\n                self.pad.update(m)\n        except Exception as e:\n            log(\"input error:\", str(e)[:80])\n\n    def _mon(self):\n        if not hasattr(self, \"_mcache\") or time.time() - self._mtime > 5:\n            self._mcache, self._mtime = self.monitor(), time.time()\n        return self._mcache\n\n    def release_all(self):\n        for c in list(self.held_keys):\n            self.handle({\"t\": \"key\", \"c\": c, \"d\": 0})\n        for b in list(self.held_btns):\n            self.handle({\"t\": \"btn\", \"b\": b, \"d\": 0})\n\n\n# ---------------------------------------------------------------------------\n# Session handling\n# ---------------------------------------------------------------------------\nclass Companion:\n    def __init__(self, args, ident):\n        self.args, self.ident = args, ident\n        self.aes = derive_key(ident[\"id\"], ident[\"key\"])\n        self.ih = info_hash(ident[\"id\"])\n        self.peer_id = secrets.token_bytes(20).decode(\"latin1\")\n        self.sessions = {}\n        self.seen = {}\n        self.fails = []\n        self.input = Input(dry=args.dry_input)\n        self.trackers = {}\n\n    async def run(self):\n        sendermod.get_encoder = _get_encoder\n        apply_mode(\"work\")\n        await asyncio.gather(*(self.tracker_loop(url) for url in TRACKERS))\n\n    async def tracker_loop(self, url):\n        delay = 2\n        while True:\n            try:\n                async with websockets.connect(url, open_timeout=15, ping_interval=20, max_size=2 ** 22) as ws:\n                    self.trackers[url] = ws\n                    delay = 2\n                    log(f\"Waiting for AxOS on {url.split('//')[1]}\")\n                    await self.announce(ws)\n                    keep = asyncio.create_task(self.reannounce(ws))\n                    try:\n                        async for raw in ws:\n                            try:\n                                msg = json.loads(raw)\n                            except ValueError:\n                                continue\n                            if msg.get(\"offer\") and msg.get(\"peer_id\") != self.peer_id:\n                                asyncio.create_task(self.on_offer(ws, msg))\n                    finally:\n                        keep.cancel()\n            except Exception as e:\n                log(f\"Signaling server {url.split('//')[1]} unavailable ({type(e).__name__}); retrying\")\n            self.trackers.pop(url, None)\n            await asyncio.sleep(delay)\n            delay = min(60, delay * 2)\n\n    async def announce(self, ws, event=\"started\"):\n        await ws.send(json.dumps({\"action\": \"announce\", \"info_hash\": self.ih, \"peer_id\": self.peer_id, \"numwant\": 0, \"uploaded\": 0, \"downloaded\": 0, \"left\": 0, \"event\": event, \"offers\": []}))\n\n    async def reannounce(self, ws):\n        while True:\n            await asyncio.sleep(30)\n            await self.announce(ws, \"\")\n\n    async def reply(self, ws, msg, payload):\n        await ws.send(json.dumps({\"action\": \"announce\", \"info_hash\": self.ih, \"peer_id\": self.peer_id, \"to_peer_id\": msg[\"peer_id\"], \"offer_id\": msg[\"offer_id\"],\n                                  \"answer\": {\"type\": \"answer\", \"sdp\": payload}}))\n\n    async def on_offer(self, ws, msg):\n        oid = msg.get(\"offer_id\")\n        if oid in self.seen:\n            return\n        self.seen[oid] = time.time()\n        now = time.time()\n        self.fails = [t for t in self.fails if now - t < 60]\n        try:\n            req = unseal(self.aes, msg[\"offer\"][\"sdp\"])\n        except Exception:\n            self.fails.append(now)\n            if len(self.fails) <= 10:\n                await self.reply(ws, msg, \"ERR:key\")\n            log(\"Rejected a connection attempt with the wrong key\")\n            return\n        if abs(now - req.get(\"ts\", 0) / 1000) > 300:\n            log(\"Rejected a stale connection request\")\n            return\n        log(f\"Connection request from AxOS ({req.get('mode', 'work')} mode)\")\n        apply_mode(req.get(\"mode\", \"work\"), req.get(\"fps\"), req.get(\"height\"), req.get(\"bitrate\"))\n        STATE[\"monitor\"] = int(req.get(\"monitor\") or 1)\n        ice = [RTCIceServer(urls=u) for u in STUN] + [RTCIceServer(**t) for t in req.get(\"turn\", []) if t.get(\"urls\")]\n        pc = RTCPeerConnection(RTCConfiguration(iceServers=ice))\n        sid = secrets.token_hex(4)\n        sess = {\"pc\": pc, \"tracks\": [], \"channels\": {}}\n        self.sessions[sid] = sess\n\n        @pc.on(\"datachannel\")\n        def on_dc(ch):\n            sess[\"channels\"][ch.label] = ch\n\n            @ch.on(\"message\")\n            def on_msg(raw):\n                try:\n                    m = json.loads(raw)\n                except ValueError:\n                    return\n                self.on_control(sess, ch, m)\n            if ch.label == \"ctl\":\n                ch.send(json.dumps({\"t\": \"hello\", \"name\": self.ident[\"name\"], \"os\": f\"{platform.system()} {platform.release()}\", \"version\": VERSION, \"monitors\": screen.monitors(),\n                                    \"encoder\": STATE[\"encoder\"], \"features\": {\"audio\": bool(sess.get(\"audio\")), \"clipboard\": bool(OPTIONAL[\"pyperclip\"]), \"gamepad\": bool(self.input.pad and self.input.pad.pad), \"input\": bool(self.input.impl) or self.input.dry}}))\n                asyncio.ensure_future(self.clipboard_loop(sess, ch))\n\n        @pc.on(\"connectionstatechange\")\n        async def on_state():\n            log(\"Connection:\", pc.connectionState)\n            if pc.connectionState in (\"failed\", \"closed\"):\n                await self.close(sid)\n\n        await pc.setRemoteDescription(RTCSessionDescription(sdp=req[\"sdp\"], type=\"offer\"))\n        screen = ScreenTrack(test_pattern=self.args.test_pattern)\n        sess[\"tracks\"].append(screen)\n        for t in pc.getTransceivers():\n            if t.kind == \"video\":\n                pc.addTrack(screen)\n                break\n        want_audio = req.get(\"audio\", True) and (OPTIONAL[\"soundcard\"] or self.args.test_pattern)\n        if want_audio and any(t.kind == \"audio\" for t in pc.getTransceivers()):\n            audio = LoopbackAudio(test_tone=self.args.test_pattern)\n            sess[\"tracks\"].append(audio)\n            sess[\"audio\"] = True\n            pc.addTrack(audio)\n        answer = await pc.createAnswer()\n        await pc.setLocalDescription(answer)\n        await self.reply(ws, msg, seal(self.aes, {\"sdp\": pc.localDescription.sdp, \"ts\": int(time.time() * 1000), \"name\": self.ident[\"name\"]}))\n\n    def on_control(self, sess, ch, m):\n        t = m.get(\"t\")\n        if t == \"ping\":\n            ch.send(json.dumps({\"t\": \"pong\", \"ts\": m.get(\"ts\"), \"enc\": STATE[\"encoder\"], \"fps\": STATE[\"fps\"]}))\n        elif t == \"mode\":\n            apply_mode(m.get(\"mode\", \"work\"), m.get(\"fps\"), m.get(\"height\"), m.get(\"bitrate\"))\n            log(f\"Switched to {STATE['mode']} mode: {STATE['fps']} fps, up to {STATE['max_height']}p, {STATE['max_br'] // 1_000_000} Mbps\")\n        elif t == \"monitor\":\n            STATE[\"monitor\"] = int(m.get(\"i\", 1))\n        elif t == \"clip\" and OPTIONAL[\"pyperclip\"]:\n            try:\n                OPTIONAL[\"pyperclip\"].copy(str(m.get(\"text\", \"\"))[:1_000_000])\n                sess[\"clip\"] = m.get(\"text\")\n            except Exception:\n                pass\n        elif t == \"release\":\n            self.input.release_all()\n        else:\n            self.input.handle(m)\n\n    async def clipboard_loop(self, sess, ch):\n        pc = OPTIONAL[\"pyperclip\"]\n        if not pc:\n            return\n        while sess[\"pc\"].connectionState not in (\"closed\", \"failed\"):\n            await asyncio.sleep(1)\n            if STATE[\"mode\"] != \"work\":\n                continue\n            try:\n                text = pc.paste()\n            except Exception:\n                continue\n            if text and text != sess.get(\"clip\") and ch.readyState == \"open\":\n                sess[\"clip\"] = text\n                ch.send(json.dumps({\"t\": \"clip\", \"text\": text[:100_000]}))\n\n    async def close(self, sid):\n        sess = self.sessions.pop(sid, None)\n        if not sess:\n            return\n        self.input.release_all()\n        for t in sess[\"tracks\"]:\n            try:\n                t.stop()\n            except Exception:\n                pass\n        await sess[\"pc\"].close()\n        log(\"Session ended\")\n\n\ndef main():\n    ap = argparse.ArgumentParser(description=\"AxOS Companion: remote desktop host for AxOS\")\n    ap.add_argument(\"--name\", help=\"Name shown in AxOS\")\n    ap.add_argument(\"--new-key\", action=\"store_true\", help=\"Generate a new secret key (disconnects saved AxOS devices)\")\n    ap.add_argument(\"--test-pattern\", action=\"store_true\", help=\"Stream a test pattern instead of the screen\")\n    ap.add_argument(\"--dry-input\", action=\"store_true\", help=\"Log input instead of controlling this PC\")\n    args = ap.parse_args()\n    if MISSING:\n        print(\"AxOS Companion needs a few Python packages. Install them with:\\n\\n  \" + (\"py\" if IS_WIN else \"python3\") + \" -m pip install aiortc mss pynput numpy websockets\\n\")\n        print(\"Missing:\", \", \".join(sorted(set(MISSING))))\n        sys.exit(1)\n    if mss is None and not args.test_pattern:\n        print(\"Screen capture needs the 'mss' package: pip install mss\")\n        sys.exit(1)\n    ident = load_identity(args)\n    extras = [k for k in (\"pyperclip\", \"soundcard\", \"vgamepad\", \"dxcam\") if OPTIONAL[k]]\n    print(\"\\n  AxOS Companion \" + VERSION)\n    print(\"  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\")\n    print(f\"  PC name     {ident['name']}\")\n    print(f\"  PC ID       {ident['id']}\")\n    print(f\"  Secret key  {ident['key']}\")\n    print(\"  \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\")\n    print(\"  In AxOS, open Remote Desktop \u2192 Add a PC and enter the ID and key.\")\n    print(\"  Anyone with the key can control this PC. Run with --new-key to change it.\")\n    print(f\"  Extras: {', '.join(extras) if extras else 'none (pip install pyperclip soundcard for clipboard and audio)'}\\n\")\n    try:\n        asyncio.run(Companion(args, ident).run())\n    except KeyboardInterrupt:\n        print(\"\\nStopped.\")\n\n\nif __name__ == \"__main__\":\n    main()\n";
+</script>
+<script>
+/* =====================================================================
+   Remote Desktop — streams a PC running AxOS Companion over WebRTC.
+   Signaling: public WebTorrent trackers carry AES-GCM-encrypted offers
+   and answers (key derived from the PC's secret key). Media and input
+   travel over a direct, DTLS-encrypted peer connection.
+   ===================================================================== */
+const RD = {
+  TRACKERS: ["wss://tracker.openwebtorrent.com", "wss://tracker.webtorrent.dev"],
+  STUN: ["stun:stun.l.google.com:19302", "stun:stun.cloudflare.com:3478"],
+  normId: id => String(id).toUpperCase().replace(/[^A-Z0-9]/g, ""),
+  latin1: buf => Array.from(new Uint8Array(buf), b => String.fromCharCode(b)).join(""),
+  async key(id, secret) {
+    const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(String(secret).toUpperCase().replace(/[^A-Z0-9]/g, "")), "PBKDF2", false, ["deriveKey"]);
+    return crypto.subtle.deriveKey({ name: "PBKDF2", hash: "SHA-256", salt: new TextEncoder().encode("axos-rd:" + this.normId(id)), iterations: 150000 }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+  },
+  async infoHash(id) { return this.latin1(await crypto.subtle.digest("SHA-1", new TextEncoder().encode("axos-rd:" + this.normId(id)))); },
+  async seal(key, obj) { const iv = crypto.getRandomValues(new Uint8Array(12)); const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(JSON.stringify(obj)))); const out = new Uint8Array(12 + ct.length); out.set(iv); out.set(ct, 12); let s = ""; for (let i = 0; i < out.length; i += 32768) s += String.fromCharCode.apply(null, out.subarray(i, i + 32768)); return btoa(s); },
+  async unseal(key, text) { const raw = Uint8Array.from(atob(text), c => c.charCodeAt(0)); return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: raw.subarray(0, 12) }, key, raw.subarray(12)))); },
+  pcs() { try { return JSON.parse(localStorage.getItem("axos.rdPCs")) || []; } catch (e) { return []; } },
+  savePcs(l) { localStorage.setItem("axos.rdPCs", JSON.stringify(l)); Bus.emit("rd"); },
+  opts() { try { return { turnUrl: "", turnUser: "", turnPass: "", ...JSON.parse(localStorage.getItem("axos.rdOpts") || "{}") }; } catch (e) { return { turnUrl: "", turnUser: "", turnPass: "" }; } },
+  /* Signal through the trackers and return a connected RTCPeerConnection */
+  async connect({ id, secret, mode, fps, height, bitrate, monitor = 1, onStatus = () => { }, signal }) {
+    const o = this.opts(); const turn = o.turnUrl ? [{ urls: o.turnUrl, username: o.turnUser, credential: o.turnPass }] : [];
+    const pc = new RTCPeerConnection({ iceServers: [{ urls: this.STUN }, ...turn] });
+    const vt = pc.addTransceiver("video", { direction: "recvonly" }); pc.addTransceiver("audio", { direction: "recvonly" });
+    try { const caps = RTCRtpReceiver.getCapabilities("video").codecs; const pri = c => /h264/i.test(c.mimeType) ? (/42e01f/.test(c.sdpFmtpLine || "") ? 0 : 1) : /vp8/i.test(c.mimeType) ? 2 : 3; vt.setCodecPreferences([...caps].sort((a, b) => pri(a) - pri(b))); } catch (e) { }
+    const ctl = pc.createDataChannel("ctl", { ordered: true }); const mv = pc.createDataChannel("mv", { ordered: false, maxRetransmits: 0 });
+    onStatus("Preparing a secure connection…");
+    const key = await this.key(id, secret); const ih = await this.infoHash(id);
+    await pc.setLocalDescription(await pc.createOffer());
+    await new Promise(res => { if (pc.iceGatheringState === "complete") return res(); const t = setTimeout(res, 2500); pc.addEventListener("icegatheringstatechange", () => { if (pc.iceGatheringState === "complete") { clearTimeout(t); res(); } }); });
+    const payload = await this.seal(key, { sdp: pc.localDescription.sdp, ts: Date.now(), mode, fps, height, bitrate, monitor, audio: true, turn });
+    const peerId = this.latin1(crypto.getRandomValues(new Uint8Array(20))), offerId = this.latin1(crypto.getRandomValues(new Uint8Array(20)));
+    onStatus("Looking for your PC…");
+    const answer = await new Promise((resolve, reject) => {
+      const sockets = []; let done = false, timers = [];
+      const finish = (err, val) => { if (done) return; done = true; timers.forEach(clearTimeout); timers.forEach(clearInterval); sockets.forEach(s => { try { s.close(); } catch (e) { } }); err ? reject(err) : resolve(val); };
+      timers.push(setTimeout(() => finish(new Error("Your PC didn't answer. Make sure AxOS Companion is running on it and the PC ID is correct.")), 30000));
+      signal?.addEventListener("abort", () => finish(new DOMException("Cancelled", "AbortError")));
+      let opened = 0, failed = 0;
+      for (const url of this.TRACKERS) {
+        let ws; try { ws = new WebSocket(url); } catch (e) { failed++; continue; } sockets.push(ws);
+        const announce = () => ws.readyState === 1 && ws.send(JSON.stringify({ action: "announce", info_hash: ih, peer_id: peerId, numwant: 5, uploaded: 0, downloaded: 0, left: 1, event: "started", offers: [{ offer: { type: "offer", sdp: payload }, offer_id: offerId }] }));
+        ws.onopen = () => { opened++; announce(); timers.push(setInterval(announce, 4000)); };
+        ws.onerror = () => { failed++; if (failed >= this.TRACKERS.length && !opened) finish(new Error("Couldn't reach the signaling servers. Your network may block them.")); };
+        ws.onmessage = async ev => {
+          let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+          if (!m.answer || m.offer_id !== offerId) return;
+          if (m.answer.sdp === "ERR:key") return finish(new Error("Wrong secret key for this PC."));
+          try { finish(null, await this.unseal(key, m.answer.sdp)); } catch (e) { }
+        };
+      }
+    });
+    onStatus("Connecting to " + (answer.name || "your PC") + "…");
+    await pc.setRemoteDescription({ type: "answer", sdp: answer.sdp });
+    await new Promise((res, rej) => {
+      const t = setTimeout(() => rej(new Error("Found your PC but couldn't open a direct connection. Some networks block peer-to-peer traffic. Add a TURN relay server under Remote Desktop settings.")), 20000);
+      const chk = () => { if (pc.connectionState === "connected") { clearTimeout(t); res(); } else if (pc.connectionState === "failed") { clearTimeout(t); rej(new Error("The connection failed. Try again, or add a TURN relay server.")); } };
+      pc.addEventListener("connectionstatechange", chk); chk();
+    });
+    return { pc, ctl, mv, name: answer.name };
+  },
+};
+const RD_MODES = { gaming: { fps: 60, height: 1080, bitrate: 20000000 }, work: { fps: 30, height: 2160, bitrate: 15000000 } };
+const RD_CODES = ["Escape", "Tab", "AltLeft", "ControlLeft", "MetaLeft", "F4", "Delete", "PrintScreen"];
+
+registerApp("remote", {
+  name: "Remote Desktop", icon: "monitor", colors: ["#22d3ee", "#7c3aed"], w: 1100, h: 700, minW: 520, minH: 380, category: "System", keywords: "remote desktop pc stream companion rdp vnc control gaming",
+  launch(win, args) {
+    const B = win.body; let sess = null;
+    const home = () => {
+      const pcs = RD.pcs(); const o = RD.opts();
+      B.innerHTML = `<div style="height:100%;overflow:auto;background:var(--surface)"><div style="padding:26px 28px;color:#fff;background:linear-gradient(120deg,#0891b2,#6d28d9)"><div class="row" style="gap:16px">${appIconHTML("remote", 56)}<div><h1 style="margin:0;font-size:24px">Remote Desktop</h1><div style="opacity:.9">Use your PC from AxOS, with a gaming mode and a work mode</div></div></div></div>
+        <div style="padding:20px 28px;display:grid;grid-template-columns:minmax(260px,1.2fr) minmax(260px,1fr);gap:18px" class="rd-grid">
+          <div><div class="row" style="justify-content:space-between;margin-bottom:10px"><b style="font-size:15px">Your PCs</b><button class="btn primary sm add">${ic("plus")} Add a PC</button></div>
+            ${pcs.length ? pcs.map((p, i) => `<div class="card" style="padding:14px;margin-bottom:10px;display:flex;gap:14px;align-items:center;flex-wrap:wrap"><div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#22d3ee,#7c3aed);display:grid;place-items:center;color:#fff">${ic("monitor")}</div><div class="grow" style="min-width:140px"><div style="font-weight:600">${esc(p.name || p.id)}</div><div class="dim mono" style="font-size:12px">${esc(p.id)}${p.last ? " · " + timeAgo(p.last) : ""}</div></div><div class="seg"><button data-go="${i}" data-mode="gaming">${ic("gamepad")} Gaming</button><button data-go="${i}" data-mode="work">${ic("monitor")} Work</button></div><button class="ibtn" data-menu="${i}">${ic("moreV")}</button></div>`).join("") : `<div class="card" style="padding:22px;text-align:center"><div class="dim">No PCs yet. Set up AxOS Companion on a PC, then add it here with its ID and secret key.</div></div>`}
+            <div class="card" style="padding:14px;margin-top:6px"><b>Connection settings</b><div class="dim" style="font-size:12px;margin:4px 0 8px;line-height:1.5">Most networks connect directly. If yours blocks peer-to-peer traffic (some school, office and mobile networks do), add a TURN relay server.</div><div class="col" style="gap:6px"><input class="input tu" placeholder="turn:turn.example.com:3478" value="${esc(o.turnUrl)}"><div class="row"><input class="input grow tuu" placeholder="Username" value="${esc(o.turnUser)}"><input class="input grow tup" type="password" placeholder="Password" value="${esc(o.turnPass)}"></div></div></div></div>
+          <div><b style="font-size:15px">Set up a PC</b><div class="card" style="padding:16px;margin-top:10px;line-height:1.55;font-size:13px"><ol style="margin:0;padding-left:18px"><li>Install <b>Python 3.10 or newer</b> on the PC (python.org).</li><li>Download <b>AxOS Companion</b> and copy it to the PC.<div style="margin:8px 0"><button class="btn primary sm dl">${ic("download")} Download axos-companion.py</button></div></li><li>Install its packages:<pre class="mono cmd" style="background:var(--surface-3);padding:8px 10px;border-radius:6px;font-size:11.5px;white-space:pre-wrap;margin:6px 0">pip install aiortc mss pynput numpy websockets pyperclip soundcard</pre><span class="dim" style="font-size:12px">Windows gamers can also add <code>vgamepad dxcam</code> for controller support and faster capture.</span></li><li>Run it: <code>python axos-companion.py</code>. It prints a <b>PC ID</b> and <b>secret key</b>.</li><li>Click <b>Add a PC</b> here and enter them.</li></ol>
+            <div class="dim" style="font-size:12px;margin-top:10px">Windows: grant permission if the firewall asks. macOS: allow Screen Recording and Accessibility for your terminal. Linux: needs an X11 session (Wayland isn't supported).</div></div>
+            <div class="card" style="padding:16px;margin-top:12px;font-size:12.5px;line-height:1.6"><b>Gaming mode</b> · 60 fps at up to 1080p and 20 Mbps, raw mouse with pointer lock, controller passthrough, minimal buffering.<br><b>Work mode</b> · sharp full-resolution text at 30 fps, normal cursor, clipboard sync.<br><span class="dim">Uses your PC's hardware video encoder (NVIDIA, Intel or AMD) when available.</span></div></div>
+        </div></div>`;
+      $(".add", B).onclick = () => editPc();
+      $(".dl", B).onclick = () => download("axos-companion.py", AXOS_COMPANION_PY, "text/x-python");
+      $$("[data-go]", B).forEach(b => b.onclick = () => start(RD.pcs()[+b.dataset.go], b.dataset.mode));
+      $$("[data-menu]", B).forEach(b => b.onclick = e => { const i = +b.dataset.menu; Menu.at(e.currentTarget, [{ label: "Edit", icon: "edit", action: () => editPc(i) }, { label: "Remove", icon: "trash", danger: true, action: () => { const l = RD.pcs(); l.splice(i, 1); RD.savePcs(l); home(); } }]); });
+      const saveOpts = () => localStorage.setItem("axos.rdOpts", JSON.stringify({ turnUrl: $(".tu", B).value.trim(), turnUser: $(".tuu", B).value.trim(), turnPass: $(".tup", B).value }));
+      $$(".tu,.tuu,.tup", B).forEach(i => { i.onchange = saveOpts; i.onkeydown = e => e.stopPropagation(); });
+      win.setTitle("Remote Desktop");
+    };
+    const editPc = async (i) => {
+      const l = RD.pcs(); const p = i != null ? l[i] : { id: "", key: "", name: "" };
+      const body = h(`<div class="col" style="margin-top:10px;gap:10px"><label><div class="muted" style="font-size:12px;margin-bottom:4px">PC ID</div><input class="input id mono" style="width:100%" placeholder="ABCD-EFGH" value="${esc(p.id)}" spellcheck="false"></label><label><div class="muted" style="font-size:12px;margin-bottom:4px">Secret key</div><input class="input ky mono" style="width:100%" type="password" placeholder="XXXX-XXXX-XXXX" value="${esc(p.key)}" spellcheck="false"></label><label><div class="muted" style="font-size:12px;margin-bottom:4px">Name (optional)</div><input class="input nm" style="width:100%" placeholder="Gaming PC" value="${esc(p.name || "")}"></label><div class="dim" style="font-size:12px">AxOS Companion prints both when it starts. The key never leaves this device unencrypted.</div></div>`);
+      const ok = await Dialog.open({ title: i != null ? "Edit PC" : "Add a PC", body, buttons: [{ label: "Cancel", value: false }, { label: "Save", primary: true, value: true }] }); if (!ok) return;
+      const np = { id: $(".id", body).value.trim().toUpperCase(), key: $(".ky", body).value.trim().toUpperCase(), name: $(".nm", body).value.trim(), last: p.last };
+      if (RD.normId(np.id).length < 6 || RD.normId(np.key).length < 8) return Dialog.alert("Check the details", "Enter the PC ID and secret key exactly as AxOS Companion shows them.", { icon: "alert" });
+      if (i != null) l[i] = np; else l.push(np); RD.savePcs(l); home();
+    };
+    /* ---------------- session ---------------- */
+    const start = async (p, mode) => {
+      const ctl = new AbortController(); const prof = { ...RD_MODES[mode] };
+      B.innerHTML = `<div class="rd-wrap" style="position:relative;flex:1;background:#000;display:grid;place-items:center;color:#ddd"><div class="col" style="align-items:center;gap:14px"><div class="spinner" style="width:34px;height:34px;border-color:rgba(255,255,255,.2);border-top-color:#fff"></div><div class="st">Starting…</div><button class="btn sm cancel">Cancel</button></div></div>`;
+      $(".cancel", B).onclick = () => { ctl.abort(); home(); };
+      win.setTitle(`${p.name || p.id} — Remote Desktop`);
+      let conn;
+      try { conn = await RD.connect({ id: p.id, secret: p.key, mode, ...prof, signal: ctl.signal, onStatus: s => { const e = $(".st", B); if (e) e.textContent = s; } }); }
+      catch (e) { if (e.name === "AbortError") return; B.innerHTML = `<div class="empty-state" style="background:var(--surface)">${ic("wifiOff")}<div style="max-width:440px">${esc(e.message)}</div><div class="row"><button class="btn primary retry">Try again</button><button class="btn back">Back</button></div></div>`; $(".retry", B).onclick = () => start(p, mode); $(".back", B).onclick = home; return; }
+      const l = RD.pcs(); const idx = l.findIndex(x => x.id === p.id); if (idx >= 0) { l[idx].last = Date.now(); l[idx].mode = mode; RD.savePcs(l); }
+      session(p, mode, conn);
+    };
+    const session = (p, mode, { pc, ctl, mv, name }) => {
+      B.innerHTML = `<div class="rd-wrap" tabindex="0" style="position:relative;flex:1;background:#000;overflow:hidden;outline:none"><video class="rd-v" autoplay playsinline style="position:absolute;inset:0;width:100%;height:100%;object-fit:contain"></video>
+        <div class="rd-bar" style="position:absolute;top:8px;left:50%;transform:translateX(-50%);display:flex;gap:4px;align-items:center;padding:5px 8px;border-radius:12px;background:rgba(20,20,26,.82);backdrop-filter:blur(14px);color:#eee;z-index:3;transition:opacity .3s,transform .4s var(--spring);font-size:12px;box-shadow:0 8px 30px rgba(0,0,0,.4)">
+          <div class="seg" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.1)"><button data-m="gaming">${ic("gamepad")} Gaming</button><button data-m="work">${ic("monitor")} Work</button></div>
+          <button class="ibtn q" style="color:#eee" data-tip="Quality">${ic("sliders")}</button><button class="ibtn k" style="color:#eee" data-tip="Send keys">${ic("keyboard")}</button><button class="ibtn cb" style="color:#eee" data-tip="Send clipboard to PC">${ic("paste")}</button><button class="ibtn au" style="color:#eee" data-tip="Sound">${ic("volume")}</button><button class="ibtn sts" style="color:#eee" data-tip="Stats">${ic("activity")}</button><button class="ibtn fs" style="color:#eee" data-tip="Full screen">${ic("maximize")}</button><button class="ibtn x" style="color:#fca5a5" data-tip="Disconnect">${ic("x")}</button></div>
+        <pre class="rd-stats hidden" style="position:absolute;left:10px;top:10px;margin:0;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,.65);color:#9ef;font:11.5px/1.5 var(--mono);z-index:2;pointer-events:none"></pre>
+        <div class="rd-hint" style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);padding:6px 12px;border-radius:8px;background:rgba(0,0,0,.6);color:#ddd;font-size:12px;z-index:2;pointer-events:none;transition:opacity .5s"></div></div>`;
+      const W = $(".rd-wrap", B), V = $(".rd-v", B), bar = $(".rd-bar", B), stEl = $(".rd-stats", B), hint = $(".rd-hint", B);
+      const stream = new MediaStream(); pc.getReceivers().forEach(r => r.track && stream.addTrack(r.track)); V.srcObject = stream; V.play().catch(() => { V.muted = true; V.play(); showHint("Sound is muted. Click the speaker button to unmute."); });
+      let hello = {}, cur = { mode, ...RD_MODES[mode] }, closed = false, showStats = false, pending = { x: 0, y: 0 }, absPos = null, raf = 0, padPrev = "";
+      const send = (ch, m) => { if (ch.readyState === "open") ch.send(JSON.stringify(m)); };
+      const showHint = (t, ms = 3500) => { hint.textContent = t; hint.style.opacity = 1; clearTimeout(showHint.t); showHint.t = setTimeout(() => hint.style.opacity = 0, ms); };
+      const tuneLatency = () => pc.getReceivers().forEach(r => { try { if ("jitterBufferTarget" in r) r.jitterBufferTarget = cur.mode === "gaming" ? 0 : null; else r.playoutDelayHint = cur.mode === "gaming" ? 0 : null; } catch (e) { } });
+      const syncBar = () => { $$("[data-m]", bar).forEach(b => b.classList.toggle("on", b.dataset.m === cur.mode)); $(".cb", bar).style.display = cur.mode === "work" ? "" : "none"; $(".au", bar).innerHTML = ic(V.muted ? "volumeX" : "volume"); W.style.cursor = cur.mode === "gaming" ? "crosshair" : "default"; };
+      const setMode = (m, extra = {}) => { cur = { ...cur, ...(m !== cur.mode ? RD_MODES[m] : {}), ...extra, mode: m }; send(ctl, { t: "mode", mode: m, fps: cur.fps, height: cur.height, bitrate: cur.bitrate }); tuneLatency(); syncBar(); if (m === "work" && document.pointerLockElement === W) document.exitPointerLock(); showHint(m === "gaming" ? "Gaming mode: click the stream to lock the mouse. Press Esc to release it." : "Work mode: sharp text, normal cursor, clipboard sync."); };
+      ctl.onmessage = ev => { let m; try { m = JSON.parse(ev.data); } catch (e) { return; }
+        if (m.t === "hello") { hello = m; showHint(`Connected to ${m.name} · ${m.os}${m.features?.input === false ? " · view only (input unavailable on that PC)" : ""}`, 5000); send(ctl, { t: "mode", mode: cur.mode, fps: cur.fps, height: cur.height, bitrate: cur.bitrate }); }
+        else if (m.t === "pong") { cur.rtt = Math.round(performance.now() - m.ts); if (m.enc) hello.encoder = m.enc; }
+        else if (m.t === "clip" && cur.mode === "work") { navigator.clipboard?.writeText(m.text).then(() => showHint("Copied from your PC"), () => { }); } };
+      ctl.onclose = () => end("The PC closed the connection.");
+      pc.addEventListener("connectionstatechange", () => { if (["failed", "closed"].includes(pc.connectionState)) end("The connection was lost."); else if (pc.connectionState === "disconnected") showHint("Connection unstable… reconnecting", 6000); });
+      tuneLatency(); syncBar();
+      /* ---- input ---- */
+      const contentRect = () => { const r = V.getBoundingClientRect(), vw = V.videoWidth || 16, vh = V.videoHeight || 9, s = Math.min(r.width / vw, r.height / vh); const w = vw * s, hh = vh * s; return { x: r.left + (r.width - w) / 2, y: r.top + (r.height - hh) / 2, w, h: hh }; };
+      const flush = () => { raf = 0; if (pending.x || pending.y) { send(mv, { t: "rel", x: Math.round(pending.x), y: Math.round(pending.y) }); pending = { x: 0, y: 0 }; } if (absPos) { send(mv, { t: "pos", ...absPos }); absPos = null; } };
+      const queue = () => { if (!raf) raf = requestAnimationFrame(flush); };
+      W.addEventListener("pointermove", e => { if (e.target.closest(".rd-bar")) return; if (document.pointerLockElement === W) { pending.x += e.movementX; pending.y += e.movementY; } else { const c = contentRect(); absPos = { x: +((e.clientX - c.x) / c.w).toFixed(5), y: +((e.clientY - c.y) / c.h).toFixed(5) }; } queue(); bar.style.opacity = e.clientY - W.getBoundingClientRect().top < 70 ? 1 : document.pointerLockElement === W ? 0 : bar.style.opacity; });
+      W.addEventListener("pointerdown", e => { if (e.target.closest(".rd-bar")) return; W.focus(); if (cur.mode === "gaming" && document.pointerLockElement !== W) { const r = W.requestPointerLock?.({ unadjustedMovement: true }); r?.catch?.(() => W.requestPointerLock()); } e.preventDefault(); send(ctl, { t: "btn", b: e.button, d: 1 }); });
+      W.addEventListener("pointerup", e => { if (e.target.closest(".rd-bar")) return; send(ctl, { t: "btn", b: e.button, d: 0 }); });
+      W.addEventListener("contextmenu", e => { e.preventDefault(); e.stopPropagation(); });
+      W.addEventListener("wheel", e => { e.preventDefault(); const k = e.deltaMode === 1 ? 33 : e.deltaMode === 2 ? 400 : 1; send(ctl, { t: "wheel", x: Math.round(e.deltaX * k), y: Math.round(e.deltaY * k) }); }, { passive: false });
+      const key = d => e => { if (e.target.closest("input,.rd-bar")) return; e.preventDefault(); e.stopPropagation(); if (d && cur.mode === "work" && (e.ctrlKey || e.metaKey) && e.code === "KeyV" && navigator.clipboard?.readText) { navigator.clipboard.readText().then(t => { send(ctl, { t: "clip", text: t }); send(ctl, { t: "key", c: e.code, d: 1 }); }, () => send(ctl, { t: "key", c: e.code, d: 1 })); return; } if (e.repeat && cur.mode === "gaming") return; send(ctl, { t: "key", c: e.code, d: d ? 1 : 0 }); };
+      W.addEventListener("keydown", key(true)); W.addEventListener("keyup", key(false));
+      W.addEventListener("blur", () => send(ctl, { t: "release" }));
+      const padLoop = () => {
+        if (closed) return;
+        const g = cur.mode === "gaming" ? [...(navigator.getGamepads?.() || [])].find(Boolean) : null;
+        if (g) {
+          let bits = 0; g.buttons.forEach((x, i) => { if (x.pressed) bits |= 1 << i; });
+          const msg = { t: "pad", b: bits, a: g.axes.slice(0, 4).map(v => +v.toFixed(3)), tr: [+(g.buttons[6]?.value || 0).toFixed(3), +(g.buttons[7]?.value || 0).toFixed(3)] };
+          const k = JSON.stringify(msg); if (k !== padPrev) { padPrev = k; send(mv, msg); }
+        }
+        requestAnimationFrame(padLoop);
+      };
+      requestAnimationFrame(padLoop);
+      /* ---- toolbar ---- */
+      $$("[data-m]", bar).forEach(b => b.onclick = () => setMode(b.dataset.m));
+      $(".q", bar).onclick = e => Menu.at(e.currentTarget, [
+        { label: "Resolution", icon: "maximize", sub: [["720p", 720], ["1080p", 1080], ["1440p", 1440], ["4K (work)", 2160]].map(([l, v]) => ({ label: l, checked: cur.height === v, action: () => setMode(cur.mode, { height: v }) })) },
+        { label: "Frame rate", icon: "activity", sub: [30, 60, 90, 120].map(v => ({ label: v + " fps", checked: cur.fps === v, action: () => setMode(cur.mode, { fps: v }) })) },
+        { label: "Bitrate", icon: "zap", sub: [[5, "5 Mbps (slow networks)"], [10, "10 Mbps"], [20, "20 Mbps"], [35, "35 Mbps (LAN)"], [50, "50 Mbps (LAN)"]].map(([v, l]) => ({ label: l, checked: cur.bitrate === v * 1e6, action: () => setMode(cur.mode, { bitrate: v * 1e6 }) })) },
+        hello.monitors?.length > 1 ? { label: "Display", icon: "monitor", sub: hello.monitors.map(m => ({ label: `Display ${m.i} (${m.w}×${m.h})`, action: () => send(ctl, { t: "monitor", i: m.i }) })) } : null,
+      ]);
+      $(".k", bar).onclick = e => { const combo = codes => () => { codes.forEach(c => send(ctl, { t: "key", c, d: 1 })); setTimeout(() => codes.slice().reverse().forEach(c => send(ctl, { t: "key", c, d: 0 })), 60); }; Menu.at(e.currentTarget, [{ label: "Ctrl+Alt+Delete", action: combo(["ControlLeft", "AltLeft", "Delete"]) }, { label: "Alt+Tab", action: combo(["AltLeft", "Tab"]) }, { label: "Windows key", action: combo(["MetaLeft"]) }, { label: "Alt+F4", action: combo(["AltLeft", "F4"]) }, { label: "Esc", action: combo(["Escape"]) }, { label: "Print Screen", action: combo(["PrintScreen"]) }]); };
+      $(".cb", bar).onclick = async () => { try { const t = await navigator.clipboard.readText(); send(ctl, { t: "clip", text: t }); showHint("Clipboard sent to your PC"); } catch (e) { showHint("Allow clipboard access to send it"); } };
+      $(".au", bar).onclick = () => { V.muted = !V.muted; syncBar(); };
+      $(".sts", bar).onclick = () => { showStats = !showStats; stEl.classList.toggle("hidden", !showStats); };
+      $(".fs", bar).onclick = async () => { if (document.fullscreenElement) return document.exitFullscreen(); await W.requestFullscreen?.(); if (cur.mode === "gaming") navigator.keyboard?.lock?.().catch(() => { }); W.focus(); };
+      $(".x", bar).onclick = () => end();
+      setTimeout(() => { if (!closed) bar.style.opacity = .25; }, 4000);
+      bar.onpointerenter = () => bar.style.opacity = 1;
+      /* ---- stats ---- */
+      let lastBytes = 0, lastT = 0;
+      const statTimer = setInterval(async () => {
+        send(ctl, { t: "ping", ts: performance.now() }); if (!showStats) return;
+        const r = await pc.getStats(); let v = null, pair = null, codec = null, local = null, remote = null; const byId = {};
+        r.forEach(s => { byId[s.id] = s; if (s.type === "inbound-rtp" && s.kind === "video") v = s; if (s.type === "candidate-pair" && s.nominated && s.state === "succeeded") pair = s; });
+        if (v?.codecId) codec = byId[v.codecId]; if (pair) { local = byId[pair.localCandidateId]; remote = byId[pair.remoteCandidateId]; }
+        const now = performance.now(); const mbps = v && lastT ? ((v.bytesReceived - lastBytes) * 8 / ((now - lastT) / 1000) / 1e6).toFixed(1) : "–"; if (v) { lastBytes = v.bytesReceived; lastT = now; }
+        const route = local?.candidateType === "relay" || remote?.candidateType === "relay" ? "TURN relay" : local?.candidateType === "host" && remote?.candidateType === "host" ? "Direct (same network)" : "Direct (internet)";
+        stEl.textContent = `${cur.mode === "gaming" ? "GAMING" : "WORK"} · ${hello.encoder ? "encoder " + hello.encoder : ""}\n${v?.frameWidth || "?"}×${v?.frameHeight || "?"} @ ${Math.round(v?.framesPerSecond || 0)} fps\n${mbps} Mbps · ${codec?.mimeType?.split("/")[1] || "?"}${v?.decoderImplementation ? " · " + v.decoderImplementation : ""}\nLatency ${cur.rtt ?? "–"} ms · loss ${v?.packetsLost ?? 0} · jitter ${v ? Math.round((v.jitter || 0) * 1000) : "–"} ms\n${route}`;
+      }, 1000);
+      const end = (msg) => {
+        if (closed) return; closed = true; clearInterval(statTimer); cancelAnimationFrame(raf); send(ctl, { t: "release" });
+        try { if (document.pointerLockElement === W) document.exitPointerLock(); if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { }
+        try { pc.close(); } catch (e) { } sess = null;
+        if (msg) { B.innerHTML = `<div class="empty-state" style="background:var(--surface)">${ic("wifiOff")}<div>${esc(msg)}</div><div class="row"><button class="btn primary re">Reconnect</button><button class="btn back">Back</button></div></div>`; $(".re", B).onclick = () => start(p, cur.mode); $(".back", B).onclick = home; } else home();
+      };
+      sess = { end }; W.focus();
+    };
+    win.on("close", () => sess?.end());
+    const off = Bus.on("rd", () => { if (!sess && $(".add", B)) home(); }); win.on("close", off);
+    home();
+  },
+});
+</script>
+<script>
+/* =====================================================================
+   AxOS Cloud — accounts and end-to-end encrypted cloud saves.
+   Runs on the personal gateway worker (KV binding AXCLOUD). The password
+   never leaves this device: it derives an auth key (sent) and a separate
+   encryption key (kept). Saves are gzip-compressed, then AES-GCM encrypted.
+   ===================================================================== */
+const Cloud = {
+  VOLATILE: /^axos\.(settings|gwHealth|recents|lastRun|tipShown|installed|migr\d|axplayInit)$/,
+  st() { return { server: "", user: "", token: "", auto: true, lastSync: 0, version: 0, size: 0, ...(Settings.get("cloud") || {}) }; },
+  set(p) { Settings.set("cloud", { ...this.st(), ...p }); Bus.emit("cloud"); },
+  server(st = this.st()) { return (st.server || Settings.get("browser").workerUrl || "").trim().replace(/\/?$/, "/"); },
+  get signedIn() { const s = this.st(); return !!(s.token && s.user); },
+  async api(path, { method = "GET", body, headers = {}, raw = false, server } = {}) {
+    const base = server || this.server(); if (!/^https?:\/\//.test(base)) throw new Error("Set up your personal gateway first (Settings → Network & Browser), or enter a cloud server address.");
+    const st = this.st(); const hd = { ...headers }; if (st.token && !server) hd.authorization = "Bearer " + st.token;
+    let res; try { res = await fetch(base + "cloud/" + path, { method, body, headers: hd }); } catch (e) { throw new Error("Couldn't reach the cloud server. Check your connection and the gateway address."); }
+    if (raw && res.ok) return res;
+    const j = await res.json().catch(() => ({ error: `Cloud server error (HTTP ${res.status}).` }));
+    if (!res.ok) { const err = new Error(j.error || `HTTP ${res.status}`); err.status = res.status; err.meta = j.meta; if (res.status === 401 && !server) this.set({ token: "" }); throw err; }
+    return j;
+  },
+  async keys(user, password) {
+    const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits", "deriveKey"]);
+    const u = user.toLowerCase().trim();
+    const auth = new Uint8Array(await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: new TextEncoder().encode("axos-auth:" + u), iterations: 200000 }, base, 256));
+    const enc = await crypto.subtle.deriveKey({ name: "PBKDF2", hash: "SHA-256", salt: new TextEncoder().encode("axos-enc:" + u), iterations: 200000 }, base, { name: "AES-GCM", length: 256 }, true, ["encrypt", "decrypt"]);
+    return { auth: Array.from(auth, b => b.toString(16).padStart(2, "0")).join(""), enc };
+  },
+  async encKey() { const raw = await IDB.get("cloudKey"); if (!raw) throw new Error("Sign in to AxOS Cloud again on this device."); return crypto.subtle.importKey("raw", raw, "AES-GCM", false, ["encrypt", "decrypt"]); },
+  async signIn({ server, user, password, create = false }) {
+    server = (server || this.server()).trim().replace(/\/?$/, "/");
+    const k = await this.keys(user, password);
+    const r = await this.api(create ? "signup" : "login", { method: "POST", server, body: JSON.stringify({ user: user.trim(), auth: k.auth }), headers: { "content-type": "application/json" } });
+    await IDB.set("cloudKey", await crypto.subtle.exportKey("raw", k.enc));
+    this.set({ server, user: r.user, token: r.token, version: 0, lastSync: 0 });
+    return r;
+  },
+  async signOut() { try { await this.api("logout", { method: "POST" }); } catch (e) { } await IDB.del("cloudKey"); this.set({ token: "", user: "", version: 0, lastSync: 0 }); },
+  /* ---- payload ---- */
+  async pack() {
+    const ls = {}; for (const k of Object.keys(localStorage)) if (k.startsWith("axos.") && !this.VOLATILE.test(k) && !k.startsWith("axos.pxStore.")) ls[k] = localStorage.getItem(k);
+    const settings = { ...Settings.data }; delete settings.cloud;
+    const json = JSON.stringify({ axos: AXOS_VERSION, date: Date.now(), device: Settings.get("hostname"), settings, ls, fs: Backup.enc(FS.root) });
+    const gz = await new Response(new Blob([json]).stream().pipeThrough(new CompressionStream("gzip"))).arrayBuffer();
+    const iv = crypto.getRandomValues(new Uint8Array(12)); const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, await this.encKey(), gz));
+    const out = new Uint8Array(4 + 12 + ct.length); out.set([0x41, 0x58, 0x43, 0x31]); out.set(iv, 4); out.set(ct, 16); return out;
+  },
+  async unpack(buf) {
+    const b = new Uint8Array(buf); if (b[0] !== 0x41 || b[1] !== 0x58) throw new Error("This cloud save isn't in AxOS format.");
+    let gz; try { gz = await crypto.subtle.decrypt({ name: "AES-GCM", iv: b.subarray(4, 16) }, await this.encKey(), b.subarray(16)); } catch (e) { throw new Error("Couldn't decrypt the cloud save. The password may have changed."); }
+    return JSON.parse(await new Response(new Blob([gz]).stream().pipeThrough(new DecompressionStream("gzip"))).text());
+  },
+  /* ---- sync ---- */
+  dirty: false, busy: false,
+  async sync({ force = false, quiet = false } = {}) {
+    if (!this.signedIn || this.busy) return; this.busy = true; Bus.emit("cloud");
+    try {
+      const body = await this.pack(); const st = this.st();
+      let meta;
+      try { meta = await this.api("save", { method: "PUT", body, headers: { "content-type": "application/octet-stream", "x-ax-base": String(st.version || 0), "x-ax-device": Settings.get("hostname"), ...(force ? { "x-ax-force": "1" } : {}) } }); }
+      catch (e) {
+        if (e.status !== 409) throw e;
+        this.busy = false;
+        const pick = await Dialog.open({ title: "Your cloud save changed", message: `AxOS Cloud has a newer save from ${e.meta?.device || "another device"} (${fmtDate(e.meta?.updated || Date.now())}). Which one do you want to keep?`, icon: "alert", buttons: [{ label: "Decide later", value: null }, { label: "Use the cloud copy", value: "cloud" }, { label: "Keep this device", primary: true, value: "local" }], cancelValue: null });
+        if (pick === "local") return this.sync({ force: true, quiet }); if (pick === "cloud") return this.restore(); return;
+      }
+      this.dirty = false; this.set({ version: meta.version, lastSync: Date.now(), size: meta.size });
+      if (!quiet) notify("Saved to AxOS Cloud", `${fmtSize(meta.size)} · encrypted`, "settings", { silent: true, timeout: 2500 });
+    } catch (e) { if (!quiet) Dialog.alert("Couldn't sync", e.message, { icon: "errorC" }); else console.warn("Cloud sync:", e.message); }
+    finally { this.busy = false; Bus.emit("cloud"); }
+  },
+  async restore({ confirm = true } = {}) {
+    if (confirm && !(await Dialog.confirm("Restore from AxOS Cloud?", "Your files and settings on this device will be replaced by your cloud save, then AxOS restarts.", { icon: "alert", ok: "Restore" }))) return;
+    const res = await this.api("save", { raw: true }); const meta = JSON.parse(res.headers.get("x-ax-meta") || "{}");
+    const data = await this.unpack(await res.arrayBuffer()); const st = this.st(); window.AXOS_NO_SAVE = true;
+    await IDB.set("fs", Backup.dec(data.fs));
+    for (const [k, v] of Object.entries(data.ls || {})) localStorage.setItem(k, v);
+    localStorage.setItem("axos.settings", JSON.stringify({ ...data.settings, setupDone: true, cloud: { ...st, version: meta.version || st.version, lastSync: Date.now(), size: meta.size || 0 } }));
+    location.reload();
+  },
+  /* sync before shutdown / restart / sign out (bounded wait) */
+  async beforeExit() { if (!this.signedIn || !this.st().auto || !this.dirty) return; await Promise.race([this.sync({ quiet: true }), sleep(8000)]); },
+  init() {
+    Bus.on("fs", () => { this.dirty = true; });
+    Bus.on("setting", k => { if (k !== "cloud") this.dirty = true; });
+    setInterval(() => { if (this.signedIn && this.st().auto && this.dirty && !Lock.locked) this.sync({ quiet: true }); }, 10 * 60 * 1000);
+  },
+  /* ---- Settings UI ---- */
+  panel() {
+    const st = this.st(); const srv = this.server(st);
+    if (!this.signedIn) return `<h3>AxOS Cloud</h3><div class="srow stack"><div class="d muted" style="font-size:12.5px;line-height:1.55;margin-bottom:10px">Sign in to back up your files, settings, games and saved PCs, and restore them on any device. Everything is encrypted on this device before upload, so not even the server can read it. <b>If you forget your password, your cloud data can't be recovered.</b></div>
+      <div class="col" style="gap:8px;max-width:440px"><input class="input cl-srv" placeholder="Cloud server (your personal gateway address)" value="${esc(st.server || Settings.get("browser").workerUrl || "")}"><input class="input cl-user" placeholder="Username" autocomplete="username" value="${esc(st.user || "")}"><input class="input cl-pass" type="password" placeholder="Password (at least 8 characters)" autocomplete="current-password"><div class="row" style="flex-wrap:wrap"><button class="btn primary cl-in">Sign in</button><button class="btn cl-up">Create account</button></div><div class="cl-err" style="font-size:12px;color:var(--danger);min-height:16px"></div></div>
+      <div class="dim" style="font-size:12px">The cloud runs on your personal gateway. Set it up under Network &amp; Browser, then add a KV namespace binding named <code>AXCLOUD</code> to the worker in Cloudflare.</div></div>`;
+    return `<h3>AxOS Cloud</h3><div class="srow"><div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));display:grid;place-items:center;color:#fff">${ic("cloud")}</div><div class="tx"><div class="t">Signed in as <b>${esc(st.user)}</b></div><div class="d">${this.busy ? "Syncing…" : st.lastSync ? `Last synced ${timeAgo(st.lastSync)} · ${fmtSize(st.size)} encrypted` : "Not synced yet"} · ${esc(new URL(srv).host)}</div></div><button class="btn primary cl-sync" ${this.busy ? "disabled" : ""}>${ic("refresh")} Sync now</button></div>
+      ${row_("refresh", "Sync automatically", "Every 10 minutes when something changes, and before shutting down", `<span class="switch${st.auto ? " on" : ""} cl-auto"></span>`)}${row_("download", "Restore from the cloud", "Replace this device's files and settings with your cloud save", `<button class="btn cl-restore">Restore</button>`)}${row_("logout", "Sign out of AxOS Cloud", "Your files stay on this device", `<button class="btn cl-out">Sign out</button>`)}`;
+  },
+  wire(P, rerender) {
+    const q = (s, f) => { const e = $(s, P); if (e) e.onclick = f; };
+    const go = async create => {
+      const err = $(".cl-err", P); err.textContent = ""; const server = $(".cl-srv", P).value, user = $(".cl-user", P).value.trim(), password = $(".cl-pass", P).value;
+      if (!user || password.length < 8) { err.textContent = "Enter a username and a password of at least 8 characters."; return; }
+      const btn = $(create ? ".cl-up" : ".cl-in", P); btn.disabled = true; btn.innerHTML = `<span class="spinner" style="width:14px;height:14px;border-width:2px"></span>`;
+      try {
+        const r = await this.signIn({ server, user, password, create });
+        if (!create && r.meta && await Dialog.confirm("Restore your cloud save?", `Your account has a save from ${r.meta.device || "another device"} (${fmtDate(r.meta.updated)}, ${fmtSize(r.meta.size)}). Restore it on this device now?\n\nChoose "Not now" to keep this device's files; your next sync will ask which copy to keep.`, { ok: "Restore", cancel: "Not now" })) return this.restore({ confirm: false });
+        if (create) await this.sync({ quiet: true });
+        notify("Signed in to AxOS Cloud", r.user, "settings", { silent: true }); rerender();
+      } catch (e) { err.textContent = e.message; btn.disabled = false; btn.textContent = create ? "Create account" : "Sign in"; }
+    };
+    q(".cl-in", () => go(false)); q(".cl-up", () => go(true));
+    $$(".cl-srv,.cl-user,.cl-pass", P).forEach(i => i.onkeydown = e => { e.stopPropagation(); if (e.key === "Enter") go(false); });
+    q(".cl-sync", async () => { await this.sync(); rerender(); });
+    q(".cl-auto", () => { this.set({ auto: !this.st().auto }); rerender(); });
+    q(".cl-restore", () => this.restore().catch(e => Dialog.alert("Couldn't restore", e.message, { icon: "errorC" })));
+    q(".cl-out", async () => { if (await Dialog.confirm("Sign out of AxOS Cloud?", "Sync first so your latest changes are saved?", { ok: "Sync and sign out", cancel: "Cancel" })) { await this.sync({ quiet: true }); await this.signOut(); rerender(); } });
+  },
+  /* Restore during first-run setup */
+  async oobeRestore() {
+    const body = h(`<div class="col" style="margin-top:10px;gap:8px"><input class="input srv" placeholder="Cloud server (your personal gateway address)" value="${esc(Settings.get("browser").workerUrl || "")}"><input class="input usr" placeholder="Username"><input class="input pw" type="password" placeholder="Password"><div class="er" style="font-size:12px;color:var(--danger);min-height:16px"></div></div>`);
+    await Dialog.open({ title: "Restore from AxOS Cloud", message: "Sign in to bring back your files, settings and apps.", body, buttons: [{ label: "Cancel", value: false }, { label: "Restore", primary: true, keepOpen: true, value: (dlg) => {
+      const er = $(".er", body); er.textContent = "Signing in…";
+      Settings.patch("browser", { workerUrl: Settings.get("browser").workerUrl || $(".srv", body).value.trim() });
+      this.signIn({ server: $(".srv", body).value, user: $(".usr", body).value, password: $(".pw", body).value })
+        .then(r => { if (!r.meta) { er.textContent = "Signed in, but this account has no cloud save yet."; return; } er.textContent = "Restoring…"; return this.restore({ confirm: false }); })
+        .catch(e => { er.textContent = e.message; });
+      return undefined;
+    } }] });
+  },
+};
+function row_(icon, t, d, ctl) { return `<div class="srow">${ic(icon)}<div class="tx"><div class="t">${t}</div><div class="d">${d}</div></div>${ctl}</div>`; }
+Cloud.init();
+</script>
+<script>
 /* =====================================================================
    Boot
    ===================================================================== */
@@ -5833,6 +6227,7 @@ window.addEventListener("unhandledrejection", e => console.warn("Unhandled:", e.
   await bootSequence();
   if (!localStorage.getItem("axos.migr2")) { localStorage.setItem("axos.migr2", "1"); const sp = Settings.get("startPinned"); ["axplay", "gdash"].forEach(a => { if (!sp.includes(a)) sp.splice(4, 0, a); }); Settings.set("startPinned", sp); const tp = Settings.get("pinned"); if (!tp.includes("axplay")) Settings.set("pinned", [...tp, "axplay"]); FS.mkdir(FS.home + "/Games", true); }
   if (!localStorage.getItem("axos.migr3")) { localStorage.setItem("axos.migr3", "1"); if (Settings.get("accent") === "#4f8cff" && Settings.get("wallpaper") === "aurora") { Settings.set("accent", "#e8679f"); Settings.set("wallpaper", "axolotl"); Settings.set("preset", "default"); } const sp = Settings.get("startPinned"); if (!sp.includes("lagoon")) { sp.splice(6, 0, "lagoon"); Settings.set("startPinned", sp); } const d = AxPlay.get(); if (d.games.length && !d.games.find(g => g.id === "lagoon")) { d.games.push({ ...AXPLAY_CATALOG.find(c => c.id === "lagoon"), added: Date.now(), playtime: 0, compat: "auto", opts: "" }); AxPlay.save(d); } }
+  if (!localStorage.getItem("axos.migr4")) { localStorage.setItem("axos.migr4", "1"); const sp = Settings.get("startPinned"); if (!sp.includes("remote")) { sp.splice(5, 0, "remote"); Settings.set("startPinned", sp); } }
   Taskbar.init(); Desktop.init(); Widgets.render(); ScreenSaver.init(); applyTheme();
   if (!Settings.get("setupDone")) { await runOOBE(); Desktop.render(); Taskbar.renderApps(); Sound.play("startup"); Motion.reveal(); }
   else if (Settings.get("lockOnBoot") || Settings.get("password")) await Lock.show();

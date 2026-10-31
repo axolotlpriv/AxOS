@@ -20,6 +20,8 @@ Your files and settings are saved in the browser (IndexedDB and localStorage), s
 | **AxBrowser** | Tabs, bookmarks, history, downloads saved to `~/Downloads`, reader mode, zoom, and three connection modes (see below) |
 | **Terminal** | Bash-like shell with pipes, redirects, `&&`/`||`, `$(...)`, variables, tab completion and 100+ commands. Type `cmd` for a Command Prompt that runs `.bat` files |
 | **AxCompat** | Opens Windows `.exe` (PE32/PE32+) and Linux ELF programs (see below) |
+| **Remote Desktop** | Streams and controls your PC through the AxOS Companion app (`companion/`). Gaming mode and work mode, hardware video encoding, controller passthrough, clipboard sync |
+| **AxOS Cloud** | Accounts and end-to-end encrypted cloud saves of your files, settings, games and saved PCs |
 | **Settings** | Wallpapers, accent color, dark/light/auto theme, night light, brightness, scale, taskbar, accounts, default apps, network/proxy, accessibility, backup and restore, factory reset |
 | **Apps** | Notepad (with Markdown preview), Calculator, Paint, Photos, Media Player, Task Manager, Clock, Weather, AxOS Store |
 | **AxPlay** | Steam-style game launcher: store, library, downloads, play time, Big Picture mode with gamepad support, Proton-style compatibility layer for Windows games, native Linux games |
@@ -110,6 +112,35 @@ Web games need an internet connection. Each game window has buttons to reload, g
 **Big Picture mode** works with the arrow keys, Enter and Esc, or with a gamepad (D-pad, A and B).
 
 **Geometry Dash** isn't bundled into `index.html`. The app loads your webport at runtime: by default from https://gd-webport.pages.dev/, or from your GitHub fork through jsDelivr (switch this with the layers button in the title bar). It always runs the latest version of your repo, but it needs an internet connection.
+
+## AxOS Cloud
+
+Sign in under **Settings → Accounts**, or choose **Restore from AxOS Cloud** during first-time setup.
+
+**Where it runs:** on your personal gateway worker. Add a KV namespace binding named `AXCLOUD` to the worker in Cloudflare.
+
+**Encryption:** your password never leaves the device. It's turned into two separate keys:
+- **A sign-in key**, which the server stores only as a salted hash.
+- **An encryption key**, which stays on the device.
+
+Saves are gzip-compressed and AES-GCM encrypted before upload, so the server can't read them. If you forget your password, the cloud copy can't be recovered.
+
+**What's saved:** files, settings, AxPlay library, saved PCs and other AxOS data.
+
+**When it syncs:** every 10 minutes when something changes, and before shutdown, restart or sign out. If another device saved in the meantime, AxOS asks which copy to keep.
+
+## Remote Desktop
+
+1. Run `companion/axos-companion.py` on a PC. See `companion/README.md` for setup.
+2. In AxOS, open **Remote Desktop → Add a PC** and enter the ID and key it prints.
+
+**Modes:**
+- **Gaming:** 60+ fps, locked raw mouse, controller passthrough.
+- **Work:** full resolution, sharp text, clipboard sync.
+
+**During a session:** a stats overlay shows resolution, frame rate, bitrate, latency and route.
+
+**How it connects:** AxOS and the PC find each other through public WebTorrent trackers, using encrypted messages, then connect directly with WebRTC.
 
 ## How the browser loads websites
 
