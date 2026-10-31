@@ -1,2 +1,6 @@
 __pycache__/
 *.pyc
+companion/build/
+companion/dist/
+*.spec
+axos-selftest.txt

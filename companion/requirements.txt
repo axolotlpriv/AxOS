@@ -1,0 +1,11 @@
+aiortc
+av
+mss
+numpy
+pynput
+websockets
+pyperclip
+soundcard
+certifi
+vgamepad; sys_platform == "win32"
+dxcam; sys_platform == "win32"

@@ -1,0 +1,91 @@
+# Builds AxOS Companion for Windows, macOS and Linux, then publishes them as the
+# "AxOS Companion" release. AxOS's Remote Desktop app links to these downloads:
+#   https://github.com/<owner>/<repo>/releases/latest/download/AxOS-Companion-Windows.exe
+name: AxOS Companion
+
+on:
+  push:
+    branches: [main]
+    paths: ["companion/**", ".github/workflows/companion.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: companion-release
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            file: AxOS-Companion-Windows.exe
+          - os: macos-latest
+            file: AxOS-Companion-macOS.zip
+          - os: ubuntu-22.04 # older glibc, so the Linux build runs on more distros
+            file: AxOS-Companion-Linux
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: companion
+    env:
+      VGAMEPAD_SKIP_VIGEMBUS_INSTALL: "true" # the app offers the controller driver itself
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "pyinstaller>=6.10" pillow -r requirements.txt
+      - name: Build
+        run: python build.py
+      - name: Self-test (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $p = Start-Process -FilePath "dist\${{ matrix.file }}" -ArgumentList "--self-test" -Wait -PassThru
+          Get-Content axos-selftest.txt
+          if ($p.ExitCode -ne 0) { exit 1 }
+      - name: Self-test (macOS)
+        if: runner.os == 'macOS'
+        run: '"dist/AxOS Companion.app/Contents/MacOS/AxOS Companion" --self-test'
+      - name: Self-test (Linux)
+        if: runner.os == 'Linux'
+        run: dist/AxOS-Companion-Linux --self-test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.file }}
+          path: companion/dist/${{ matrix.file }}
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          chmod +x dist/AxOS-Companion-Linux
+          ls -la dist
+          gh release delete companion --yes --cleanup-tag || true
+          gh release create companion dist/* --target "$GITHUB_SHA" --latest \
+            --title "AxOS Companion" \
+            --notes "Remote Desktop host for AxOS. Download it on the PC you want to use from AxOS, open it, and sign in with your AxOS Cloud account. The PC then shows up in AxOS → Remote Desktop on every device signed in to the same account.
+
+          - **Windows 10/11:** AxOS-Companion-Windows.exe (if SmartScreen warns, choose More info → Run anyway)
+          - **macOS 12+ (Apple silicon):** AxOS-Companion-macOS.zip (right-click the app → Open the first time, then allow Screen Recording and Accessibility)
+          - **Linux (X11, x86-64):** AxOS-Companion-Linux (chmod +x, then run it)
+
+          Built from $GITHUB_SHA."

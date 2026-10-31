@@ -127,12 +127,19 @@ Saves are gzip-compressed and AES-GCM encrypted before upload, so the server can
 
 **What's saved:** files, settings, AxPlay library, saved PCs and other AxOS data.
 
+**Your PCs:** AxOS Companion signs in to the same account and lists its PC under the account. The PC's connection details are encrypted with your account key first. Update your gateway worker to get this: copy the code again from Settings → Network & Browser and redeploy it.
+
 **When it syncs:** every 10 minutes when something changes, and before shutdown, restart or sign out. If another device saved in the meantime, AxOS asks which copy to keep.
 
 ## Remote Desktop
 
-1. Run `companion/axos-companion.py` on a PC. See `companion/README.md` for setup.
-2. In AxOS, open **Remote Desktop → Add a PC** and enter the ID and key it prints.
+1. On the PC, download **AxOS Companion** from the [latest release](https://github.com/axolotlpriv/net-tools/releases/latest) (Windows `.exe`, macOS `.zip`, or Linux), or from the buttons in AxOS's Remote Desktop app.
+2. Open it and sign in with your AxOS Cloud account.
+3. In AxOS, signed in to the same account, open **Remote Desktop**. The PC is listed with an online indicator. Pick **Gaming** or **Work**.
+
+No account? Choose **Pair with an ID and key** in the companion, then use **Add with a code** in AxOS. See `companion/README.md` for details and for running from Python.
+
+**Builds:** `.github/workflows/companion.yml` packages the companion with PyInstaller on Windows, macOS and Linux. It self-tests each build and publishes them as the `companion` release. It runs on every push that changes `companion/`.
 
 **Modes:**
 - **Gaming:** 60+ fps, locked raw mouse, controller passthrough.
