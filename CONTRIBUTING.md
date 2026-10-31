@@ -133,7 +133,7 @@ Saves are gzip-compressed and AES-GCM encrypted before upload, so the server can
 
 ## Remote Desktop
 
-1. On the PC, download **AxOS Companion** from the [latest release](https://github.com/axolotlpriv/net-tools/releases/latest) (Windows `.exe`, macOS `.zip`, or Linux), or from the buttons in AxOS's Remote Desktop app.
+1. On the PC, download **AxOS Companion** from the [latest release](https://github.com/axolotlpriv/AxOS/releases/latest) (Windows `.exe`, macOS `.zip`, or Linux), or from the buttons in AxOS's Remote Desktop app.
 2. Open it and sign in with your AxOS Cloud account.
 3. In AxOS, signed in to the same account, open **Remote Desktop**. The PC is listed with an online indicator. Pick **Gaming** or **Work**.
 

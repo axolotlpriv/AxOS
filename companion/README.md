@@ -4,7 +4,7 @@ AxOS Companion lets AxOS's **Remote Desktop** app stream and control a PC: Windo
 
 ## Setup
 
-1. Download the app for the PC from the [latest release](https://github.com/axolotlpriv/net-tools/releases/latest):
+1. Download the app for the PC from the [latest release](https://github.com/axolotlpriv/AxOS/releases/latest):
 
    | PC | File |
    | --- | --- |
