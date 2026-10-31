@@ -1444,6 +1444,11 @@ class App:
 
         def work():
             subprocess.call(["msiexec", "/i", path])
+            if not OPTIONAL["vgamepad"]:  # vgamepad can't load until the driver exists
+                try:
+                    OPTIONAL["vgamepad"] = __import__("vgamepad")
+                except Exception as e:
+                    log("Controller support still unavailable:", str(e)[:80])
             self.comp.input.pad = Gamepad()
             self.q.put(("call", self.show_status))
         threading.Thread(target=work, daemon=True).start()
