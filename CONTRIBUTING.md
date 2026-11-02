@@ -196,6 +196,22 @@ Wisp is a protocol that carries many TCP connections over one WebSocket. InvisiP
 - **Automatic failover:** AxProxy uses the fastest relay. If a request fails it tries up to two others, and a relay is only marked as down if another one succeeded where it failed.
 - **Trust:** relays are run by strangers and can disappear. Don't sign in to anything important through them. For private browsing, run your own [wisp-server-python](https://github.com/MercuryWorkshop/wisp-server-python) or similar and add it under **Add a Wisp server**.
 
+## Staying inside AxOS
+
+AxOS never navigates away from itself and never opens a real browser window on its own. `NavGuard` (the `04a` source file) covers each way this could happen:
+
+| Risk | What stops it |
+| --- | --- |
+| A page, game or app in an iframe sets `top.location`, calls `window.open`, uses `target="_top"` or `_blank`, or submits a form to another window | Every iframe's sandbox leaves out `allow-top-navigation` and `allow-popups`. Links, image maps and forms in proxied pages are caught and opened in AxBrowser |
+| A frame reads or rewrites AxOS itself | Proxied pages and local files have an opaque origin. Other frames only get `allow-same-origin` when their origin differs from AxOS's (`axSandbox`) |
+| A link in AxOS's own UI, such as a Markdown preview | Clicks are routed to AxBrowser. `javascript:` and `file:` links are dropped, and Markdown only keeps `http(s)`, `mailto:` and `#` links |
+| A file or link dropped on the page, which browsers open by default | `dragover` and `drop` are cancelled everywhere except in text fields |
+| The Back button, a trackpad swipe or Alt+Left | After your first click, a history entry is added and re-added on every Back |
+| `window.open` called from AxOS code | Goes to AxBrowser. The two deliberate "open in a real tab" buttons (the companion download and the Steam API key page) use `axExternal` |
+| Anything else | The browser's "Leave site?" prompt. Turn it off in **Settings → Privacy & security → Ask before leaving AxOS**. AxOS's own restarts use `axReload()`, so they never show it |
+
+The hostile-page test loads a page that tries 15 escapes (top navigation, `window.open` with every target, forms, image maps, DOM access) into every frame type, and checks that the tab never moves and no window opens.
+
 ## How .exe and Linux programs work
 
 AxCompat reads the real structure of each executable:
