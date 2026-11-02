@@ -27,7 +27,7 @@ Your files and settings are saved in the browser (IndexedDB and localStorage), s
 | **AxPlay** | Steam-style game launcher: store, library, downloads, play time, Big Picture mode with gamepad support, Proton-style compatibility layer for Windows games, native Linux games |
 | **Geometry Dash** | Your [Geometry-Dash-webport](https://github.com/axolotlpriv/Geometry-Dash-webport), loaded live inside a window |
 | **Skyline Coaster Studio** | Your [Skyline](https://github.com/axolotlpriv/Skyline) roller-coaster builder. It opens the latest `index.html` from the repo each time (cached for offline use), and its saves are kept in AxOS |
-| **Store extras** | Serpent, Tic-Tac-Toe, Memory Match, Sticky Notes. Install them from the Store or with `apt install` |
+| **Store extras** | Sticky Notes. Install it from the Store or with `apt install` |
 
 ## Personalization
 
@@ -79,7 +79,9 @@ As with AxCompat, only games that carry an AxOS payload actually run. Two exampl
 
 **Adding your own games:** in the library, choose **Add a game** to add an `.exe`, a Linux binary, an `.html` game or a web URL. You can also drop games into `~/Games` and scan for them.
 
-**Lagoon Merge** is an original slide-and-merge puzzle. Sea creatures evolve up to an axolotl on a 5×5 lagoon, rocks wash in as walls, and pearls clear tiles.
+**Games only open from AxPlay.** They don't appear in Start, All apps, search, Run, the terminal or on the taskbar, so everything playable lives in one place. (An app marked `gameOnly` in the source gets this treatment.)
+
+**Real artwork:** Geometry Dash uses its official Steam art (a square crop of the store capsule for the icon and the library banner for the hero). Minecraft Classic uses Mojang's official Creeper-face icon, embedded as a tiny image, and the game's wordmark on its banner. Artwork is loaded from the publishers' own servers at runtime, apart from that one small icon, and falls back to a plain icon if offline.
 
 **Web games:** the store lists 92 free web games, each embedded from its creator's or publisher's official site:
 
