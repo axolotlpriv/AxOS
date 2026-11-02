@@ -159,7 +159,8 @@ Most sites refuse to be shown inside an iframe, so AxBrowser has three connectio
 
 AxProxy fetches each page through a gateway, rewrites it so links, forms and pop-ups stay inside AxBrowser, and renders it in a sandbox.
 
-- **Racing:** it starts the fastest working gateway, adds another one if the first is slow, and uses whichever answers first. It remembers each gateway's speed and failures, so dead ones get skipped.
+- **Wisp backend (first choice):** see [Wisp](#wisp-the-real-proxy-backend) below. It tunnels real encrypted connections through public relays, so it handles any site, POST forms, redirects with cookies and downloads.
+- **Racing:** it starts the fastest working backend (Wisp first, then your personal gateway, then the public CORS gateways), adds another one if the first is slow, and uses whichever answers first. It remembers each gateway's speed and failures, so dead ones get skipped.
 - **Caching:** recently visited pages are cached, so going back or forward is instant. **Reload** always fetches a fresh copy.
 - **Compatibility layer:** sandboxed pages normally crash because `localStorage`, cookies, `history.pushState` and IndexedDB all throw security errors there. AxProxy injects replacements:
   - Storage and cookies are saved for each site.
@@ -181,11 +182,19 @@ Ultraviolet and Scramjet need a service worker and a backend server, so they can
 - **Templates:** there are starting points for self-hosted Ultraviolet-App and Scramjet, on the internet or on your own computer.
 - **Using a server:** pick one there, or from the connection-mode button in the address bar.
 - **Trust:** only use servers you trust, because whoever runs one can see everything you type through it.
-- **Public servers:** the same page lists community-run proxy sites, with a status check:
-  - **InvisiProxy** (formerly Holy Unblocker) refuses to load inside other pages, so it opens in a real browser tab.
-  - **Nebula** opens inside AxBrowser.
 
-  Public servers come and go, so expect some to be down at any given time.
+AxOS no longer lists public proxy *sites* such as InvisiProxy or Nebula. They only link to someone else's front end, which can't run inside AxOS. What they all share is the Wisp relay behind them, and AxOS uses that directly.
+
+### Wisp: the real proxy backend
+
+Wisp is a protocol that carries many TCP connections over one WebSocket. InvisiProxy, Anura, Terbium and every Scramjet or Ultraviolet site that uses it run a Wisp relay.
+
+- **How AxOS uses it:** AxProxy loads [libcurl.js](https://github.com/ading2210/libcurl.js) (curl and mbedTLS in WebAssembly) and makes the HTTPS connections from inside the page. Only encrypted bytes go through the relay, so the operator sees which sites you connect to but not what you read or type.
+- **Pinned engine:** libcurl.js 0.7.5 is downloaded from a CDN and its SHA-256 is checked before it runs. If a CDN has been tampered with, the load is refused.
+- **What works:** any HTTPS site, POST forms, cookies on every redirect hop, gzip and Brotli pages, and binary downloads.
+- **Servers:** **Settings → Network & Browser → Wisp servers** lists 10 public relays (Terbium, Anura, FreeWisp, WebMC, PGIS, Reeyuki, Lunaar, DaydreamX, PeteZah and the Mercury Workshop demo server). Each gets a live status check. You can pin one, switch any off, or add your own `wss://` address.
+- **Automatic failover:** AxProxy uses the fastest relay. If a request fails it tries up to two others, and a relay is only marked as down if another one succeeded where it failed.
+- **Trust:** relays are run by strangers and can disappear. Don't sign in to anything important through them. For private browsing, run your own [wisp-server-python](https://github.com/MercuryWorkshop/wisp-server-python) or similar and add it under **Add a Wisp server**.
 
 ## How .exe and Linux programs work
 
