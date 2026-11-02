@@ -26,6 +26,7 @@ Your files and settings are saved in the browser (IndexedDB and localStorage), s
 | **Apps** | Notepad (with Markdown preview), Calculator, Paint, Photos, Media Player, Task Manager, Clock, Weather, AxOS Store |
 | **AxPlay** | Steam-style game launcher: store, library, downloads, play time, Big Picture mode with gamepad support, Proton-style compatibility layer for Windows games, native Linux games |
 | **Geometry Dash** | Your [Geometry-Dash-webport](https://github.com/axolotlpriv/Geometry-Dash-webport), loaded live inside a window |
+| **Skyline Coaster Studio** | Your [Skyline](https://github.com/axolotlpriv/Skyline) roller-coaster builder. It opens the latest `index.html` from the repo each time (cached for offline use), and its saves are kept in AxOS |
 | **Store extras** | Serpent, Tic-Tac-Toe, Memory Match, Sticky Notes. Install them from the Store or with `apt install` |
 
 ## Personalization

@@ -1271,7 +1271,7 @@ const DEFAULT_SETTINGS = {
   sounds: true, volume: 60, muted: false, brightness: 100, nightLight: false, nightStrength: 40,
   leaveGuard: true, dnd: false, wifi: true, bluetooth: false, airplane: false, bootAnim: true, lockOnBoot: true,
   pinned: ["explorer", "browser", "terminal", "settings", "notepad", "store"],
-  startPinned: ["explorer", "browser", "settings", "terminal", "axplay", "gdash", "lagoon", "notepad", "calculator", "paint", "photos", "media", "taskmgr", "clock", "store", "weather", "compat", "welcome"],
+  startPinned: ["explorer", "browser", "settings", "terminal", "axplay", "gdash", "skyline", "lagoon", "notepad", "calculator", "paint", "photos", "media", "taskmgr", "clock", "store", "weather", "compat", "welcome"],
   installed: ["serpent", "tictactoe", "memory"],
   defaultApps: {},
   browser: { mode: "proxy", gateway: "auto", customGateway: "", uvPrefix: "", uvCodec: "xor", search: "ddg", home: "axos://newtab", scripts: true, bookmarksBar: true },
@@ -5505,6 +5505,46 @@ registerApp("gdash", {
 });
 
 /* =====================================================================
+   Skyline Coaster Studio (loaded from the user's GitHub repo every time it opens)
+   ===================================================================== */
+const SKYLINE = { repo: "axolotlpriv/Skyline", url: "https://raw.githubusercontent.com/axolotlpriv/Skyline/HEAD/index.html" };
+/* The game saves to localStorage, which a sandboxed frame can't touch, so give it one that AxOS keeps in IndexedDB */
+function skylineShim(id, init) {
+  return `<script>(function(){var P=parent,m=new Map(Object.entries(${JSON.stringify(init)})),t=0;function save(){clearTimeout(t);t=setTimeout(function(){P.postMessage({axsky:${JSON.stringify(id)},data:Object.fromEntries(m)},"*")},250)}
+var api={getItem:function(k){k=String(k);return m.has(k)?m.get(k):null},setItem:function(k,v){m.set(String(k),String(v));save()},removeItem:function(k){m.delete(String(k));save()},clear:function(){m.clear();save()},key:function(i){return Array.from(m.keys())[i]||null}};
+Object.defineProperty(api,"length",{get:function(){return m.size}});try{Object.defineProperty(window,"localStorage",{value:api,configurable:true})}catch(e){}})();<\/script>`;
+}
+/* The game's own mark (an arch with a loop over a cyan ground line), on a dark tile and as a wide hero image */
+const SKYLINE_MARK = `<path d="M6 82 C 26 82, 30 20, 50 20 C 70 20, 74 60, 62 64 C 50 68, 44 46, 58 40 C 72 34, 82 70, 96 82" fill="none" stroke="url(#lg)" stroke-width="8" stroke-linecap="round"/><path d="M6 92 H96" stroke="#3fe0d0" stroke-width="4" stroke-linecap="round"/>`;
+const SKYLINE_DEFS = `<linearGradient id="lg" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#ffd2b8"/><stop offset="1" stop-color="#ff5a2a"/></linearGradient>`;
+const svgURI = svg => "data:image/svg+xml;base64," + btoa(unescape(encodeURIComponent(svg)));
+const SKYLINE_ICON = svgURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128"><defs>${SKYLINE_DEFS}<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1b3160"/><stop offset="1" stop-color="#060b18"/></linearGradient><radialGradient id="gl" cx=".5" cy=".4" r=".65"><stop offset="0" stop-color="#ff7a2f" stop-opacity=".34"/><stop offset="1" stop-color="#ff7a2f" stop-opacity="0"/></radialGradient></defs><rect width="128" height="128" fill="url(#bg)"/><rect width="128" height="128" fill="url(#gl)"/><g transform="translate(13 11) scale(1.02)">${SKYLINE_MARK.replace('stroke-width="8"', 'stroke-width="12"').replace('stroke-width="4"', 'stroke-width="6"')}</g></svg>`);
+const SKYLINE_ART = svgURI(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 420" preserveAspectRatio="xMidYMid slice"><defs>${SKYLINE_DEFS}<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a1330"/><stop offset=".6" stop-color="#2a3f7a"/><stop offset="1" stop-color="#ff9a5c"/></linearGradient><linearGradient id="hl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1e3a2f"/><stop offset="1" stop-color="#0b1a16"/></linearGradient></defs><rect width="1200" height="420" fill="url(#sky)"/><g fill="#fff" opacity=".7"><circle cx="120" cy="60" r="1.6"/><circle cx="310" cy="110" r="1.2"/><circle cx="520" cy="40" r="1.8"/><circle cx="760" cy="90" r="1.3"/><circle cx="980" cy="50" r="1.7"/><circle cx="1100" cy="130" r="1.2"/></g><path d="M0 330 C 160 270 300 300 420 280 C 560 255 680 315 820 290 C 960 265 1080 300 1200 270 V420 H0Z" fill="#162a4f" opacity=".85"/><path d="M0 365 C 200 320 360 350 540 335 C 720 320 900 360 1200 325 V420 H0Z" fill="url(#hl)"/><g transform="translate(560 40) scale(5.4)" opacity=".95">${SKYLINE_MARK}</g></svg>`);
+registerApp("skyline", {
+  name: "Skyline Coaster Studio", icon: "activity", iconImg: SKYLINE_ICON, colors: ["#ff7a2f", "#1ea7ff"], w: 1180, h: 720, minW: 520, minH: 360, category: "Games", keywords: "skyline coaster roller coaster theme park builder studio game",
+  desc: "Design and ride your own roller coasters. Loaded from axolotlpriv/Skyline each time it opens.",
+  launch(win) {
+    const B = win.body; const ID = "sky" + uid(); let frame = null;
+    win.extra.innerHTML = `<button class="ibtn sk-rl" data-tip="Reload (gets the latest version)" style="width:30px;height:30px">${ic("refresh")}</button><button class="ibtn sk-fs" data-tip="Full screen" style="width:30px;height:30px">${ic("maximize")}</button>`;
+    const onMsg = e => { const d = e.data; if (d && d.axsky === ID && frame && e.source === frame.contentWindow && d.data && typeof d.data === "object") IDB.set("skyline-save", d.data); };
+    window.addEventListener("message", onMsg); win.on("close", () => window.removeEventListener("message", onMsg));
+    const show = async () => {
+      B.innerHTML = `<div style="flex:1;position:relative;background:#04070e"><div class="empty-state" style="position:absolute;inset:0;color:#ccc"><div class="spinner"></div><div>Loading Skyline…</div></div></div>`;
+      const host = B.firstElementChild; let html = null, cached = await IDB.get("skyline-cache");
+      try { const r = await fetch(SKYLINE.url, { cache: "no-cache", signal: AbortSignal.timeout ? AbortSignal.timeout(20000) : undefined }); if (!r.ok) throw new Error("GitHub returned HTTP " + r.status); html = await r.text(); if (!/<html/i.test(html)) throw new Error("Unexpected response"); IDB.set("skyline-cache", { html, time: Date.now() }); }
+      catch (e) { html = cached?.html; if (!html) { host.innerHTML = `<div class="empty-state" style="color:#ccc">${ic("wifiOff")}<div>Skyline needs an internet connection the first time.</div><div class="dim" style="font-size:12px">${esc(e.message)}</div><button class="btn primary sk-try">Try again</button></div>`; $(".sk-try", host).onclick = show; return; } }
+      const save = (await IDB.get("skyline-save")) || {};
+      html = html.replace(/<head[^>]*>/i, m => m + skylineShim(ID, save));
+      host.innerHTML = ""; const f = document.createElement("iframe"); frame = f;
+      f.setAttribute("sandbox", "allow-scripts allow-forms allow-modals allow-downloads allow-pointer-lock"); f.setAttribute("allow", "fullscreen; autoplay; clipboard-write"); f.setAttribute("allowfullscreen", ""); f.setAttribute("referrerpolicy", "no-referrer");
+      f.style.cssText = "position:absolute;inset:0;width:100%;height:100%;border:0;background:#04070e"; f.srcdoc = html; host.appendChild(f);
+    };
+    $(".sk-rl", win.extra).onclick = show; $(".sk-fs", win.extra).onclick = () => (frame || B).requestFullscreen?.();
+    show();
+  },
+});
+
+/* =====================================================================
    Sample games (original) shipped as real PE / ELF files with payloads
    ===================================================================== */
 const SAMPLE_GAMES = {
@@ -5545,6 +5585,7 @@ Compat.repack = function (buf, payload) {
    ===================================================================== */
 const AXPLAY_CATALOG = [
   { id: "gd", title: "Geometry Dash (webport)", kind: "app", app: "gdash", platform: "web", dev: "axolotlpriv", tags: ["Rhythm", "Platformer"], size: "3.6 MB", desc: "Jump, fly and flip through rhythm-based levels. This is your webport from github.com/axolotlpriv/Geometry-Dash-webport, loaded live inside AxOS.", featured: true, colors: ["#facc15", "#ea580c"] },
+  { id: "skyline", title: "Skyline Coaster Studio", kind: "app", app: "skyline", platform: "web", dev: "axolotlpriv", tags: ["Builder", "Simulation"], size: "320 KB", desc: "Design, build and ride your own roller coasters. Your Skyline repo, loaded fresh from GitHub every time you open it.", colors: ["#ff7a2f", "#1ea7ff"], art: SKYLINE_ART },
   { id: "neondrift", title: "Neon Drift", kind: "elf", file: "Neon Drift/NeonDrift.x86_64", platform: "linux", dev: "AxOS Games", tags: ["Arcade", "Racing"], size: "24 KB", desc: "A native Linux arcade racer. Dodge glowing barriers on an endless synthwave highway. Ships as an x86-64 ELF binary and runs through the AxPlay Linux Runtime.", colors: ["#ff2bd6", "#00e5ff"] },
   { id: "orbital", title: "Orbital", kind: "exe", file: "Orbital/Orbital.exe", platform: "windows", dev: "AxOS Games", tags: ["Arcade", "Space"], size: "26 KB", desc: "A Windows game about staying in orbit. Switch between rings to dodge incoming rocks. Runs on AxOS through AxCompat's Proton-style compatibility layer.", colors: ["#0ea5e9", "#1e1b4b"] },
   { id: "lagoon", title: "Lagoon Merge", kind: "app", app: "lagoon", platform: "axos", dev: "AxOS Games", tags: ["Puzzle", "Merge"], size: "18 KB", desc: "Slide sea creatures across a 5×5 lagoon, merge matching pairs and grow them all the way up to the legendary axolotl. Rocks wash in and block the way. Merge next to them to break them apart.", colors: ["#38bdf8", "#0f4c5c"] },
@@ -5729,7 +5770,7 @@ const AxPlay = {
   },
   async uninstall(g) {
     if (!(await Dialog.confirm(`Uninstall ${g.title}?`, "Its files will be removed. Your play time is kept.", { ok: "Uninstall", danger: true }))) return;
-    if (g.kind === "app" && AXPLAY_CATALOG.some(c => c.id === g.id && c.app !== "gdash")) Store.uninstall(g.app, true);
+    if (g.kind === "app" && AXPLAY_CATALOG.some(c => c.id === g.id && !["gdash", "skyline"].includes(c.app))) Store.uninstall(g.app, true);
     if (g.path && g.catalog !== false && AXPLAY_CATALOG.some(c => c.id === g.id && c.file)) { try { FS.rm(FS.dirname(g.path)); } catch (e) { } }
     if (g.id === "gd") await IDB.del("gd-cache");
     this.update(g.id, { uninstalled: true }); Bus.emit("axplay");
@@ -6544,6 +6585,7 @@ window.addEventListener("unhandledrejection", e => console.warn("Unhandled:", e.
   await bootSequence();
   if (!localStorage.getItem("axos.migr2")) { localStorage.setItem("axos.migr2", "1"); const sp = Settings.get("startPinned"); ["axplay", "gdash"].forEach(a => { if (!sp.includes(a)) sp.splice(4, 0, a); }); Settings.set("startPinned", sp); const tp = Settings.get("pinned"); if (!tp.includes("axplay")) Settings.set("pinned", [...tp, "axplay"]); FS.mkdir(FS.home + "/Games", true); }
   if (!localStorage.getItem("axos.migr3")) { localStorage.setItem("axos.migr3", "1"); if (Settings.get("accent") === "#4f8cff" && Settings.get("wallpaper") === "aurora") { Settings.set("accent", "#e8679f"); Settings.set("wallpaper", "axolotl"); Settings.set("preset", "default"); } const sp = Settings.get("startPinned"); if (!sp.includes("lagoon")) { sp.splice(6, 0, "lagoon"); Settings.set("startPinned", sp); } const d = AxPlay.get(); if (d.games.length && !d.games.find(g => g.id === "lagoon")) { d.games.push({ ...AXPLAY_CATALOG.find(c => c.id === "lagoon"), added: Date.now(), playtime: 0, compat: "auto", opts: "" }); AxPlay.save(d); } }
+  if (!localStorage.getItem("axos.migr5")) { localStorage.setItem("axos.migr5", "1"); const sp = Settings.get("startPinned"); if (!sp.includes("skyline")) { sp.splice(Math.max(0, sp.indexOf("gdash") + 1), 0, "skyline"); Settings.set("startPinned", sp); } try { const d = AxPlay.get(), c = AXPLAY_CATALOG.find(x => x.id === "skyline"); if (c && !d.games.find(g => g.id === "skyline")) { d.games.push({ ...c, added: Date.now(), playtime: 0, compat: "auto", opts: "" }); AxPlay.save(d); } } catch (e) { } }
   if (!localStorage.getItem("axos.migr4")) { localStorage.setItem("axos.migr4", "1"); const sp = Settings.get("startPinned"); if (!sp.includes("remote")) { sp.splice(5, 0, "remote"); Settings.set("startPinned", sp); } }
   Taskbar.init(); Desktop.init(); Widgets.render(); ScreenSaver.init(); applyTheme();
   if (!Settings.get("setupDone")) { await runOOBE(); Desktop.render(); Taskbar.renderApps(); Sound.play("startup"); Motion.reveal(); }
