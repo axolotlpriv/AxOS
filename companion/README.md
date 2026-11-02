@@ -33,14 +33,27 @@ Choose **Pair with an ID and key instead**. In AxOS, open **Remote Desktop → A
 | Frame rate | 60 fps (up to 120) | 30 fps |
 | Resolution | Up to 1080p | Full resolution, up to 4K |
 | Bitrate cap | 20 Mbps | 15 Mbps |
-| Mouse | Locked raw mouse; relative input that games read | Absolute cursor |
+| Mouse | Auto: free on the desktop, locked with raw input when a game hides the cursor | Free (absolute) |
 | Extras | Controller passthrough, minimal buffering | Clipboard sync, sharper text encoding |
 
 You can switch modes during a session, and change resolution, frame rate and bitrate from the toolbar.
 
+**Your PC's cursor:** screen capture leaves the pointer out. The companion therefore streams the cursor's position, shape (arrow, text beam, resize and so on) and whether it's hidden, and AxOS draws it. On Windows and Linux you see the real shape; on macOS, a standard arrow.
+
+**Mouse in gaming mode** (the mouse button in the toolbar):
+- **Auto (default):** on the desktop the mouse is free and exact, so you can click the taskbar and windows. When a game hides the cursor to take the mouse, AxOS locks it and sends raw relative motion. When the cursor comes back (a menu, the desktop), it unlocks.
+- **Always lock:** for games that keep the cursor visible but want raw mouse input.
+- **Never lock:** strategy games and anything played with a visible cursor.
+
+Press **Esc** to release a locked mouse.
+
+**Multiple displays:** the display button in the toolbar switches between displays, or shows **All displays** at once. AxOS remembers your choice for each PC.
+
+**Admin windows (Windows):** Windows doesn't let normal apps control windows running as administrator, such as Task Manager, installers and some game launchers. Click **Run as admin** in the companion's window to control those too. The sign-in screen and UAC prompts run on a secure desktop that no remote app can show.
+
 **Video encoding:** the companion uses your graphics card's hardware encoder when available: NVENC on NVIDIA, Quick Sync on Intel, AMF on AMD, VideoToolbox on macOS. Otherwise it falls back to tuned x264 on the CPU. The app window shows which one it picked.
 
-**Input on Windows:** keys and mouse are sent with `SendInput` hardware scancodes and raw relative mouse motion, so games pick them up.
+**Input on Windows:** keys and mouse are sent with `SendInput` hardware scancodes and raw relative mouse motion, so games pick them up. Clicks carry their exact position, so a click always lands where you clicked even if the network reorders packets.
 
 ## How it connects
 

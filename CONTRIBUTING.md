@@ -142,8 +142,10 @@ No account? Choose **Pair with an ID and key** in the companion, then use **Add 
 **Builds:** `.github/workflows/companion.yml` packages the companion with PyInstaller on Windows, macOS and Linux. It self-tests each build and publishes them as the `companion` release. It runs on every push that changes `companion/`.
 
 **Modes:**
-- **Gaming:** 60+ fps, locked raw mouse, controller passthrough.
+- **Gaming:** 60+ fps and controller passthrough. The mouse locks with raw input only when a game hides the cursor, and stays free on the desktop.
 - **Work:** full resolution, sharp text, clipboard sync.
+
+**Cursor and displays:** the PC's real cursor (position, shape, hidden or not) is streamed and drawn by AxOS, since screen capture leaves it out. With several displays, pick one or **All displays** from the toolbar.
 
 **During a session:** a stats overlay shows resolution, frame rate, bitrate, latency and route.
 

@@ -33,12 +33,14 @@ import queue
 import secrets
 import shlex
 import ssl
+import struct
 import subprocess
 import sys
 import threading
 import time
 import urllib.error
 import urllib.request
+import zlib
 from xml.sax.saxutils import escape as xml_escape
 
 VERSION = "1.1.0"
@@ -76,6 +78,15 @@ for _name in ("pyperclip", "soundcard", "vgamepad", "dxcam"):
 
 IS_WIN = platform.system() == "Windows"
 IS_MAC = platform.system() == "Darwin"
+if IS_WIN:  # physical pixels everywhere, so capture, cursor and input agree on coordinates
+    try:
+        import ctypes
+        ctypes.windll.shcore.SetProcessDpiAwareness(2)
+    except Exception:
+        try:
+            ctypes.windll.user32.SetProcessDPIAware()
+        except Exception:
+            pass
 try:  # packaged builds carry their own CA bundle (the system one may be missing)
     import certifi
     os.environ.setdefault("SSL_CERT_FILE", certifi.where())
@@ -254,7 +265,7 @@ MODES = {
     "gaming": {"fps": 60, "max_height": 1080, "min_br": 3_000_000, "max_br": 20_000_000, "start_br": 10_000_000, "preset": "ultrafast"},
     "work": {"fps": 30, "max_height": 2160, "min_br": 2_000_000, "max_br": 15_000_000, "start_br": 8_000_000, "preset": "veryfast"},
 }
-STATE = {"mode": "work", "fps": 30, "max_height": 2160, "max_br": 15_000_000, "monitor": 1, "encoder": "?"}
+STATE = {"mode": "work", "fps": 30, "max_height": 2160, "max_br": 15_000_000, "monitor": 0, "encoder": "?"}
 
 
 def apply_mode(mode, fps=None, max_height=None, max_br=None):
@@ -373,6 +384,84 @@ def _get_encoder(codec):
     return _orig_get_encoder(codec)
 
 
+# ---------------------------------------------------------------------------
+# Displays: capture, cursor and input all use physical virtual-desktop pixels.
+# Index 0 is all displays together; 1..n are single displays (mss order).
+# ---------------------------------------------------------------------------
+class Displays:
+    TEST = {"left": 0, "top": 0, "width": 1280, "height": 720}
+
+    def __init__(self):
+        self.test, self._mons, self._t = False, None, 0
+
+    def all(self):
+        if self._mons is None or time.time() - self._t > 3:
+            fake = os.environ.get("AXOS_DISPLAYS")  # testing: "1280x720+0+0,1280x720+1280+0" splits one screen into displays
+            if self.test or mss is None:
+                self._mons = [dict(self.TEST), dict(self.TEST)]
+            elif fake:
+                ms = [dict(zip(("width", "height", "left", "top"), map(int, d.replace("x", "+").split("+")))) for d in fake.split(",")]
+                ms[0]["is_primary"] = True
+                x0, y0 = min(m["left"] for m in ms), min(m["top"] for m in ms)
+                self._mons = [{"left": x0, "top": y0, "width": max(m["left"] + m["width"] for m in ms) - x0, "height": max(m["top"] + m["height"] for m in ms) - y0}] + ms
+            else:
+                with MSS() as s:
+                    self._mons = [dict(m) for m in s.monitors]
+            self._t = time.time()
+        return self._mons
+
+    def describe(self):
+        """Displays for AxOS, numbered left to right like a display arrangement."""
+        out = [{"i": i, "x": m["left"], "y": m["top"], "w": m["width"], "h": m["height"], "primary": bool(m.get("is_primary", m["left"] == 0 and m["top"] == 0))}
+               for i, m in enumerate(self.all()) if i > 0]
+        for n, d in enumerate(sorted(out, key=lambda d: (d["x"], d["y"])), 1):
+            d["n"] = n
+        if out and not any(d["primary"] for d in out):
+            out[0]["primary"] = True
+        return out
+
+    def primary(self):
+        return next((d["i"] for d in self.describe() if d["primary"]), 1)
+
+    def valid(self, i):
+        return isinstance(i, int) and 0 <= i < len(self.all()) and (i > 0 or len(self.all()) > 2)
+
+    def rect(self, i=None):
+        mons = self.all()
+        i = STATE["monitor"] if i is None else i
+        return mons[i] if 0 < i < len(mons) or (i == 0 and len(mons) > 2) else mons[min(1, len(mons) - 1)]
+
+
+DISPLAYS = Displays()
+
+
+def dx_cameras():
+    """DXGI desktop-duplication cameras (Windows, dxcam), keyed by the display rectangle each captures."""
+    cams, dx = {}, OPTIONAL["dxcam"]
+    for dev in range(4):
+        found = False
+        for out in range(8):
+            try:
+                try:  # the numpy processor ships compiled with dxcam; the default one needs OpenCV
+                    cam = dx.create(device_idx=dev, output_idx=out, output_color="BGRA", processor_backend="numpy")
+                except TypeError:
+                    cam = dx.create(device_idx=dev, output_idx=out, output_color="BGRA")
+            except Exception:
+                break
+            found = True
+            try:
+                r = cam._output.desc.DesktopCoordinates
+                cams[(r.left, r.top, r.right - r.left, r.bottom - r.top)] = cam
+            except Exception:
+                displays = DISPLAYS.describe()
+                if len(displays) == 1:  # one display: the camera can only be that one
+                    m = DISPLAYS.rect(1)
+                    cams[(m["left"], m["top"], m["width"], m["height"])] = cam
+        if not found:
+            break
+    return cams
+
+
 class ScreenTrack(VideoStreamTrack if not MISSING else object):
     kind = "video"
 
@@ -382,19 +471,14 @@ class ScreenTrack(VideoStreamTrack if not MISSING else object):
         self._local = threading.local()
         self._start = None
         self._count = 0
-        self._dx = None
+        self._dx, self._last = {}, {}
         if IS_WIN and OPTIONAL["dxcam"] and not test_pattern:
             try:
-                self._dx = OPTIONAL["dxcam"].create(output_color="BGRA")
-                log("Capture: DXGI desktop duplication (dxcam)")
-            except Exception:
-                self._dx = None
-
-    def monitors(self):
-        if self.test or mss is None:
-            return [{"i": 1, "w": 1920, "h": 1080, "primary": True}]
-        with MSS() as s:
-            return [{"i": i, "w": m["width"], "h": m["height"], "primary": i == 1} for i, m in enumerate(s.monitors) if i > 0]
+                self._dx = dx_cameras()
+                if self._dx:
+                    log(f"Capture: DXGI desktop duplication on {len(self._dx)} display(s)")
+            except Exception as e:
+                log("DXGI capture unavailable:", str(e)[:60])
 
     def _sct(self):
         if not hasattr(self._local, "sct"):
@@ -410,20 +494,22 @@ class ScreenTrack(VideoStreamTrack if not MISSING else object):
             img[:, :, 0] = np.linspace(80, 200, w, dtype=np.uint8)[None, :]
             img[:, :, 2] = np.linspace(200, 60, h, dtype=np.uint8)[:, None]
             img[h // 2 - 60:h // 2 + 60, max(0, x - 60):x + 60, :3] = 255
+            img[h - 48:, :, :3] = 40  # a "taskbar" to aim at
             return img, w, h
-        if self._dx is not None:
-            arr = self._dx.grab()
-            if arr is None:
-                arr = getattr(self, "_last", None)
-                if arr is None:
-                    time.sleep(0.005)
-                    return self._grab()
-            self._last = arr
-            return arr, arr.shape[1], arr.shape[0]
-        sct = self._sct()
-        mons = sct.monitors
-        mon = mons[STATE["monitor"]] if STATE["monitor"] < len(mons) else mons[1]
-        shot = sct.grab(mon)
+        m = DISPLAYS.rect()
+        key = (m["left"], m["top"], m["width"], m["height"])
+        cam = self._dx.get(key)
+        if cam is not None:
+            for _ in range(20):  # dxcam returns None while the screen hasn't changed
+                arr = cam.grab()
+                if arr is not None:
+                    self._last[key] = arr
+                    return arr, arr.shape[1], arr.shape[0]
+                if key in self._last:
+                    arr = self._last[key]
+                    return arr, arr.shape[1], arr.shape[0]
+                time.sleep(0.005)
+        shot = self._sct().grab(m)
         return np.frombuffer(shot.bgra, np.uint8).reshape(shot.height, shot.width, 4), shot.width, shot.height
 
     async def recv(self):
@@ -449,6 +535,160 @@ class ScreenTrack(VideoStreamTrack if not MISSING else object):
         frame.pts = int((time.time() - self._start) * 90000)
         frame.time_base = fractions.Fraction(1, 90000)
         return frame
+
+
+# ---------------------------------------------------------------------------
+# Cursor: screen capture leaves the pointer out, so the companion reports its
+# position, visibility and shape and AxOS draws it.
+# ---------------------------------------------------------------------------
+def png_rgba(w, h, rgba):
+    raw = b"".join(b"\x00" + rgba[y * w * 4:(y + 1) * w * 4] for y in range(h))
+
+    def chunk(tag, data):
+        return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+    return b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 6, 0, 0, 0)) + chunk(b"IDAT", zlib.compress(raw, 6)) + chunk(b"IEND", b"")
+
+
+class WinCursor:
+    def __init__(self):
+        import ctypes
+        from ctypes import wintypes
+        self.ct, self.wt = ctypes, wintypes
+        self.u, self.g = ctypes.WinDLL("user32"), ctypes.WinDLL("gdi32")
+
+        class CURSORINFO(ctypes.Structure):
+            _fields_ = [("cbSize", wintypes.DWORD), ("flags", wintypes.DWORD), ("hCursor", wintypes.HANDLE), ("pt", wintypes.POINT)]
+
+        class ICONINFO(ctypes.Structure):
+            _fields_ = [("fIcon", wintypes.BOOL), ("xHotspot", wintypes.DWORD), ("yHotspot", wintypes.DWORD), ("hbmMask", wintypes.HBITMAP), ("hbmColor", wintypes.HBITMAP)]
+
+        class BITMAP(ctypes.Structure):
+            _fields_ = [("bmType", wintypes.LONG), ("bmWidth", wintypes.LONG), ("bmHeight", wintypes.LONG), ("bmWidthBytes", wintypes.LONG),
+                        ("bmPlanes", wintypes.WORD), ("bmBitsPixel", wintypes.WORD), ("bmBits", ctypes.c_void_p)]
+
+        class BITMAPINFOHEADER(ctypes.Structure):
+            _fields_ = [("biSize", wintypes.DWORD), ("biWidth", wintypes.LONG), ("biHeight", wintypes.LONG), ("biPlanes", wintypes.WORD), ("biBitCount", wintypes.WORD),
+                        ("biCompression", wintypes.DWORD), ("biSizeImage", wintypes.DWORD), ("biXPelsPerMeter", wintypes.LONG), ("biYPelsPerMeter", wintypes.LONG),
+                        ("biClrUsed", wintypes.DWORD), ("biClrImportant", wintypes.DWORD)]
+        self.CURSORINFO, self.ICONINFO, self.BITMAP, self.BIH = CURSORINFO, ICONINFO, BITMAP, BITMAPINFOHEADER
+        self.u.GetCursorInfo.argtypes = [ctypes.POINTER(CURSORINFO)]
+        self.u.GetIconInfo.argtypes = [wintypes.HANDLE, ctypes.POINTER(ICONINFO)]
+        self.u.GetDC.restype = wintypes.HDC
+        self.u.GetDC.argtypes = [wintypes.HWND]
+        self.u.ReleaseDC.argtypes = [wintypes.HWND, wintypes.HDC]
+        self.g.GetObjectW.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p]
+        self.g.GetDIBits.argtypes = [wintypes.HDC, wintypes.HBITMAP, wintypes.UINT, wintypes.UINT, ctypes.c_void_p, ctypes.c_void_p, wintypes.UINT]
+        self.g.DeleteObject.argtypes = [wintypes.HANDLE]
+
+    def poll(self):
+        ci = self.CURSORINFO()
+        ci.cbSize = self.ct.sizeof(ci)
+        if not self.u.GetCursorInfo(self.ct.byref(ci)):
+            return None
+        visible = bool(ci.flags & 1) and bool(ci.hCursor)  # CURSOR_SHOWING; games hide it or set no cursor
+        return ci.pt.x, ci.pt.y, visible, str(ci.hCursor or 0)
+
+    def _bits(self, hbm):
+        bm = self.BITMAP()
+        self.g.GetObjectW(hbm, self.ct.sizeof(bm), self.ct.byref(bm))
+        w, h = bm.bmWidth, abs(bm.bmHeight)
+        bih = self.BIH(self.ct.sizeof(self.BIH), w, -h, 1, 32, 0, 0, 0, 0, 0, 0)
+        buf = self.ct.create_string_buffer(w * h * 4)
+        hdc = self.u.GetDC(None)
+        try:
+            self.g.GetDIBits(hdc, hbm, 0, h, buf, self.ct.byref(bih), 0)
+        finally:
+            self.u.ReleaseDC(None, hdc)
+        return np.frombuffer(buf.raw, np.uint8).reshape(h, w, 4).copy()
+
+    def shape(self, key):
+        ii = self.ICONINFO()
+        if not int(key) or not self.u.GetIconInfo(self.wt.HANDLE(int(key)), self.ct.byref(ii)):
+            return None
+        try:
+            mask = self._bits(ii.hbmMask) if ii.hbmMask else None
+            if ii.hbmColor:
+                px = self._bits(ii.hbmColor)
+                rgba = px[:, :, [2, 1, 0, 3]].copy()
+                if not rgba[:, :, 3].any() and mask is not None:  # old-style cursor: transparency lives in the mask
+                    rgba[:, :, 3] = np.where(mask[:px.shape[0], :, 0] == 0, 255, 0)
+            elif mask is not None:  # monochrome: AND mask on top, XOR mask below
+                h = mask.shape[0] // 2
+                a, x = mask[:h, :, 0] > 127, mask[h:2 * h, :, 0] > 127
+                rgba = np.zeros((h, mask.shape[1], 4), np.uint8)
+                rgba[~a] = np.where(x[~a][:, None], [255, 255, 255, 255], [0, 0, 0, 255])
+                rgba[a & x] = [0, 0, 0, 255]  # "invert" pixels (the text I-beam): draw them dark with a light edge
+                edge = np.zeros_like(a)
+                inv = a & x
+                edge[1:, :] |= inv[:-1, :]
+                edge[:-1, :] |= inv[1:, :]
+                edge[:, 1:] |= inv[:, :-1]
+                edge[:, :-1] |= inv[:, 1:]
+                rgba[edge & a & ~x] = [255, 255, 255, 255]
+            else:
+                return None
+            h, w = rgba.shape[:2]
+            return {"w": w, "h": h, "hx": ii.xHotspot, "hy": ii.yHotspot, "png": base64.b64encode(png_rgba(w, h, rgba.tobytes())).decode()}
+        finally:
+            for hbm in (ii.hbmMask, ii.hbmColor):
+                if hbm:
+                    self.g.DeleteObject(hbm)
+
+
+class XCursor:
+    def __init__(self):
+        from Xlib import display
+        self.d = display.Display()
+        self.root = self.d.screen().root
+        self.fixes = self.d.has_extension("XFIXES")
+        if self.fixes:
+            self.d.xfixes_query_version()
+        self._img, self._t = None, 0
+
+    def poll(self):
+        p = self.root.query_pointer()
+        key = "0"
+        if self.fixes and time.time() - self._t > 0.1:  # the shape changes rarely; check it 10 times a second
+            self._t = time.time()
+            img = self.d.xfixes_get_cursor_image(self.root)
+            if self._img is None or img.cursor_serial != self._img.cursor_serial:
+                self._blank = not any(px >> 24 for px in img.cursor_image)  # an invisible cursor = hidden by the app
+            self._img = img
+        if self._img is not None:
+            key = str(self._img.cursor_serial)
+        return p.root_x, p.root_y, not getattr(self, "_blank", False), key
+
+    def shape(self, key):
+        img = self._img
+        if img is None or str(img.cursor_serial) != key or not img.width:
+            return None
+        argb = np.array(img.cursor_image, dtype=np.uint32).reshape(img.height, img.width)
+        rgba = np.stack([(argb >> 16) & 255, (argb >> 8) & 255, argb & 255, (argb >> 24) & 255], axis=-1).astype(np.uint8)
+        return {"w": img.width, "h": img.height, "hx": img.xhot, "hy": img.yhot, "png": base64.b64encode(png_rgba(img.width, img.height, rgba.tobytes())).decode()}
+
+
+class BasicCursor:
+    """Position only (macOS): AxOS draws a standard arrow."""
+
+    def __init__(self):
+        from pynput import mouse
+        self.m = mouse.Controller()
+
+    def poll(self):
+        x, y = self.m.position
+        return int(x), int(y), True, "0"
+
+    def shape(self, key):
+        return None
+
+
+def make_cursor():
+    for cls in ((WinCursor,) if IS_WIN else (BasicCursor,) if IS_MAC else (XCursor, BasicCursor)):
+        try:
+            return cls()
+        except Exception as e:
+            log(f"Cursor tracking: {cls.__name__} unavailable ({str(e)[:60]})")
+    return None
 
 
 class LoopbackAudio(MediaStreamTrack if not MISSING else object):
@@ -553,10 +793,6 @@ class WinInput:
 
         self.INPUT, self.MOUSEINPUT, self.KEYBDINPUT = INPUT, MOUSEINPUT, KEYBDINPUT
         u.SendInput.argtypes = (wintypes.UINT, ctypes.POINTER(INPUT), ctypes.c_int)
-        try:
-            ctypes.windll.shcore.SetProcessDpiAwareness(2)
-        except Exception:
-            pass
 
     def _send(self, inp):
         self.u.SendInput(1, self.ct.byref(inp), self.ct.sizeof(inp))
@@ -646,7 +882,14 @@ class PynputInput:
             (self.m.press if down else self.m.release)(btn)
 
     def wheel(self, dx, dy):
-        self.m.scroll(int(dx / 100) if dx else 0, int(-dy / 100) or (-1 if dy > 0 else 1 if dy < 0 else 0))
+        # Browsers send pixels (about 100 per notch); pynput scrolls in notches, so keep the remainder
+        self._wx = getattr(self, "_wx", 0) + dx
+        self._wy = getattr(self, "_wy", 0) - dy
+        sx, sy = int(self._wx / 100), int(self._wy / 100)
+        self._wx -= sx * 100
+        self._wy -= sy * 100
+        if sx or sy:
+            self.m.scroll(sx, sy)
 
 
 class Gamepad:
@@ -698,13 +941,7 @@ class Input:
                 log("Input control unavailable:", str(e)[:80], "(view-only mode)")
         self.pad = Gamepad() if not dry else None
         self.held_keys, self.held_btns = set(), set()
-
-    def monitor(self):
-        if mss is None:
-            return {"left": 0, "top": 0, "width": 1920, "height": 1080}
-        with MSS() as s:
-            mons = s.monitors
-            return mons[STATE["monitor"]] if STATE["monitor"] < len(mons) else mons[1]
+        self.pos_seq = 0
 
     def handle(self, m):
         t = m.get("t")
@@ -720,23 +957,29 @@ class Input:
                 (self.held_keys.add if m["d"] else self.held_keys.discard)(m["c"])
                 self.impl.key(m["c"], bool(m["d"]))
             elif t == "pos":
-                self.impl.move_abs(min(1, max(0, m["x"])), min(1, max(0, m["y"])), self._mon())
+                n = m.get("n", 0)
+                if n and self.pos_seq and self.pos_seq - 10000 < n <= self.pos_seq:
+                    return  # an older position that arrived late (the position channel is unordered)
+                self.pos_seq = n
+                self._abs(m)
             elif t == "rel":
                 self.impl.move_rel(m["x"], m["y"])
             elif t == "btn":
+                if "x" in m:  # clicks carry their position, so they land exactly where AxOS clicked
+                    self._abs(m)
                 (self.held_btns.add if m["d"] else self.held_btns.discard)(m["b"])
                 self.impl.button(int(m["b"]), bool(m["d"]))
             elif t == "wheel":
+                if "px" in m:
+                    self._abs({"x": m["px"], "y": m["py"]})
                 self.impl.wheel(m.get("x", 0), m.get("y", 0))
             elif t == "pad" and self.pad:
                 self.pad.update(m)
         except Exception as e:
             log("input error:", str(e)[:80])
 
-    def _mon(self):
-        if not hasattr(self, "_mcache") or time.time() - self._mtime > 5:
-            self._mcache, self._mtime = self.monitor(), time.time()
-        return self._mcache
+    def _abs(self, m):
+        self.impl.move_abs(min(1, max(0, float(m["x"]))), min(1, max(0, float(m["y"]))), DISPLAYS.rect())
 
     def release_all(self):
         for c in list(self.held_keys):
@@ -760,10 +1003,13 @@ class Companion:
         self.input = Input(dry=args.dry_input)
         self.trackers = {}
         self.account = Account(ident)
+        DISPLAYS.test = bool(args.test_pattern)
+        self.cursor = None
 
     async def run(self):
         sendermod.get_encoder = _get_encoder
         apply_mode("work")
+        self.cursor = make_cursor()
         await asyncio.gather(self.presence_loop(), *(self.tracker_loop(url) for url in TRACKERS))
 
     async def presence_loop(self):
@@ -860,7 +1106,9 @@ class Companion:
             return
         log(f"Connection request from AxOS ({req.get('mode', 'work')} mode)")
         apply_mode(req.get("mode", "work"), req.get("fps"), req.get("height"), req.get("bitrate"))
-        STATE["monitor"] = int(req.get("monitor") or 1)
+        want = req.get("monitor")
+        STATE["monitor"] = want if DISPLAYS.valid(want) else DISPLAYS.primary()
+        self.input.pos_seq = 0
         ice = [RTCIceServer(urls=u) for u in STUN] + [RTCIceServer(**t) for t in req.get("turn", []) if t.get("urls")]
         pc = RTCPeerConnection(RTCConfiguration(iceServers=ice))
         sid = secrets.token_hex(4)
@@ -880,9 +1128,11 @@ class Companion:
                     return
                 self.on_control(sess, ch, m)
             if ch.label == "ctl":
-                ch.send(json.dumps({"t": "hello", "name": self.ident["name"], "os": f"{platform.system()} {platform.release()}", "version": VERSION, "monitors": screen.monitors(),
+                ch.send(json.dumps({"t": "hello", "name": self.ident["name"], "os": f"{platform.system()} {platform.release()}", "version": VERSION,
+                                    "displays": DISPLAYS.describe(), "display": STATE["monitor"], "cursor": self.cursor is not None, "admin": is_admin(),
                                     "encoder": STATE["encoder"], "features": {"audio": bool(sess.get("audio")), "clipboard": bool(OPTIONAL["pyperclip"]), "gamepad": bool(self.input.pad and self.input.pad.pad), "input": bool(self.input.impl) or self.input.dry}}))
                 asyncio.ensure_future(self.clipboard_loop(sess, ch))
+                asyncio.ensure_future(self.cursor_loop(sess))
 
         @pc.on("connectionstatechange")
         async def on_state():
@@ -917,7 +1167,13 @@ class Companion:
                 STATUS["sessions"][k] = STATE["mode"]
             log(f"Switched to {STATE['mode']} mode: {STATE['fps']} fps, up to {STATE['max_height']}p, {STATE['max_br'] // 1_000_000} Mbps")
         elif t == "monitor":
-            STATE["monitor"] = int(m.get("i", 1))
+            i = int(m.get("i", 1))
+            if DISPLAYS.valid(i):
+                STATE["monitor"] = i
+                self.input.release_all()
+                d = next((d for d in DISPLAYS.describe() if d["i"] == i), None)
+                log("Showing " + (f"display {d['n']} ({d['w']}×{d['h']})" if d else "all displays"))
+            self.broadcast({"t": "displays", "displays": DISPLAYS.describe(), "display": STATE["monitor"]})
         elif t == "clip" and OPTIONAL["pyperclip"]:
             try:
                 OPTIONAL["pyperclip"].copy(str(m.get("text", ""))[:1_000_000])
@@ -928,6 +1184,48 @@ class Companion:
             self.input.release_all()
         else:
             self.input.handle(m)
+
+    def broadcast(self, msg):
+        data = json.dumps(msg)
+        for sess in self.sessions.values():
+            ch = sess["channels"].get("ctl")
+            if ch and ch.readyState == "open":
+                ch.send(data)
+
+    async def cursor_loop(self, sess):
+        """Stream the PC's pointer (position on the shown display, visibility, shape) to AxOS."""
+        if self.cursor is None:
+            return
+        sent, tries, last, seq, last_t = set(), {}, None, 0, 0
+        while sess["pc"].connectionState not in ("closed", "failed"):
+            await asyncio.sleep(1 / 120 if STATE["mode"] == "gaming" else 1 / 60)
+            ch, ctl = sess["channels"].get("cur"), sess["channels"].get("ctl")
+            if not ch or ch.readyState != "open":
+                continue
+            try:
+                got = self.cursor.poll()
+                if not got:
+                    continue
+                x, y, visible, key = got
+                if key not in sent and tries.get(key, 0) < 5 and ctl and ctl.readyState == "open":
+                    tries[key] = tries.get(key, 0) + 1
+                    shape = self.cursor.shape(key)
+                    if shape:
+                        sent.add(key)
+                        ctl.send(json.dumps({"t": "curimg", "k": key, **shape}))
+            except Exception as e:
+                log("Cursor tracking error:", str(e)[:80])
+                await asyncio.sleep(1)
+                continue
+            r = DISPLAYS.rect()
+            nx, ny = (x - r["left"]) / r["width"], (y - r["top"]) / r["height"]
+            on = 0 <= nx < 1 and 0 <= ny < 1
+            state = (round(nx, 4), round(ny, 4), visible, on, key, r["width"])
+            now = time.time()
+            if state != last or now - last_t > 0.5:  # the channel is lossy, so repeat the latest state now and then
+                seq += 1
+                ch.send(json.dumps({"t": "cur", "n": seq, "x": state[0], "y": state[1], "v": int(visible), "on": int(on), "k": key, "w": r["width"], "h": r["height"]}))
+                last, last_t = state, now
 
     async def clipboard_loop(self, sess, ch):
         pc = OPTIONAL["pyperclip"]
@@ -1044,6 +1342,23 @@ def vigem_installer():
     return None
 
 
+def is_admin():
+    if not IS_WIN:
+        return None
+    try:
+        import ctypes
+        return bool(ctypes.windll.shell32.IsUserAnAdmin())
+    except Exception:
+        return None
+
+
+def relaunch_as_admin():
+    """Windows only lets an elevated program control elevated windows (Task Manager, installers, admin apps)."""
+    import ctypes
+    params = subprocess.list2cmdline(sys.argv[1:] if FROZEN else [os.path.abspath(__file__), "--gui"] + sys.argv[1:])
+    return ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, params, None, 1) > 32
+
+
 def gui_available():
     if not IS_WIN and not IS_MAC and not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
         return False
@@ -1086,6 +1401,21 @@ def self_test():
             lines.append(f"crypto/webrtc: FAILED ({e})")
     if IS_WIN:
         lines.append("vigembus installer: " + ("bundled" if vigem_installer() else "missing"))
+        try:  # read the standard arrow through the same code that streams the PC's cursor
+            import ctypes
+            u = ctypes.windll.user32
+            u.LoadCursorW.restype, u.LoadCursorW.argtypes = ctypes.c_void_p, [ctypes.c_void_p, ctypes.c_void_p]
+            sh = WinCursor().shape(str(u.LoadCursorW(None, ctypes.c_void_p(32512))))
+            if not sh or not base64.b64decode(sh["png"]).startswith(b"\x89PNG"):
+                raise RuntimeError("no image")
+            lines.append(f"cursor: ok (arrow {sh['w']}x{sh['h']}, hotspot {sh['hx']},{sh['hy']})")
+        except Exception as e:
+            ok = False
+            lines.append(f"cursor: FAILED ({e})")
+        try:
+            lines.append(f"dxgi capture: {len(dx_cameras())} display(s)" if OPTIONAL["dxcam"] else "dxgi capture: dxcam missing")
+        except Exception as e:
+            lines.append(f"dxgi capture: unavailable here ({str(e)[:60]})")
     lines.append("RESULT: " + ("PASS" if ok else "FAIL"))
     report = "\n".join(lines)
     try:
@@ -1140,12 +1470,6 @@ class App:
         self.tk, self.args, self.ident = tk, args, ident
         self.q, self.logbuf, self.page, self.busy = queue.Queue(), [], None, False
         LOG_SINKS.append(lambda line: self.q.put(("log", line)))
-        if IS_WIN:
-            try:
-                import ctypes
-                ctypes.windll.shcore.SetProcessDpiAwareness(2)
-            except Exception:
-                pass
         self.root = r = tk.Tk()
         r.title("AxOS Companion")
         r.configure(bg=self.BG)
@@ -1334,6 +1658,8 @@ class App:
         row("encoder", "Video encoder")
         pad = self.comp.input.pad
         row("pad", "Controllers", ("Install driver", self.install_vigem) if IS_WIN and not (pad and pad.pad) and vigem_installer() else None)
+        if IS_WIN:
+            row("admin", "Permissions", None if is_admin() else ("Run as admin", self.elevate))
         self.auto = tk.BooleanVar(value=autostart_enabled())
         tk.Checkbutton(B, text="Start AxOS Companion when I sign in to this computer", variable=self.auto, command=self.toggle_auto, font=self.font(10),
                        bg=self.BG, fg=self.FG, selectcolor=self.CARD, activebackground=self.BG, activeforeground=self.FG, highlightthickness=0, bd=0, anchor="w").pack(anchor="w", pady=(10, 0))
@@ -1378,8 +1704,10 @@ class App:
                 "signal": f"{STATUS['trackers']} of {len(TRACKERS)} servers connected",
                 "encoder": STATE["encoder"] if STATE["encoder"] != "?" else self.best_enc,
                 "pad": "Virtual Xbox controller ready" if pad and pad.pad else "Needs the ViGEmBus driver" if IS_WIN else "Keyboard and mouse only"}
+        if IS_WIN:
+            vals["admin"] = "Administrator (full control)" if is_admin() else "Standard (can't click admin windows)"
         for k, v in vals.items():
-            if self.rows[k].cget("text") != v:
+            if k in self.rows and self.rows[k].cget("text") != v:
                 self.rows[k].configure(text=v)
 
     def poll(self):
@@ -1452,6 +1780,14 @@ class App:
             self.comp.input.pad = Gamepad()
             self.q.put(("call", self.show_status))
         threading.Thread(target=work, daemon=True).start()
+
+    def elevate(self):
+        from tkinter import messagebox
+        if not messagebox.askyesno("Run as administrator?", "Windows only lets an app running as administrator control admin windows, like Task Manager, installers and some games' launchers.\n\nRestart AxOS Companion as administrator?", parent=self.root):
+            return
+        if relaunch_as_admin():
+            go_offline(self.comp)
+            os._exit(0)
 
     def quit(self):
         from tkinter import messagebox
