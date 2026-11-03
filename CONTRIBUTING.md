@@ -99,7 +99,7 @@ As with AxCompat, only games that carry an AxOS payload actually run. Two exampl
 | Music | Patatap, Chrome Music Lab, Incredibox (demo) |
 | Play & learn | The Evolution of Trust, Adventures with Anxiety, Elevator Saga, Flexbox Froggy, Grid Garden, CSS Diner, Learn Git Branching, SQL Murder Mystery, NandGame, CodeCombat, Keybr |
 
-**1,369 more games** come from [GameMonetize](https://gamemonetize.com/)'s free catalog, which is published for sites to embed. They're bundled compressed into `index.html` (about 145 KB) and unpacked the first time you open the store. Children's content, hentai/adult tags, duplicates and low-quality entries are filtered out. In the store you can narrow everything by:
+**1,369 more games** come from [GameMonetize](https://gamemonetize.com/)'s free catalog, which is published for sites to embed. They're bundled compressed into `index.html` (about 145 KB) and unpacked the first time you open the store. Gambling, dating, adult and similar themes, plus duplicates, are filtered out. In the store you can narrow everything by:
 
 - **Genre:** Action, Adventure, Arcade, Puzzle, Racing, Shooting, Sports, Strategy, Simulation, Platformer, Fighting, Survival, Horror, RPG, Board & Card, Clicker & Idle, Casual, Educational, Cooking, Dress-up, Music, Tower Defense
 - **Type:** Single player, 2 players, Multiplayer, .io, 3D, 2D, Mobile-friendly, Kids & family, Endless
