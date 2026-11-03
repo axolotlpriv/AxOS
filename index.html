@@ -507,8 +507,9 @@ body.taskview-on .win.minimized{ opacity:1; pointer-events:auto; }
 /* ---- AxBrowser ---- */
 .bx-tabs{ display:flex; align-items:flex-end; flex:1; min-width:0; height:40px; padding:0 4px 0 2px; gap:2px; }
 .bx-strip{ display:flex; align-items:flex-end; gap:1px; height:100%; min-width:0; flex:0 1 auto; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; position:relative; scroll-behavior:smooth; } .bx-strip::-webkit-scrollbar{ display:none; }
-.bx-tab{ position:relative; display:flex; align-items:center; gap:7px; height:33px; min-width:44px; width:220px; max-width:220px; flex:0 1 220px; padding:0 6px 0 11px; margin-bottom:0; border-radius:10px 10px 0 0; font-size:12.3px; color:var(--text-2); user-select:none; cursor:default; transition:background .18s var(--ease-out),color .18s,width .28s var(--ease-out),flex-basis .28s var(--ease-out),opacity .2s,transform .24s var(--ease-out); overflow:visible; }
+.bx-tab{ container-type:inline-size; position:relative; display:flex; align-items:center; gap:7px; height:33px; min-width:34px; width:220px; max-width:220px; flex:0 1 220px; padding:0 6px 0 11px; margin-bottom:0; border-radius:10px 10px 0 0; font-size:12.3px; color:var(--text-2); user-select:none; cursor:default; transition:background .18s var(--ease-out),color .18s,width .28s var(--ease-out),flex-basis .28s var(--ease-out),opacity .2s,transform .24s var(--ease-out); overflow:visible; }
 .bx-tab:hover{ background:rgba(var(--accent-rgb),.09); color:var(--text); }
+.bx-tab.on{ min-width:120px; } @container (max-width:84px){ .bx-tab .tt{ display:none; } .bx-tab:not(.on) .x,.bx-tab:not(.on) .au{ display:none !important; } .bx-tab .fav{ margin:0 auto; } .bx-tab:not(.on){ padding:0 4px; } }
 .bx-tab::after{ content:""; position:absolute; right:-1px; top:9px; bottom:9px; width:1px; background:var(--border); opacity:.8; transition:opacity .15s; } .bx-tab.on::after,.bx-tab:hover::after,.bx-tab.on + .bx-tab::before{ opacity:0; }
 .bx-tab.on{ background:var(--surface-2); color:var(--text); z-index:2; }
 .bx-tab.on::before{ content:""; position:absolute; left:-9px; bottom:0; width:9px; height:9px; background:radial-gradient(circle at 0 0,transparent 8.5px,var(--surface-2) 9px); pointer-events:none; }
@@ -3405,7 +3406,7 @@ const GATEWAYS = {
   alloriginsRaw: { name: "AllOrigins (raw)", kind: "raw", build: u => `https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`, hedge: 2500 },
 };
 /* Source for a personal Cloudflare Worker gateway (no rate limits, real POST, cookies) */
-const AXPROXY_WORKER = `// AxOS personal gateway: AxProxy web gateway + AxOS Cloud (accounts and encrypted cloud saves).
+const AXPROXY_WORKER = `// AxOS personal gateway: AxProxy web gateway, AxCore transport (redirects and WebSockets), and AxOS Cloud (accounts and encrypted cloud saves).
 // Paste into a Cloudflare Worker and deploy.
 // For cloud saves, also add a KV namespace binding named AXCLOUD (Settings > Bindings).
 // Optional: set KEY to a secret and enter the same key in AxOS Settings (protects the web gateway).
@@ -3488,6 +3489,20 @@ export default {
     const url = new URL(req.url);
     if (url.pathname.startsWith("/cloud/")) return cloud(req, env, url.pathname.slice(7));
     const target = url.searchParams.get("url");
+    if (req.headers.get("Upgrade") === "websocket") {
+      if (!target || !/^wss?:/i.test(target)) return new Response("Bad WebSocket target", { status: 400, headers: CORS });
+      if (KEY && url.searchParams.get("key") !== KEY) return new Response("Forbidden", { status: 403, headers: CORS });
+      const wt = new URL(target); wt.protocol = wt.protocol === "wss:" ? "https:" : "http:";
+      const wh = new Headers({ Upgrade: "websocket" });
+      try { const extra = JSON.parse(atob(url.searchParams.get("h") || "e30=")); for (const k in extra) wh.set(k, extra[k]); } catch (e) { }
+      const proto = req.headers.get("sec-websocket-protocol"); if (proto) wh.set("sec-websocket-protocol", proto);
+      const up = (await fetch(wt.href, { headers: wh })).webSocket;
+      if (!up) return new Response("The site refused the WebSocket", { status: 502, headers: CORS });
+      const pair = new WebSocketPair(), client = pair[0], server = pair[1]; server.accept(); up.accept();
+      server.addEventListener("message", function (e) { up.send(e.data); }); up.addEventListener("message", function (e) { server.send(e.data); });
+      server.addEventListener("close", function (e) { up.close(e.code, e.reason); }); up.addEventListener("close", function (e) { server.close(e.code, e.reason); });
+      return new Response(null, { status: 101, webSocket: client });
+    }
     if (!target || !/^https?:\\/\\//i.test(target)) return new Response("AxOS gateway is running. Web gateway: ?url=https://example.com · Cloud: " + (env.AXCLOUD ? "ready" : "add a KV binding named AXCLOUD"), { headers: CORS });
     if (KEY && req.headers.get("x-ax-key") !== KEY) return new Response("Forbidden", { status: 403, headers: CORS });
     const h = new Headers();
@@ -3495,14 +3510,15 @@ export default {
     const ck = req.headers.get("x-ax-cookie"); if (ck) h.set("cookie", ck);
     if (!h.has("user-agent")) h.set("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0 Safari/537.36");
     if (!h.has("accept-language")) h.set("accept-language", req.headers.get("accept-language") || "en-US,en;q=0.9");
-    const init = { method: req.method, headers: h, redirect: "follow" };
+    const manual = req.headers.get("x-ax-redirect") === "manual";   // AxCore wants the raw 3xx, wrapped in a 200
+    const init = { method: req.method, headers: h, redirect: manual ? "manual" : "follow" };
     if (!["GET", "HEAD"].includes(req.method)) init.body = await req.arrayBuffer();
     let r; try { r = await fetch(target, init); } catch (e) { return new Response("Upstream error: " + e.message, { status: 502, headers: CORS }); }
     const out = new Headers(CORS);
     for (const [k, v] of r.headers) if (!DROP.test(k)) out.set(k, v);
     const sc = r.headers.getSetCookie ? r.headers.getSetCookie() : []; if (sc.length) out.set("x-ax-set-cookie", JSON.stringify(sc));
     out.set("x-ax-final-url", r.url); out.set("x-ax-status", String(r.status));
-    return new Response(r.body, { status: r.status === 304 ? 200 : r.status, headers: out });
+    return new Response(r.body, { status: manual || r.status === 304 ? 200 : r.status, headers: out });
   },
 };`;
 /* Ultraviolet / Scramjet server templates (you supply the host) */
@@ -3776,7 +3792,8 @@ const Wisp = {
   servers() { const c = this.cfg(); return [...WISP_SERVERS, ...c.custom.map((s, i) => ({ ...s, custom: true, rank: 20 + i }))].map(s => ({ ...s, enabled: !c.off.includes(s.id) })); },
   get enabled() { return this.cfg().on && this.servers().some(s => s.enabled); },
   host(s) { try { return new URL(s.url).host; } catch (e) { return s.url; } },
-  score(s) { const hh = this.health[s.id] || {}; const down = hh.streak >= 2 && Date.now() - hh.last < 180000; return (down ? 1e6 : 0) + (hh.ms ?? 900 + s.rank * 60) * (1 + (hh.streak || 0) * 2); },
+  /* lower is better: handshake time plus the measured time to move 1 MB (a slow or throttled relay loses even if it answers fast) */
+  score(s) { const hh = this.health[s.id] || {}; const down = hh.streak >= 2 && Date.now() - hh.last < 180000; const thr = hh.kbps != null ? Math.min(30000, 1e6 / Math.max(hh.kbps, 15)) : 0; return (down ? 1e6 : 0) + (hh.ms ?? 900 + s.rank * 60) * (1 + (hh.streak || 0) * 2) + thr; },
   /* servers to try, best first; a pinned server always goes first */
   order() { const c = this.cfg(); let l = this.servers().filter(s => s.enabled).sort((a, b) => this.score(a) - this.score(b)); const pin = c.pin !== "auto" && l.find(s => s.id === c.pin); if (pin) l = [pin, ...l.filter(s => s !== pin)]; if (this.active) { const a = l.find(s => s.id === this.active.id); if (a && !(this.health[a.id]?.streak >= 1)) l = [a, ...l.filter(s => s !== a)]; } return l; },
   note(id, ok, ms) { const hh = this.health[id] || {}; if (ok) { hh.ms = hh.ms ? Math.round(hh.ms * .6 + ms * .4) : Math.round(ms); hh.streak = 0; hh.ok = Date.now(); } else { hh.streak = (hh.streak || 0) + 1; hh.last = Date.now(); } this.health[id] = hh; clearTimeout(this._ht); this._ht = setTimeout(() => { try { localStorage.setItem("axos.wispHealth", JSON.stringify(this.health)); } catch (e) { } Bus.emit("wisp"); }, 400); },
@@ -3793,7 +3810,7 @@ const Wisp = {
     })().catch(e => { this.loading = null; throw e; });
   },
   /* once per session when the browser opens: fetch the engine and rank the relays by real latency */
-  warm() { if (this._warm || !this.enabled) return; this._warm = true; this.load().catch(() => { }); this.servers().filter(s => s.enabled).forEach(s => this.probe(s)); },
+  warm() { if (this._warm || !this.enabled) return; this._warm = true; this.load().catch(() => { }); Promise.all(this.servers().filter(s => s.enabled).map(s => this.probe(s))).then(() => setTimeout(() => this.speedAll().catch(() => { }), 1500)); },
   activate(s) {
     if (this.active?.id === s.id && this.session) return;
     this.lib.set_websocket(s.url);
@@ -3809,6 +3826,24 @@ const Wisp = {
       ws.onmessage = ev => { const u = new Uint8Array(ev.data instanceof ArrayBuffer ? ev.data : []); fin(u[0] === 3 || u[0] === 5, u[0] === 3 || u[0] === 5 ? "" : "not a Wisp server"); };
       ws.onerror = () => fin(false, "refused"); ws.onclose = () => fin(false, "closed");
     });
+  },
+  /* measure real throughput of one relay: pull part of a large, fast CDN file through a throwaway session. Runs in the page, so it never disturbs pages that are loading. */
+  async speed(s, { url = "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js", limit = 450000, timeout = 7000 } = {}) {
+    const lib = await this.load(); lib.set_websocket(s.url); const sess = new lib.HTTPSession(); const t0 = performance.now(); const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), timeout); let got = 0, ttfb = 0, kbps = 0;
+    try {
+      const r = await sess.fetch(url, { headers: { "accept-encoding": "identity" }, signal: ctl.signal }); ttfb = Math.round(performance.now() - t0); const rd = r.body.getReader(); const t1 = performance.now();
+      try { while (got < limit) { const { done, value } = await rd.read(); if (done) break; got += value.length; } } catch (e) { }
+      try { await rd.cancel(); } catch (e) { }
+      kbps = got > 20000 ? Math.round(got / 1024 / Math.max(.05, (performance.now() - t1) / 1000)) : 0;
+    } catch (e) { kbps = 0; } finally { clearTimeout(to); /* closing a session with a stream still open can crash the WebAssembly runtime: let it idle out first */ this.stale.push(sess); setTimeout(() => { try { sess.close(); } catch (e) { } this.stale = this.stale.filter(x => x !== sess); }, 90000); }
+    const hh = this.health[s.id] || (this.health[s.id] = {}); hh.kbps = kbps; hh.ttfb = ttfb; hh.sp = Date.now(); clearTimeout(this._ht); this._ht = setTimeout(() => { try { localStorage.setItem("axos.wispHealth", JSON.stringify(this.health)); } catch (e) { } Bus.emit("wisp"); }, 300);
+    return { kbps, ttfb };
+  },
+  busy: null,
+  /* background: speed-test the best few relays one after another (skipping ones tested in the last 15 minutes) */
+  async speedAll(n = 4) {
+    if (this._speeding) return; this._speeding = true;
+    try { const list = this.order().filter(s => !(this.health[s.id]?.streak >= 2)).slice(0, n + 2).filter(s => !this.health[s.id]?.sp || Date.now() - this.health[s.id].sp > 15 * 60000).slice(0, n); for (const s of list) { for (let k = 0; k < 60 && this.busy && this.busy(); k++) await new Promise(r => setTimeout(r, 500)); await this.speed(s).catch(() => { }); } } finally { this._speeding = false; Bus.emit("wisp"); }
   },
   /* one HTTP exchange through the best relay, following redirects here so cookies from every hop are kept */
   async fetch(url, { method = "GET", headers = {}, body, signal, cookies = true, binary = false } = {}) {
@@ -3887,7 +3922,7 @@ const AxCore = {
     this.sj = new ScramjetController({ prefix: this.scope + "service/", files: { wasm: P + "scramjet.wasm.wasm", all: P + "scramjet.all.js", sync: P + "scramjet.sync.js" }, flags: { interceptDownloads: true } });
     await this.sj.init();
     this.sj.addEventListener("download", e => Bus.emit("axcore-download", e.download));
-    const reg = await navigator.serviceWorker.register(this.dir.href + "sw.js?v=1", { scope: this.dir.href });
+    const reg = await navigator.serviceWorker.register(this.dir.href + "sw.js?v=2", { scope: this.dir.href });
     await navigator.serviceWorker.ready;
     if (!navigator.serviceWorker.controller) await Promise.race([new Promise(r => navigator.serviceWorker.addEventListener("controllerchange", r, { once: true })), sleep(4000)]);
     if (!navigator.serviceWorker.controller) { await reg.update().catch(() => { }); await sleep(600); }
@@ -3899,8 +3934,18 @@ const AxCore = {
   },
   /* ---- relays ---- */
   transport: () => AxCore.scope + "proxy/libcurl-transport.mjs",
-  candidates() { const now = Date.now(); return Wisp.order().filter(s => (this.bad.get(s.id) || 0) < now); },
-  async setRelay(s) { await this.conn.setTransport(this.transport(), [{ wisp: s.url }]); this.relay = s; Bus.emit("axcore"); },
+  /* the personal gateway (a Cloudflare Worker from Settings) is a second kind of path: plain HTTPS, so it works where WebSockets are blocked */
+  gateway() { const w = AxProxy.worker(); return w ? { id: "gateway", name: "Personal gateway", kind: "gateway", url: w.base, key: w.key } : null; },
+  score(s) { return s.kind === "gateway" ? 2200 : Wisp.score(s); },
+  candidates() {
+    const now = Date.now(), ok = s => (this.bad.get(s.id) || 0) < now, pref = Settings.get("browser").path || "auto", gw = this.gateway(), wisp = Wisp.order().filter(ok);
+    if (!gw || !ok(gw)) return pref === "gateway" ? [] : wisp; if (pref === "gateway") return [gw]; if (pref === "wisp") return wisp; return [...wisp, gw];
+  },
+  async setRelay(s) {
+    if (s.kind === "gateway") await this.conn.setTransport(this.scope + "proxy/ax-gateway.mjs", [{ url: s.url, key: s.key }]); else await this.conn.setTransport(this.transport(), [{ wisp: s.url }]);
+    this.relay = s; Bus.emit("axcore");
+  },
+  note(s, ok, ms) { if (s.kind !== "gateway") Wisp.note(s.id, ok, ms); },
   /* wait briefly for the first relay probes, pick the best one, then prove it can fetch a page */
   async pickRelay() {
     Wisp.warm(); const t0 = Date.now(), fresh = () => Object.values(Wisp.health).filter(x => x && Date.now() - Math.max(x.ok || 0, x.last || 0) < 120000).length;
@@ -3908,8 +3953,8 @@ const AxCore = {
     let best = null, lastErr = null, tried = 0;
     for (const s of this.candidates()) {
       if (tried >= 3) break; tried++;
-      try { await this.setRelay(s); const ms = await this.check(); Wisp.note(s.id, true, ms); if (!best || ms < best.ms) best = { s, ms }; if (ms < 900) break; }
-      catch (e) { lastErr = e; Wisp.note(s.id, false, 0); this.bad.set(s.id, Date.now() + 3 * 60000); }
+      try { await this.setRelay(s); const ms = await this.check(); this.note(s, true, ms); if (!best || ms < best.ms) best = { s, ms }; if (ms < 900) break; }
+      catch (e) { lastErr = e; this.note(s, false, 0); this.bad.set(s.id, Date.now() + 3 * 60000); }
     }
     if (!best) throw new Error("No Wisp relay answered" + (lastErr ? " (" + lastErr.message + ")" : "") + ". Check Settings > Network & Browser.");
     if (this.relay !== best.s) await this.setRelay(best.s); this.info.ms = best.ms; return best.s;
@@ -3920,11 +3965,17 @@ const AxCore = {
     try { const r = await this.client.fetch("https://example.com/", { signal: ctl.signal }); if (!r || r.status >= 500) throw new Error("status " + (r && r.status)); await r.arrayBuffer?.().catch(() => { }); return Math.round(performance.now() - t0); }
     finally { clearTimeout(tm); }
   },
+  /* a faster relay has been measured and nothing is loading: switch to it quietly */
+  async maybeSwap(busy) {
+    if (!this.ready || this.swapping || (busy && busy())) return; const best = this.candidates()[0]; if (!best || !this.relay || best.id === this.relay.id) return;
+    if (this.score(best) > this.score(this.relay) * .6) return; this.swapping = true;
+    try { const prev = this.relay; await this.setRelay(best); const ms = await this.check(); this.info.ms = ms; this.note(best, true, ms); Bus.emit("axcore-swap", { from: prev, to: best }); } catch (e) { this.note(best, false, 0); this.bad.set(best.id, Date.now() + 3 * 60000); } finally { this.swapping = false; Bus.emit("axcore"); }
+  },
   /* the current relay failed a real page: mark it, move to the next one */
   async failover() {
-    if (this.relay) { Wisp.note(this.relay.id, false, 0); this.bad.set(this.relay.id, Date.now() + 3 * 60000); }
-    const s = this.candidates()[0]; if (!s) { this.bad.clear(); throw new Error("Every Wisp relay failed"); }
-    await this.setRelay(s); try { const ms = await this.check(); Wisp.note(s.id, true, ms); this.info.ms = ms; } catch (e) { Wisp.note(s.id, false, 0); this.bad.set(s.id, Date.now() + 3 * 60000); throw e; }
+    if (this.relay) { this.note(this.relay, false, 0); this.bad.set(this.relay.id, Date.now() + 3 * 60000); }
+    const s = this.candidates()[0]; if (!s) { this.bad.clear(); throw new Error("Every relay failed"); }
+    await this.setRelay(s); try { const ms = await this.check(); this.note(s, true, ms); this.info.ms = ms; } catch (e) { this.note(s, false, 0); this.bad.set(s.id, Date.now() + 3 * 60000); throw e; }
     return s;
   },
   /* ---- frames ---- */
@@ -3972,7 +4023,7 @@ registerApp("browser", {
   name: "AxBrowser", icon: "globe", colors: ["#38bdf8", "#2563eb"], w: 1180, h: 760, minW: 520, minH: 320, single: true, keywords: "web internet chrome edge firefox proxy ultraviolet scramjet browser",
   onReopen(win, a) { if (a.url || a.file || a.path) win.browserOpen({ url: a.url, file: a.file || a.path, mode: a.mode }); },
   launch(win, args) {
-    Wisp.warm(); if (AxCore.supported) AxCore.start().catch(() => { });
+    Wisp.warm(); Wisp.busy = () => tabs.some(t => t.loading); if (AxCore.supported) AxCore.start().catch(() => { });
     const B = win.body; $(".ttl", win.el).style.display = "none"; win.extra.style.flex = "1"; win.extra.style.minWidth = "0"; win.tbar.style.paddingLeft = "6px"; win.tbar.style.height = "40px";
     win.extra.innerHTML = `<div class="bx-tabs"><div class="bx-strip"></div><button class="bx-new" data-tip="New tab (Ctrl+T)" aria-label="New tab">${ic("plus")}</button><div class="bx-drag"></div><button class="bx-ts" data-tip="Search tabs (Ctrl+Shift+A)" aria-label="Search tabs">${ic("chevL")}</button></div>`;
     B.innerHTML = `<div class="bx"><div class="bx-bar"><button class="ibtn bk" data-tip="Back (Alt+←)">${ic("arrowL")}</button><button class="ibtn fw" data-tip="Forward (Alt+→)">${ic("arrowR")}</button><button class="ibtn rl" data-tip="Reload (Ctrl+R)">${ic("refresh")}</button><button class="ibtn hm" data-tip="Home">${ic("home")}</button>
@@ -4033,7 +4084,7 @@ registerApp("browser", {
     const select = t => {
       if (cur && cur !== t) { cur.lastShown = Date.now(); closeFind(); }
       cur = t; tabs.forEach(x => x.el.classList.toggle("hid", x !== t)); hideHC(); closeSug(); renderTabs(); syncBar(); if (t.lazy) { const u = t.lazy; t.lazy = null; nav(t, u, { push: false }); }
-      requestAnimationFrame(() => t.tabEl?.scrollIntoView({ block: "nearest", inline: "nearest" })); t.frame?.contentWindow?.focus?.();
+      const reveal = () => t.tabEl?.scrollIntoView({ block: "nearest", inline: "nearest" }); requestAnimationFrame(reveal); setTimeout(() => { if (cur === t) reveal(); }, 340); t.frame?.contentWindow?.focus?.();
     };
     const destroy = t => { t.ctl?.abort(); clearInterval(t.poll); t.el.remove(); };
     const closeTab = (t, o = {}) => {
@@ -4185,11 +4236,14 @@ registerApp("browser", {
         status(""); setLoading(t, false); return errorPage(t, t.url, new Error(err.message), { kind: relayOK ? "site" : "relay", via: t.via });
       }
       status(""); t.pending = false; setLoading(t, false); if (AxCore.relay && Wisp.health[AxCore.relay.id]) Wisp.health[AxCore.relay.id].streak = 0;
-      pollCore(t); applyZoom(t); applyMute(t);
+      pollCore(t); applyZoom(t); applyMute(t); AxCore.maybeSwap(coreBusy);
       if (BS().history !== false) BrowserData.addHistory(t.url, t.title);
     };
+    const coreBusy = () => tabs.some(t => t.loading && t.engine === "core");
     const pollCore = t => {
       let d = null, w = null; try { w = t.frame?.contentWindow; d = w?.document; } catch (e) { return; } if (!d || !d.documentElement || AxCore.errorOf(d)) return;
+      /* the page is usable once it is interactive: don't keep the spinner for slow images */
+      if (t.loading && d.body && d.body.childElementCount > 0 && ((d.readyState !== "loading" && Date.now() - (t.lt || 0) > 1200) || Date.now() - (t.lt || 0) > 12000)) { t.pending = false; setLoading(t, false); status(""); if (BS().history !== false) BrowserData.addHistory(t.url, t.title); }
       let ch = false; const title = d.title && d.title !== "Scramjet" ? d.title : ""; if (title && title !== t.title) { t.title = title.slice(0, 200); ch = true; }
       const ln = d.querySelector("link[rel~=icon],link[rel='shortcut icon']"); if (ln) { const hr = ln.getAttribute("href"); if (hr) { try { const abs = new URL(hr, d.baseURI).href; const dec = AxCore.decode(abs); const fav = /^https?:/.test(dec) ? dec : abs; if (fav && fav !== t.fav && /^https?:/.test(fav)) { t.fav = fav; ch = true; } } catch (e) { } } }
       const media = [...d.querySelectorAll("video,audio")]; const au = media.some(m => !m.paused && !m.ended && m.readyState > 2 && !m.muted && m.volume > 0); if (au !== !!t.audible) { t.audible = au; ch = true; }
@@ -4371,7 +4425,7 @@ try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch
     }
     const clearData = async what => {
       if (what.history) { const cut = what.since ? Date.now() - what.since : 0; BrowserData.set("history", BrowserData.history.filter(x => cut && x.time < cut)); }
-      if (what.cookies) { try { const db = await new Promise((res, rej) => { const r = indexedDB.open("$scramjet", 1); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); for (const s of ["cookies"]) if (db.objectStoreNames.contains(s)) await new Promise(res => { const tx = db.transaction(s, "readwrite"); tx.objectStore(s).clear(); tx.oncomplete = res; tx.onerror = res; }); db.close(); } catch (e) { } AxProxy.jar = {}; try { Object.keys(localStorage).filter(k => k.startsWith("axos.pxStore.")).forEach(k => localStorage.removeItem(k)); } catch (e) { } }
+      if (what.cookies) { try { const db = await new Promise((res, rej) => { const r = indexedDB.open("$scramjet", 1); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); for (const s of ["cookies"]) if (db.objectStoreNames.contains(s)) await new Promise(res => { const tx = db.transaction(s, "readwrite"); tx.objectStore(s).clear(); tx.oncomplete = res; tx.onerror = res; }); db.close(); } catch (e) { } AxProxy.jar = {}; try { await caches.delete("ax-http-v1"); } catch (e) { } try { Object.keys(localStorage).filter(k => k.startsWith("axos.pxStore.")).forEach(k => localStorage.removeItem(k)); } catch (e) { } }
       notify("Browsing data cleared", [what.history && "history", what.cookies && "cookies and site data"].filter(Boolean).join(" and "), "browser", { silent: true, timeout: 2500 });
     };
     const clearMenu = (anchor, after) => Menu.at(anchor, [
@@ -4404,14 +4458,16 @@ try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch
         const mode = (BS().mode === "proxy" ? "auto" : BS().mode) || "auto"; const c = connLine(); const relays = Wisp.servers();
         el.innerHTML = `<div class="ip"><h1>Browser settings</h1><p class="lead">Connection engine, relays, search and privacy.</p>
           <div class="card"><h3>Connection engine</h3>${Object.entries(BX_ENGINES).map(([k, [n, d]]) => `<div class="opt${mode === k ? " on" : ""}" data-m="${k}"><span class="r"></span><div><b>${n}</b><small>${d}</small></div></div>`).join("")}<div class="srow"><span class="dot ${c.k}"></span><div class="k">${c.t}</div><button class="btn sm" data-restart>${ic("refresh")} Restart AxCore</button></div></div>
-          <div class="card"><h3>Wisp relays</h3><p style="color:var(--text-3);font-size:12px;margin:0 0 6px;line-height:1.5">AxBrowser tries the fastest relay and moves to the next one by itself when a relay stops answering.</p>${relays.map(s => { const hh = Wisp.health[s.id] || {}; const cls = AxCore.relay?.id === s.id ? "ok" : hh.streak >= 2 ? "bad" : hh.ms ? "ok" : "wait"; return `<div class="srow"><span class="dot ${cls}" data-d="${s.id}"></span><div class="k">${esc(s.name)}${AxCore.relay?.id === s.id ? " · <b style='color:var(--accent)'>in use</b>" : ""}<small>${esc(Wisp.host(s))}${hh.ms ? " · " + hh.ms + " ms" : ""}</small></div><button class="btn sm" data-use="${s.id}">Use</button></div>`; }).join("")}<div class="row" style="margin-top:10px;gap:8px"><button class="btn sm" data-test>Test relays</button><button class="btn sm" data-more>Add relays…</button></div></div>
+          <div class="card"><h3>Connection path</h3><p style="color:var(--text-3);font-size:12px;margin:0 0 8px;line-height:1.5">AxCore can reach the web through a Wisp relay (a WebSocket) or through your personal gateway (a Cloudflare Worker over plain HTTPS, useful where WebSockets are blocked).</p>${[["auto", "Automatic", "Wisp relays first, your gateway if they all fail"], ["wisp", "Wisp relays only", ""], ["gateway", "Personal gateway only", AxProxy.worker() ? "Using " + esc(AxProxy.worker().base) : "Not set up yet. Add the gateway in Settings > Network & Browser."]].map(([k, n, d]) => `<div class="opt${(BS().path || "auto") === k ? " on" : ""}" data-path="${k}"><span class="r"></span><div><b>${n}</b>${d ? `<small>${d}</small>` : ""}</div></div>`).join("")}</div>
+          <div class="card"><h3>Wisp relays</h3><p style="color:var(--text-3);font-size:12px;margin:0 0 6px;line-height:1.5">AxBrowser tries the fastest relay and moves to the next one by itself when a relay stops answering.</p>${relays.map(s => { const hh = Wisp.health[s.id] || {}; const cls = AxCore.relay?.id === s.id ? "ok" : hh.streak >= 2 ? "bad" : hh.ms ? "ok" : "wait"; return `<div class="srow"><span class="dot ${cls}" data-d="${s.id}"></span><div class="k">${esc(s.name)}${AxCore.relay?.id === s.id ? " · <b style='color:var(--accent)'>in use</b>" : ""}<small>${esc(Wisp.host(s))}${hh.ms ? " · " + hh.ms + " ms" : ""}${hh.kbps != null ? " · " + (hh.kbps >= 1024 ? (hh.kbps / 1024).toFixed(1) + " MB/s" : hh.kbps + " kB/s") : ""}</small></div><button class="btn sm" data-use="${s.id}">Use</button></div>`; }).join("")}<div class="row" style="margin-top:10px;gap:8px"><button class="btn sm" data-test>Test relays</button><button class="btn sm" data-more>Add relays…</button></div></div>
           <div class="card"><h3>General</h3><div class="srow"><div class="k">Search engine</div><select class="input se" style="width:180px">${Object.entries(SEARCH_ENGINES).map(([k, v]) => `<option value="${k}"${BS().search === k ? " selected" : ""}>${v[0]}</option>`).join("")}</select></div><div class="srow"><div class="k">Home page<small>Leave as axos://newtab for the new tab page</small></div><input class="input hp" style="width:240px" value="${esc(BS().home || "axos://newtab")}"></div>
           <div class="srow"><div class="k">Show bookmarks bar</div><span class="switch${BS().bookmarksBar ? " on" : ""}" data-sw="bookmarksBar"></span></div><div class="srow"><div class="k">Reopen my tabs next time</div><span class="switch${BS().restore !== false ? " on" : ""}" data-sw="restore"></span></div><div class="srow"><div class="k">Save browsing history</div><span class="switch${BS().history !== false ? " on" : ""}" data-sw="history"></span></div><div class="srow"><div class="k">Run page scripts in AxProxy<small>Turn off for faster, simpler pages</small></div><span class="switch${BS().scripts !== false ? " on" : ""}" data-sw="scripts"></span></div></div>
           <div class="card"><h3>Privacy</h3><div class="row" style="gap:8px"><button class="btn sm cl">Clear browsing data…</button><button class="btn sm" data-adv>More network options…</button></div></div></div>`;
         $$("[data-m]", el).forEach(o => o.onclick = () => { Settings.patch("browser", { mode: o.dataset.m }); if (o.dataset.m === "core" || o.dataset.m === "auto") AxCore.start().catch(() => { }).then(draw); draw(); });
+        $$("[data-path]", el).forEach(o => o.onclick = async () => { Settings.patch("browser", { path: o.dataset.path }); if (AxCore.ready) { try { AxCore.bad.clear(); await AxCore.failover(); } catch (e) { } } draw(); });
         $("[data-restart]", el).onclick = async () => { AxCore.state = "idle"; AxCore.starting = null; try { const regs = await navigator.serviceWorker?.getRegistrations?.() || []; for (const r of regs) await r.unregister(); } catch (e) { } try { await AxCore.start(); } catch (e) { } draw(); };
         $$("[data-use]", el).forEach(b => b.onclick = async () => { const s = relays.find(x => x.id === b.dataset.use); b.textContent = "…"; Wisp.patch({ pin: s.id }); if (AxCore.ready) { try { await AxCore.setRelay(s); AxCore.info.ms = await AxCore.check(); } catch (e) { notify("Relay didn't answer", s.name, "browser", { silent: true }); } } draw(); });
-        $("[data-test]", el).onclick = async e => { e.currentTarget.textContent = "Testing…"; await Promise.all(relays.filter(s => s.enabled).map(s => Wisp.probe(s).catch(() => { }))); draw(); };
+        $("[data-test]", el).onclick = async e => { e.currentTarget.textContent = "Testing…"; await Promise.all(relays.filter(s => s.enabled).map(s => Wisp.probe(s).catch(() => { }))); draw(); for (const s of relays.filter(x => x.enabled && !(Wisp.health[x.id]?.streak >= 2)).slice(0, 5)) { await Wisp.speed(s).catch(() => { }); if (!el.isConnected) return; draw(); } };
         $("[data-more]", el).onclick = () => launch("settings", { page: "network" }); $("[data-adv]", el).onclick = () => launch("settings", { page: "network" });
         $(".se", el).onchange = e => Settings.patch("browser", { search: e.target.value }); $(".hp", el).onchange = e => Settings.patch("browser", { home: toURL(e.target.value) });
         $$("[data-sw]", el).forEach(s => s.onclick = () => { const k = s.dataset.sw; const on = !(k === "bookmarksBar" ? BS()[k] : BS()[k] !== false); Settings.patch("browser", { [k]: on }); s.classList.toggle("on", on); if (k === "bookmarksBar") renderBM(); });
@@ -4500,7 +4556,7 @@ try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch
       const ql = q.toLowerCase().replace(/^https?:\/\/(www\.)?/, ""); const hit = [...BrowserData.bookmarks, ...BrowserData.history].map(x => x.url).map(u => { try { const x = new URL(u); return x.host.replace(/^www\./, ""); } catch (er) { return ""; } }).find(hh => hh && hh.startsWith(ql) && hh.length > ql.length);
       if (hit) { const full = q.slice(0, q.length - ql.length) + hit; omni.value = full; omni.setSelectionRange(q.length, full.length); }
     };
-    omni.onfocus = () => { omniBox.classList.add("typing"); setTimeout(() => omni.select(), 0); };
+    omni.onfocus = () => { omniBox.classList.add("typing"); omni.select(); setTimeout(() => omni.select(), 0); };
     omni.onblur = () => { omniBox.classList.remove("typing"); setTimeout(() => { closeSug(); if (cur && document.activeElement !== omni) { omni.value = isInternal(cur.url) && /newtab/.test(cur.url) ? "" : cur.url; urlEl.innerHTML = bxFmtURL(cur.url); } }, 120); };
     urlEl.onclick = () => { omni.focus(); };
     omni.onkeydown = e => {
@@ -4552,7 +4608,8 @@ try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch
     const docKey = e => { if (!win.isActive || e.defaultPrevented && e.target.closest?.(".bx-omni")) return; if (e.target.closest && e.target.closest(".bx-find input,.bx-omni input") && !(e.ctrlKey || e.metaKey) && e.key !== "F5" && e.key !== "F12") return; if (e.target.closest && e.target.closest(".dialog,.ctx") ) return; forwardKey(e); };
     document.addEventListener("keydown", docKey, true);
     /* ============================ lifecycle ============================ */
-    win.on("close", () => { document.removeEventListener("keydown", docKey, true); queueSave(true); window.removeEventListener("message", onMsg); offBM(); offAC(); offDL(); offDLb(); tabs.forEach(destroy); closeSug(); closePop(); hideHC(); closeFind(); });
+    const offW = Bus.on("wisp", () => AxCore.maybeSwap(coreBusy)); const offSwap = Bus.on("axcore-swap", e => { notify("Faster relay", "AxBrowser switched to " + e.to.name, "browser", { silent: true, timeout: 2200 }); });
+    win.on("close", () => { offW(); offSwap(); document.removeEventListener("keydown", docKey, true); queueSave(true); window.removeEventListener("message", onMsg); offBM(); offAC(); offDL(); offDLb(); tabs.forEach(destroy); closeSug(); closePop(); hideHC(); closeFind(); });
     win.browserOpen = a => { if (a.file) newTab("file://" + a.file); else if (a.url) newTab(a.url, { mode: a.mode || null }); else newTab(); };
     const first = args.file || args.path ? "file://" + (args.file || args.path) : args.url || null;
     const saved = BS().restore !== false && !first ? (BS().session || []) : [];
