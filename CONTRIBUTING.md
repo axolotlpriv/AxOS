@@ -86,18 +86,28 @@ As with AxCompat, only games that carry an AxOS payload actually run. Two exampl
 
 **Real artwork:** Geometry Dash uses its official Steam art (a square crop of the store capsule for the icon and the library banner for the hero). Minecraft Classic uses Mojang's official Creeper-face icon, embedded as a tiny image, and the game's wordmark on its banner. Artwork is loaded from the publishers' own servers at runtime, apart from that one small icon, and falls back to a plain icon if offline.
 
-**Web games:** the store lists 92 free web games, each embedded from its creator's or publisher's official site:
+**Web games:** the store lists about 1,475 free web games. 102 are hand-picked, each embedded from its creator's or publisher's official site:
 
 | Category | Games |
 | --- | --- |
-| Action & arcade | HexGL, Q1K3, Underrun, Xibalba, X-Type, Biolab Disaster, Z-Type, Radius Raid, Space Huggers, Swooop |
-| Multiplayer | Krunker, Shell Shockers, Smash Karts, Kirka, Deadshot, EV.IO, Venge, Repuls, Rocket Bot Royale, Slither.io, Diep.io, Mope.io, Wings.io, Paper.io 2, Hexanaut, Defly, Zombs, Tribals, YoHoHo, Lordz, Tanx, generals.io, Territorial.io, skribbl.io, Papergames |
+| Action & arcade | PolyTrack, HexGL, Q1K3, Underrun, Xibalba, X-Type, Biolab Disaster, Z-Type, Radius Raid, Space Huggers, Swooop |
+| Multiplayer | Starblast.io, Survev.io, Suroi.io, Wormate.io, Taming.io, EvoWorld.io, Gats.io, Kour.io, Arras.io, Krunker, Shell Shockers, Smash Karts, Kirka, Deadshot, EV.IO, Venge, Repuls, Rocket Bot Royale, Slither.io, Diep.io, Mope.io, Wings.io, Paper.io 2, Hexanaut, Defly, Zombs, Tribals, YoHoHo, Lordz, Tanx, generals.io, Territorial.io, skribbl.io, Papergames |
 | Sandbox & creative | Minecraft Classic, Bloxd.io, shapez, Sandspiel, Sandboxels, Line Rider, Orb.Farm, Townscaper |
 | Puzzle | Astray, Hextris, Untrusted, Minesweeper Online, Little Alchemy 2, Solitaire, and Simon Tatham's Net, Bridges, Loopy, Pattern, Galaxies, Untangle, Keen, Light Up, Signpost, Towers and Inertia |
 | Word & daily | Worldle, Nerdle, Globle, Framed, Semantle |
 | Idle | A Dark Room, Universal Paperclips, Candy Box 2, Particle Clicker, Bitburner, Gridland, Kittens Game, Trimps, Antimatter Dimensions, Swarm Simulator, Evolve, Progress Knight, The Prestige Tree |
 | Music | Patatap, Chrome Music Lab, Incredibox (demo) |
 | Play & learn | The Evolution of Trust, Adventures with Anxiety, Elevator Saga, Flexbox Froggy, Grid Garden, CSS Diner, Learn Git Branching, SQL Murder Mystery, NandGame, CodeCombat, Keybr |
+
+**1,369 more games** come from [GameMonetize](https://gamemonetize.com/)'s free catalog, which is published for sites to embed. They're bundled compressed into `index.html` (about 145 KB) and unpacked the first time you open the store. Children's content, hentai/adult tags, duplicates and low-quality entries are filtered out. In the store you can narrow everything by:
+
+- **Genre:** Action, Adventure, Arcade, Puzzle, Racing, Shooting, Sports, Strategy, Simulation, Platformer, Fighting, Survival, Horror, RPG, Board & Card, Clicker & Idle, Casual, Educational, Cooking, Dress-up, Music, Tower Defense
+- **Type:** Single player, 2 players, Multiplayer, .io, 3D, 2D, Mobile-friendly, Kids & family, Endless
+- **Source:** hand-picked or GameMonetize
+
+There's also a search box, sorting (A to Z, Z to A, surprise me), a "See all" link on every genre shelf, and "Show more" paging.
+
+**Ads:** GameMonetize games load an ad SDK. AxOS fetches the game page, removes the ad scripts and swaps in a stand-in SDK that reports "ad finished" immediately, then runs the page in a frame with **no access to AxOS** (no same-origin, no popups, no top navigation). The frame has private in-memory storage only, so these games don't keep progress between sessions. A few games won't start without the real SDK: after about 14 seconds AxOS notices and reloads them normally, and the shield button in each game window switches between blocked and allowed. The hand-picked games are the creators' own sites in a normal frame, so any ads they show themselves can't be removed from inside AxOS.
 
 Store pages and library tiles show each game's real logo and preview art, loaded from its official site. If a site doesn't publish one, AxOS shows a symbol instead.
 
