@@ -231,14 +231,18 @@ AxFlix, AxTube and AxTok live in the Start menu. Like everything else, none of t
 - **Optional YouTube API key:** a free key from Google Cloud makes search and trending use YouTube's own API.
 - **Playback:** YouTube's official embed player when AxOS is served from a web address, or a direct 360p stream otherwise. YouTube's player shows **Error 153** when the page that embeds it sends no referrer, which is the case when AxOS is opened from a local file. Automatic mode handles this, and the watch page has a switch between the two.
 - **Limits:** the public servers are sometimes blocked by YouTube for certain videos (live streams especially). The video still plays through the embed, but details and comments may be missing.
+- **Playlists:** search has a Playlists filter, and pasting a playlist link opens it. **Play all** starts a queue with Previous and Next. Public servers sometimes return playlists with no videos (YouTube blocks it), and AxTube says so and links to YouTube.
+- **Watch page extras:** theater mode (**T**), **Autoplay next** and a **Next** button (related videos, or the next one in a playlist), chapters you can click to jump to, and subtitles in the Direct player's CC menu. Shortcuts: **/** search, **Shift+N** and **Shift+P** next and previous, and with the Direct player **J/L** ±10 s, **K** or space pause, **←/→** ±5 s, **M** mute, **F** full screen, **<** and **>** speed, **0–9** jump.
+- **Quality:** the Direct player is 360p because the public servers only offer that. HD plays in YouTube's own player. Autoplay next only works with the Direct player, because YouTube's player doesn't report when a video ends.
 - **Subscriptions, history, watch-later** stay on this device.
 
 ### AxTok
 
 - **No Wisp:** the feed comes from the public trending data at tikwm.com, with open CORS. Videos are plain files in a `<video>` element.
-- **Controls:** scroll or use the arrow keys, **L** to like, **S** to save, **M** for sound, **Space** to pause, double-click to like.
+- **Controls:** scroll or use ↑/↓, **L** to like, **S** to save, **M** for sound, **Space** to pause, double-click to like. **←/→** seek 5 s and the progress bar at the bottom of each video is a scrubber you can click or drag. **[** and **]** (or the Speed button) change speed from 0.5× to 2×. **Auto-next** in the side bar moves on when a video ends.
+- **Comments:** the comment button (or **C**) opens a panel with the video's real comments, 20 at a time. Ads in the feed are skipped.
 - **Open link:** paste a TikTok link to play it, with TikTok's own embed player as a fallback.
-- **Limits:** TikTok has no public search, so there isn't any. The data service allows about one request a second and is sometimes unavailable. The trending feed is public and unfiltered.
+- **Limits:** TikTok's search, creator pages and profile endpoints sit behind a bot check that AxOS doesn't try to get around, so there is no search or creator page. The data service allows about one request a second and is sometimes unavailable. The trending feed is public and unfiltered.
 
 ## Staying inside AxOS
 
