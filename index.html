@@ -504,50 +504,72 @@ body.taskview-on .win.minimized{ opacity:1; pointer-events:auto; }
 
 /* ---- Browser ---- */
 .br{ display:flex; flex-direction:column; height:100%; background:var(--surface); }
-.br-tabs{ display:flex; align-items:flex-end; gap:2px; height:38px; padding:0 0 0 2px; min-width:0; flex:0 1 auto; overflow:hidden; }
-.br-tab{ display:flex; align-items:center; gap:8px; height:31px; min-width:60px; max-width:220px; flex:1 1 220px; padding:0 6px 0 10px; border-radius:8px 8px 0 0; font-size:12.3px; color:var(--text-2); position:relative; }
-.br-tab:hover{ background:var(--hover); }
-.br-tab.on{ background:var(--surface-2); color:var(--text); box-shadow:0 -1px 0 var(--border) inset; }
-.br-tab .fav{ width:16px; height:16px; flex:none; display:grid; place-items:center; }
-.br-tab .fav img{ width:16px; height:16px; border-radius:3px; }
-.br-tab .tt{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.br-tab .x{ width:20px; height:20px; border:0; border-radius:4px; background:transparent; color:var(--text-2); display:grid; place-items:center; flex:none; }
-.br-tab .x:hover{ background:var(--active); }
-.br-tab .x svg{ width:12px; height:12px; }
-.br-newtab{ align-self:center; }
-.br-bar{ display:flex; align-items:center; gap:4px; padding:6px 8px; background:var(--surface-2); }
-.br-omni{ flex:1; display:flex; align-items:center; gap:8px; height:34px; padding:0 6px 0 12px; border-radius:18px; background:var(--surface-3); border:1px solid transparent; min-width:0; }
-.br-omni:focus-within{ background:var(--input); border-color:var(--accent); box-shadow:0 0 0 3px rgba(var(--accent-rgb),.2); }
-.br-omni input{ flex:1; border:0; background:transparent; outline:none; height:100%; min-width:0; }
-.br-omni .mode{ font-size:11px; padding:2px 8px; border-radius:10px; background:rgba(var(--accent-rgb),.18); color:var(--accent); white-space:nowrap; }
-.br-bm{ display:flex; align-items:center; gap:2px; padding:0 8px 5px; background:var(--surface-2); border-bottom:1px solid var(--border); min-height:6px; overflow:hidden; }
-.br-bm .b{ display:flex; align-items:center; gap:6px; height:26px; padding:0 9px; border-radius:13px; font-size:12px; white-space:nowrap; max-width:180px; overflow:hidden; text-overflow:ellipsis; }
-.br-bm .b:hover{ background:var(--hover); }
-.br-bm .b img{ width:14px; height:14px; border-radius:2px; }
-.br-view{ flex:1; position:relative; background:#fff; min-height:0; }
-.br-view iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; background:#fff; }
-.br-view .internal{ position:absolute; inset:0; overflow:auto; background:var(--surface); color:var(--text); }
-.br-load{ position:absolute; top:0; left:0; right:0; height:2px; z-index:3; overflow:hidden; }
-.br-load i{ display:block; height:100%; width:30%; background:var(--accent); animation:indet 1s ease-in-out infinite; }
-.br-err{ position:absolute; inset:0; background:var(--surface); display:flex; align-items:center; justify-content:center; padding:30px; }
-.br-err .in{ max-width:520px; }
-.br-err h2{ font-weight:600; margin:16px 0 8px; }
-.br-err p{ color:var(--text-2); line-height:1.55; }
-.ntp{ min-height:100%; display:flex; flex-direction:column; align-items:center; padding:9vh 20px 40px; background:radial-gradient(1200px 500px at 50% -10%,rgba(var(--accent-rgb),.25),transparent),var(--surface); }
-.ntp .logo{ font-size:46px; font-weight:700; letter-spacing:-1.5px; background:linear-gradient(90deg,var(--accent),var(--accent-2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
-.ntp .sb{ width:min(580px,92%); height:48px; margin:22px 0 34px; display:flex; align-items:center; gap:10px; padding:0 18px; border-radius:24px; background:var(--surface-2); border:1px solid var(--border-2); box-shadow:var(--shadow-sm); }
-.ntp .sb input{ flex:1; border:0; outline:none; background:transparent; font-size:15px; }
-.ntp .tiles{ display:grid; grid-template-columns:repeat(auto-fill,96px); gap:10px; justify-content:center; width:min(640px,100%); }
-.ntp .tile{ display:flex; flex-direction:column; align-items:center; gap:8px; padding:14px 6px; border-radius:10px; font-size:12px; }
-.ntp .tile:hover{ background:var(--hover); }
-.ntp .tile .ti{ width:46px; height:46px; border-radius:50%; background:var(--surface-3); display:grid; place-items:center; }
-.ntp .tile .ti img{ width:24px; height:24px; }
-.ntp .note{ margin-top:34px; max-width:600px; font-size:12px; color:var(--text-3); text-align:center; line-height:1.6; }
-.intpage{ max-width:820px; margin:0 auto; padding:30px 24px; }
-.intpage h1{ font-weight:600; font-size:24px; margin:0 0 18px; }
-.intpage .li{ display:flex; align-items:center; gap:12px; padding:8px 10px; border-radius:7px; }
-.intpage .li:hover{ background:var(--hover); }
-.intpage .li img{ width:16px; height:16px; }
+/* ---- AxBrowser ---- */
+.bx-tabs{ display:flex; align-items:flex-end; flex:1; min-width:0; height:40px; padding:0 4px 0 2px; gap:2px; }
+.bx-strip{ display:flex; align-items:flex-end; gap:1px; height:100%; min-width:0; flex:0 1 auto; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; position:relative; scroll-behavior:smooth; } .bx-strip::-webkit-scrollbar{ display:none; }
+.bx-tab{ position:relative; display:flex; align-items:center; gap:7px; height:33px; min-width:44px; width:220px; max-width:220px; flex:0 1 220px; padding:0 6px 0 11px; margin-bottom:0; border-radius:10px 10px 0 0; font-size:12.3px; color:var(--text-2); user-select:none; cursor:default; transition:background .18s var(--ease-out),color .18s,width .28s var(--ease-out),flex-basis .28s var(--ease-out),opacity .2s,transform .24s var(--ease-out); overflow:visible; }
+.bx-tab:hover{ background:rgba(var(--accent-rgb),.09); color:var(--text); }
+.bx-tab::after{ content:""; position:absolute; right:-1px; top:9px; bottom:9px; width:1px; background:var(--border); opacity:.8; transition:opacity .15s; } .bx-tab.on::after,.bx-tab:hover::after,.bx-tab.on + .bx-tab::before{ opacity:0; }
+.bx-tab.on{ background:var(--surface-2); color:var(--text); z-index:2; }
+.bx-tab.on::before{ content:""; position:absolute; left:-9px; bottom:0; width:9px; height:9px; background:radial-gradient(circle at 0 0,transparent 8.5px,var(--surface-2) 9px); pointer-events:none; }
+.bx-tab.on::after{ right:-9px; left:auto; top:auto; bottom:0; width:9px; height:9px; opacity:1; background:radial-gradient(circle at 100% 0,transparent 8.5px,var(--surface-2) 9px); }
+.bx-tab.pinned{ width:38px; min-width:38px; max-width:38px; flex:0 0 38px; padding:0; justify-content:center; } .bx-tab.pinned .tt,.bx-tab.pinned .x{ display:none; }
+.bx-tab.enter{ width:0; min-width:0; flex-basis:0; padding:0; opacity:0; } .bx-tab.leave{ width:0 !important; min-width:0 !important; flex-basis:0 !important; padding:0 !important; opacity:0; pointer-events:none; overflow:hidden; }
+.bx-tab.drag{ z-index:9; transition:none; box-shadow:0 6px 22px rgba(0,0,0,.35); background:var(--surface-2); color:var(--text); opacity:.96; }
+.bx-tab.shift{ transition:transform .2s var(--ease-out); }
+.bx-tab .fav{ width:16px; height:16px; flex:none; display:grid; place-items:center; position:relative; }
+.bx-tab .fav img{ width:16px; height:16px; border-radius:3px; object-fit:contain; } .bx-tab .fav svg{ width:15px; height:15px; opacity:.85; }
+.bx-tab .fav .sp{ width:14px; height:14px; border-radius:50%; border:2px solid rgba(var(--accent-rgb),.25); border-top-color:var(--accent); animation:bxspin .7s linear infinite; }
+@keyframes bxspin{ to{ transform:rotate(360deg); } }
+.bx-tab .tt{ flex:1; min-width:0; white-space:nowrap; overflow:hidden; -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 14px),transparent); mask-image:linear-gradient(90deg,#000 calc(100% - 14px),transparent); }
+.bx-tab .au{ width:18px; height:18px; flex:none; border:0; border-radius:50%; background:rgba(var(--accent-rgb),.2); color:var(--accent); display:none; place-items:center; } .bx-tab.audible .au,.bx-tab.muted .au{ display:grid; } .bx-tab .au svg{ width:11px; height:11px; } .bx-tab.muted .au{ background:var(--active); color:var(--text-2); }
+.bx-tab .x{ width:20px; height:20px; border:0; border-radius:50%; background:transparent; color:var(--text-2); display:grid; place-items:center; flex:none; opacity:0; transition:opacity .12s,background .12s; } .bx-tab:hover .x,.bx-tab.on .x{ opacity:1; } .bx-tab .x:hover{ background:var(--active); color:var(--text); } .bx-tab .x svg{ width:11px; height:11px; }
+.bx-tab.pinned.audible::after{ display:none; }
+.bx-new,.bx-ts{ align-self:center; width:28px; height:28px; border:0; border-radius:50%; background:transparent; color:var(--text-2); display:grid; place-items:center; flex:none; } .bx-new:hover,.bx-ts:hover{ background:var(--hover); color:var(--text); } .bx-new svg,.bx-ts svg{ width:15px; height:15px; }
+.bx-drag{ flex:1; min-width:40px; height:100%; }
+.bx-hc{ position:fixed; z-index:99990; max-width:300px; padding:8px 11px; border-radius:10px; background:var(--glass-2); backdrop-filter:blur(24px) saturate(1.4); border:1px solid var(--border-2); box-shadow:var(--shadow-sm); font-size:12px; pointer-events:none; opacity:0; transform:translateY(-4px); transition:opacity .14s,transform .14s; } .bx-hc.on{ opacity:1; transform:none; } .bx-hc b{ display:block; font-weight:600; margin-bottom:2px; word-break:break-word; } .bx-hc span{ color:var(--text-3); word-break:break-all; }
+
+.bx{ display:flex; flex-direction:column; height:100%; position:relative; background:var(--surface); }
+.bx-bar{ display:flex; align-items:center; gap:2px; padding:5px 8px 6px; background:var(--surface-2); position:relative; z-index:6; }
+.bx-bar .ibtn{ width:32px; height:32px; } .bx-bar .ibtn:disabled{ opacity:.38; }
+.bx-omni{ position:relative; flex:1; display:flex; align-items:center; gap:4px; height:34px; margin:0 6px; padding:0 4px 0 4px; border-radius:17px; background:var(--surface-3); border:1px solid transparent; min-width:0; transition:background .18s,border-color .18s,box-shadow .25s; }
+.bx-omni:hover{ background:var(--hover); } .bx-omni:focus-within{ background:var(--input); border-color:var(--accent); box-shadow:0 0 0 3px rgba(var(--accent-rgb),.2); }
+.bx-chip{ display:flex; align-items:center; gap:5px; height:26px; padding:0 9px 0 7px; border:0; border-radius:13px; background:transparent; color:var(--text-2); font-size:11.5px; white-space:nowrap; flex:none; } .bx-chip:hover{ background:var(--active); color:var(--text); } .bx-chip svg{ width:14px; height:14px; } .bx-chip.ok svg{ color:#4ade80; } .bx-chip.warn svg{ color:#fbbf24; } .bx-chip .em{ font-weight:600; color:var(--accent); }
+.bx-omni input{ flex:1; border:0; background:transparent; outline:none; height:100%; min-width:0; font-size:13px; color:var(--text); opacity:0; position:absolute; left:92px; right:84px; width:auto; } .bx-omni:focus-within input,.bx-omni.typing input{ opacity:1; position:static; }
+.bx-url{ flex:1; min-width:0; height:100%; display:flex; align-items:center; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:text; color:var(--text-3); } .bx-url b{ font-weight:500; color:var(--text); } .bx-url .ph{ color:var(--text-3); } .bx-omni:focus-within .bx-url,.bx-omni.typing .bx-url{ display:none; }
+.bx-omni .acts{ display:flex; align-items:center; gap:1px; flex:none; } .bx-omni .acts .ibtn{ width:26px; height:26px; } .bx-zoom{ height:22px; padding:0 8px; border:0; border-radius:11px; background:var(--active); color:var(--text); font-size:11px; display:none; } .bx-zoom.on{ display:block; }
+.bx-prog{ position:absolute; left:0; right:0; bottom:-1px; height:2.5px; z-index:7; overflow:hidden; pointer-events:none; opacity:0; transition:opacity .25s; } .bx-prog.on{ opacity:1; } .bx-prog i{ display:block; height:100%; width:0; background:linear-gradient(90deg,var(--accent),var(--accent-2)); border-radius:0 2px 2px 0; transition:width .35s var(--ease-out); box-shadow:0 0 10px rgba(var(--accent-rgb),.7); }
+.bx-bm{ display:flex; align-items:center; gap:2px; padding:0 8px 5px; background:var(--surface-2); border-bottom:1px solid var(--border); min-height:5px; overflow:hidden; position:relative; z-index:5; }
+.bx-bm .b{ display:flex; align-items:center; gap:6px; height:26px; padding:0 9px; border-radius:13px; font-size:12px; white-space:nowrap; max-width:170px; flex:none; } .bx-bm .b span{ overflow:hidden; text-overflow:ellipsis; } .bx-bm .b:hover{ background:var(--hover); } .bx-bm .b img{ width:14px; height:14px; border-radius:2px; } .bx-bm .b.dragover{ box-shadow:-2px 0 0 var(--accent); } .bx-bm .more{ margin-left:auto; flex:none; }
+.bx-view{ flex:1; position:relative; background:var(--surface); min-height:0; overflow:hidden; }
+.bx-page{ position:absolute; inset:0; } .bx-page iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; background:#fff; } .bx-page.hid{ display:none; }
+.bx-page .internal{ position:absolute; inset:0; overflow:auto; background:var(--surface); color:var(--text); }
+.bx-st{ position:absolute; left:0; bottom:0; max-width:60%; height:22px; padding:0 10px; display:flex; align-items:center; font-size:11.5px; border:1px solid var(--border); border-left:0; border-bottom:0; border-radius:0 8px 0 0; background:var(--surface-2); color:var(--text-2); z-index:8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:none; opacity:0; transition:opacity .12s; } .bx-st.on{ opacity:1; }
+.bx-sug{ position:fixed; z-index:99980; border-radius:14px; background:var(--glass-2); backdrop-filter:blur(30px) saturate(1.5); border:1px solid var(--border-2); box-shadow:0 18px 50px rgba(0,0,0,.45); padding:6px; overflow:hidden; animation:bxpop .14s var(--ease-out); }
+@keyframes bxpop{ from{ opacity:0; transform:translateY(-6px) scale(.985); } }
+.bx-sug .it{ display:flex; align-items:center; gap:10px; height:36px; padding:0 10px; border-radius:9px; font-size:13px; } .bx-sug .it.hl{ background:rgba(var(--accent-rgb),.22); } .bx-sug .it .ic{ width:18px; height:18px; display:grid; place-items:center; color:var(--text-3); flex:none; } .bx-sug .it .ic img{ width:16px; height:16px; border-radius:3px; } .bx-sug .it .ic svg{ width:15px; height:15px; }
+.bx-sug .it .lb{ flex:1; min-width:0; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; } .bx-sug .it .lb b{ font-weight:600; } .bx-sug .it .sb{ color:var(--text-3); font-size:11.5px; max-width:42%; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; } .bx-sug .it .tag{ font-size:10.5px; padding:1px 7px; border-radius:8px; background:var(--active); color:var(--text-2); flex:none; }
+.bx-sug .hd{ font-size:10.5px; letter-spacing:.6px; color:var(--text-3); padding:7px 10px 3px; font-weight:600; }
+.bx-find{ position:absolute; top:8px; right:14px; z-index:9; display:flex; align-items:center; gap:4px; padding:5px 6px 5px 12px; border-radius:12px; background:var(--glass-2); backdrop-filter:blur(26px) saturate(1.5); border:1px solid var(--border-2); box-shadow:var(--shadow-sm); animation:bxpop .16s var(--ease-out); } .bx-find input{ width:190px; height:28px; border:0; background:transparent; outline:none; font-size:13px; color:var(--text); } .bx-find .ct{ font-size:11.5px; color:var(--text-3); min-width:44px; text-align:right; } .bx-find .ibtn{ width:26px; height:26px; } .bx-find.nomatch input{ color:#f87171; }
+.bx-pop{ position:fixed; z-index:99985; width:340px; border-radius:16px; background:var(--glass-2); backdrop-filter:blur(30px) saturate(1.5); border:1px solid var(--border-2); box-shadow:0 20px 60px rgba(0,0,0,.5); padding:14px; animation:bxpop .16s var(--ease-out); font-size:13px; } .bx-pop h4{ margin:0 0 4px; font-size:14px; font-weight:600; } .bx-pop .sub{ color:var(--text-3); font-size:12px; line-height:1.5; } .bx-pop .row2{ display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--border); } .bx-pop .row2:first-of-type{ border-top:0; } .bx-pop .row2 svg{ width:17px; height:17px; flex:none; color:var(--text-2); } .bx-pop .k{ flex:1; min-width:0; } .bx-pop .k small{ display:block; color:var(--text-3); font-size:11.5px; margin-top:1px; word-break:break-word; }
+.bx-dl{ padding:8px 0; } .bx-dl .d{ display:flex; align-items:center; gap:10px; padding:8px 4px; border-radius:9px; } .bx-dl .d:hover{ background:var(--hover); } .bx-dl .bar{ height:3px; border-radius:2px; background:var(--active); overflow:hidden; margin-top:5px; } .bx-dl .bar i{ display:block; height:100%; width:40%; background:var(--accent); animation:indet 1s ease-in-out infinite; }
+.bx-ovl{ position:absolute; inset:0; background:var(--surface); display:flex; align-items:center; justify-content:center; z-index:4; }
+.bx-conn{ text-align:center; color:var(--text-2); font-size:13px; } .bx-conn .ring{ width:34px; height:34px; margin:0 auto 14px; border-radius:50%; border:3px solid rgba(var(--accent-rgb),.2); border-top-color:var(--accent); animation:bxspin .8s linear infinite; } .bx-conn b{ display:block; color:var(--text); font-size:14px; margin-bottom:4px; } .bx-conn small{ color:var(--text-3); }
+.bx-err{ position:absolute; inset:0; background:var(--surface); display:flex; align-items:center; justify-content:center; padding:30px; overflow:auto; z-index:4; } .bx-err .in{ max-width:540px; } .bx-err .ico{ width:64px; height:64px; border-radius:20px; display:grid; place-items:center; background:rgba(var(--accent-rgb),.15); color:var(--accent); margin-bottom:18px; } .bx-err .ico svg{ width:32px; height:32px; } .bx-err h2{ font-weight:600; font-size:22px; margin:0 0 8px; } .bx-err p{ color:var(--text-2); line-height:1.6; margin:0 0 8px; } .bx-err .det{ font:11.5px var(--mono); color:var(--text-3); background:var(--surface-2); border-radius:8px; padding:8px 10px; margin:12px 0; word-break:break-word; } .bx-err ul{ color:var(--text-2); line-height:1.7; margin:6px 0 14px 18px; padding:0; }
+/* new tab */
+.nt{ min-height:100%; display:flex; flex-direction:column; align-items:center; padding:7vh 24px 40px; background:radial-gradient(900px 420px at 50% -8%,rgba(var(--accent-rgb),.3),transparent 70%),radial-gradient(700px 400px at 100% 100%,rgba(var(--accent-2-rgb,var(--accent-rgb)),.12),transparent 60%),var(--surface); }
+.nt .clock{ font-size:64px; font-weight:300; letter-spacing:-2px; line-height:1; } .nt .greet{ margin:6px 0 24px; color:var(--text-2); font-size:15px; }
+.nt .sb{ width:min(640px,94%); height:52px; display:flex; align-items:center; gap:10px; padding:0 8px 0 20px; border-radius:26px; background:var(--glass-2); backdrop-filter:blur(16px); border:1px solid var(--border-2); box-shadow:0 10px 36px rgba(0,0,0,.22); transition:box-shadow .25s,border-color .2s; } .nt .sb:focus-within{ border-color:var(--accent); box-shadow:0 0 0 4px rgba(var(--accent-rgb),.2),0 10px 36px rgba(0,0,0,.28); } .nt .sb input{ flex:1; border:0; outline:none; background:transparent; font-size:16px; color:var(--text); height:100%; } .nt .sb .eng{ border:0; height:34px; padding:0 14px; border-radius:17px; background:var(--active); color:var(--text-2); font-size:12px; }
+.nt .tiles{ display:grid; grid-template-columns:repeat(auto-fill,104px); gap:12px; justify-content:center; width:min(760px,100%); margin-top:34px; }
+.nt .tile{ text-decoration:none; color:var(--text); position:relative; display:flex; flex-direction:column; align-items:center; gap:9px; padding:16px 6px 12px; border-radius:16px; font-size:12px; text-align:center; transition:background .18s,transform .22s var(--ease-out); } .nt .tile:hover{ background:var(--glass-2); transform:translateY(-3px); } .nt .tile .ti{ width:52px; height:52px; border-radius:16px; background:var(--surface-3); display:grid; place-items:center; box-shadow:0 4px 14px rgba(0,0,0,.2); } .nt .tile .ti img{ width:28px; height:28px; border-radius:6px; } .nt .tile span.n{ max-width:92px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .nt .tile .rm{ position:absolute; top:4px; right:4px; width:20px; height:20px; border:0; border-radius:50%; background:var(--active); display:none; place-items:center; } .nt .tile:hover .rm{ display:grid; } .nt .tile .rm svg{ width:10px; height:10px; } .nt .tile.add .ti{ background:transparent; border:1.5px dashed var(--border-2); box-shadow:none; color:var(--text-3); }
+.nt .status{ margin-top:36px; display:flex; align-items:center; gap:10px; padding:9px 16px; border-radius:20px; background:var(--glass-2); border:1px solid var(--border); font-size:12px; color:var(--text-2); } .nt .status i{ width:8px; height:8px; border-radius:50%; background:var(--text-3); } .nt .status i.ok{ background:#4ade80; box-shadow:0 0 8px #4ade80; } .nt .status i.bad{ background:#f87171; } .nt .status a{ color:var(--accent); }
+.ip{ max-width:860px; margin:0 auto; padding:30px 26px 60px; } .ip h1{ font-weight:600; font-size:26px; margin:0 0 4px; } .ip .lead{ color:var(--text-3); font-size:13px; margin-bottom:20px; line-height:1.5; }
+.ip .tools{ display:flex; gap:10px; align-items:center; margin:14px 0 18px; } .ip .tools .input{ flex:1; height:38px; border-radius:19px; padding:0 16px; }
+.ip .li{ display:flex; align-items:center; gap:12px; padding:8px 10px; border-radius:9px; cursor:default; } .ip .li:hover{ background:var(--hover); } .ip .li img.f{ width:16px; height:16px; border-radius:3px; flex:none; } .ip .li .tm{ width:62px; flex:none; font-size:12px; color:var(--text-3); } .ip .li .ti{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .ip .li .ur{ max-width:38%; color:var(--text-3); font-size:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; } .ip .li .rmv{ opacity:0; width:26px; height:26px; } .ip .li:hover .rmv{ opacity:1; }
+.ip .grp{ font-size:12px; font-weight:600; color:var(--text-3); margin:18px 0 4px; padding:0 10px; letter-spacing:.3px; }
+.ip .card{ background:var(--surface-2); border:1px solid var(--border); border-radius:14px; padding:16px 18px; margin-bottom:14px; } .ip .card h3{ margin:0 0 8px; font-size:15px; font-weight:600; } .ip .opt{ display:flex; gap:12px; align-items:flex-start; padding:10px 12px; border-radius:11px; border:1px solid var(--border); margin-bottom:8px; cursor:default; transition:border-color .15s,background .15s; } .ip .opt:hover{ background:var(--hover); } .ip .opt.on{ border-color:var(--accent); background:rgba(var(--accent-rgb),.1); } .ip .opt .r{ width:16px; height:16px; border-radius:50%; border:2px solid var(--text-3); margin-top:2px; flex:none; position:relative; } .ip .opt.on .r{ border-color:var(--accent); } .ip .opt.on .r::after{ content:""; position:absolute; inset:2px; border-radius:50%; background:var(--accent); } .ip .opt b{ display:block; font-weight:600; font-size:13.5px; } .ip .opt small{ color:var(--text-3); line-height:1.5; font-size:12px; }
+.ip .srow{ display:flex; align-items:center; gap:12px; padding:9px 0; border-top:1px solid var(--border); } .ip .srow:first-of-type{ border-top:0; } .ip .srow .k{ flex:1; font-size:13px; } .ip .srow .k small{ display:block; color:var(--text-3); font-size:11.5px; margin-top:1px; } .ip .dot{ width:9px; height:9px; border-radius:50%; background:var(--text-3); flex:none; } .ip .dot.ok{ background:#4ade80; } .ip .dot.bad{ background:#f87171; } .ip .dot.wait{ background:#fbbf24; }
+.ip pre.src{ font:12px/1.5 var(--mono); white-space:pre-wrap; word-break:break-all; background:var(--surface-2); border:1px solid var(--border); border-radius:10px; padding:14px; max-height:calc(100vh - 220px); overflow:auto; }
 
 /* ---- Settings ---- */
 .st{ display:flex; height:100%; }
@@ -1267,7 +1289,7 @@ const DEFAULT_SETTINGS = {
   startPinned: ["explorer", "browser", "settings", "terminal", "axplay", "axflix", "axtube", "axtok", "notepad", "calculator", "paint", "photos", "media", "taskmgr", "clock", "store", "weather", "compat", "welcome"],
   installed: [],
   defaultApps: {},
-  browser: { mode: "proxy", gateway: "auto", customGateway: "", uvPrefix: "", uvCodec: "xor", search: "ddg", home: "axos://newtab", scripts: true, bookmarksBar: true },
+  browser: { mode: "auto", gateway: "auto", customGateway: "", uvPrefix: "", uvCodec: "xor", search: "ddg", home: "axos://newtab", scripts: true, bookmarksBar: true },
   terminal: { theme: "default", fontSize: 13.5 },
   weatherCity: "",
   iconPos: {},
@@ -1810,12 +1832,12 @@ class Win {
     const mx = $(".mx", el); if (mx) { mx.onclick = (e) => { e.stopPropagation(); SnapPop.hide(); this.toggleMax(); }; mx.onpointerenter = (e) => { if (e.pointerType !== "mouse") return; clearTimeout(SnapPop.t); SnapPop.t = setTimeout(() => SnapPop.show(this, mx), 420); }; mx.onpointerleave = () => SnapPop.later(); }
     $(".x", el).onclick = (e) => { e.stopPropagation(); this.close(); };
     $$(".tctl button", el).forEach(b => b.addEventListener("pointerdown", e => e.stopPropagation()));
-    this.tbar.addEventListener("dblclick", e => { if (e.target.closest("button,input,.br-tab,.tt")) return; this.toggleMax(); });
+    this.tbar.addEventListener("dblclick", e => { if (e.target.closest("button,input,.bx-tab,.bx-new,.bx-ts,.tt")) return; this.toggleMax(); });
     this.tbar.addEventListener("contextmenu", e => { if (e.target.closest("input")) return; e.preventDefault(); this.menu(e.clientX, e.clientY); });
     $(".tico", el).addEventListener("click", e => { const r = e.currentTarget.getBoundingClientRect(); this.menu(r.left, r.bottom + 6); });
     /* move */
     this.tbar.addEventListener("pointerdown", e => {
-      if (e.button !== 0 || e.target.closest("button,input,select,.br-tab,.tt,.tctl,.tico")) return;
+      if (e.button !== 0 || e.target.closest("button,input,select,.bx-tab,.bx-new,.bx-ts,.tt,.tctl,.tico")) return;
       const A = WM.area(); const sx = e.clientX, sy = e.clientY; let ox = this.x, oy = this.y, moved = false, zone = null;
       const pv = $("#snap-preview");
       const move = ev => {
@@ -3699,303 +3721,6 @@ function decodeRedirect(u) {
 }
 const DL_EXT = /\.(exe|msi|zip|7z|rar|gz|tgz|xz|bz2|deb|rpm|appimage|dmg|iso|img|apk|bin|run|jar|tar|mp3|wav|flac|ogg|m4a|mp4|mkv|webm|mov|avi|docx?|xlsx?|pptx?|odt|ttf|otf|woff2?)(\?|#|$)/i;
 
-registerApp("browser", {
-  name: "AxBrowser", icon: "globe", colors: ["#38bdf8", "#2563eb"], w: 1080, h: 700, minW: 480, minH: 300, single: true, keywords: "web internet chrome edge firefox proxy ultraviolet",
-  onReopen(win, a) { if (a.url || a.file || a.path) win.browserOpen({ url: a.url, file: a.file || a.path, mode: a.mode }); },
-  launch(win, args) {
-    Wisp.warm();
-    const B = win.body; $(".ttl", win.el).style.display = "none"; win.extra.style.flex = "1"; win.extra.style.minWidth = "0"; win.tbar.style.paddingLeft = "6px"; win.tbar.style.height = "40px";
-    win.extra.innerHTML = `<div class="br-tabs"></div><button class="ibtn br-newtab" data-tip="New tab (Ctrl+T)" style="width:28px;height:28px">${ic("plus")}</button>`;
-    B.innerHTML = `<div class="br"><div class="br-bar"><button class="ibtn bk" data-tip="Back">${ic("arrowL")}</button><button class="ibtn fw" data-tip="Forward">${ic("arrowR")}</button><button class="ibtn rl" data-tip="Reload (Ctrl+R)">${ic("refresh")}</button><button class="ibtn hm" data-tip="Home">${ic("home")}</button>
-      <div class="br-omni"><span class="sec" style="display:flex;color:var(--text-3)">${ic("search")}</span><input spellcheck="false" placeholder="Search or enter web address"><span class="mode" data-tip="Connection mode — click to change"></span><button class="ibtn star" style="width:26px;height:26px" data-tip="Bookmark this page">${ic("star")}</button></div>
-      <button class="ibtn dls" data-tip="Downloads">${ic("download")}</button><button class="ibtn menu" data-tip="Menu">${ic("moreV")}</button></div>
-      <div class="br-bm"></div><div class="br-view"></div><div class="statusbar hidden" style="position:absolute;left:0;bottom:0;height:22px;border:1px solid var(--border);border-radius:0 6px 0 0;background:var(--surface-2);z-index:5"></div></div>`;
-    const tabsEl = $(".br-tabs", win.extra), view = $(".br-view", B), omni = $(".br-omni input", B), modeEl = $(".mode", B), hov = $(".statusbar", B);
-    let tabs = [], cur = null;
-    const BS = () => Settings.get("browser");
-    const newTab = (url, activate = true, mode = null) => {
-      const t = { id: uid(), url: "", title: "New Tab", fav: "", hist: [], idx: -1, loading: false, zoom: 1, mode, el: h(`<div style="position:absolute;inset:0"></div>`) };
-      view.appendChild(t.el); tabs.push(t); if (activate) select(t); else t.el.style.display = "none";
-      nav(t, url || BS().home || "axos://newtab"); renderTabs(); return t;
-    };
-    const select = t => { cur = t; tabs.forEach(x => x.el.style.display = x === t ? "" : "none"); renderTabs(); syncBar(); };
-    const closeTab = t => { const i = tabs.indexOf(t); t.ctl?.abort(); t.el.remove(); tabs.splice(i, 1); if (!tabs.length) return win.close(); if (cur === t) select(tabs[Math.min(i, tabs.length - 1)]); else renderTabs(); };
-    const renderTabs = () => {
-      tabsEl.innerHTML = "";
-      tabs.forEach(t => {
-        const el = h(`<div class="br-tab${t === cur ? " on" : ""}" title="${esc(t.title)}"><span class="fav">${t.loading ? `<span class="spinner" style="width:13px;height:13px;border-width:2px"></span>` : t.fav ? `<img src="${esc(t.fav)}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment('${ic("globe").replace(/"/g, "&quot;")}'))">` : ic(t.url.startsWith("axos:") ? "home" : "globe")}</span><span class="tt">${esc(t.title || t.url)}</span><button class="x">${ic("x")}</button></div>`);
-        el.onpointerdown = e => { if (e.button === 1) { e.preventDefault(); closeTab(t); } else if (!e.target.closest(".x")) select(t); };
-        $(".x", el).onclick = e => { e.stopPropagation(); closeTab(t); };
-        el.oncontextmenu = e => { e.preventDefault(); e.stopPropagation(); Menu.show(e.clientX, e.clientY, [{ label: "New tab", icon: "plus", action: () => newTab() }, { label: "Reload", icon: "refresh", action: () => nav(t, t.url, { push: false }) }, { label: "Duplicate", icon: "copy", action: () => newTab(t.url) }, "-", { label: "Close tab", icon: "x", action: () => closeTab(t) }, { label: "Close other tabs", disabled: tabs.length < 2, action: () => tabs.filter(x => x !== t).forEach(closeTab) }]); };
-        tabsEl.appendChild(el);
-      });
-      const t = cur; win.setTitle((t?.title || "New Tab") + " — AxBrowser");
-    };
-    const modeOf = t => t.mode || BS().mode;
-    const syncBar = () => {
-      const t = cur; if (!t) return;
-      if (document.activeElement !== omni) omni.value = t.url.startsWith("axos://newtab") ? "" : t.url;
-      $(".bk", B).disabled = t.idx <= 0; $(".fw", B).disabled = t.idx >= t.hist.length - 1;
-      $(".rl", B).innerHTML = ic(t.loading ? "x" : "refresh");
-      const m = modeOf(t); const internal = t.url.startsWith("axos:") || t.url.startsWith("file:");
-      modeEl.textContent = internal ? (t.url.startsWith("file:") ? "Local file" : "AxOS") : { proxy: /^Wisp/.test(t.via || "") ? "Wisp" : "AxProxy", direct: "Direct", uv: "Ultraviolet" }[m];
-      $(".sec", B).innerHTML = ic(internal ? "home" : m === "proxy" ? "shield" : m === "uv" ? "shield" : "globe");
-      const bm = BrowserData.bookmarks.some(b => b.url === t.url); $(".star", B).innerHTML = ic(bm ? "starFill" : "star"); $(".star", B).style.color = bm ? "var(--accent)" : "";
-      renderBM();
-    };
-    const renderBM = () => {
-      const bar = $(".br-bm", B); if (!BS().bookmarksBar) { bar.innerHTML = ""; bar.style.minHeight = "0"; bar.style.paddingBottom = "0"; return; }
-      bar.style.minHeight = ""; bar.style.paddingBottom = "";
-      bar.innerHTML = BrowserData.bookmarks.slice(0, 14).map((b, i) => `<span class="b" data-i="${i}" title="${esc(b.url)}"><img src="${esc(favicon(b.url))}" alt="" onerror="this.style.display='none'">${esc(b.title)}</span>`).join("") || `<span class="dim" style="font-size:12px;padding:4px 6px">Bookmark pages with the ☆ in the address bar</span>`;
-      $$(".b", bar).forEach(el => { const b = BrowserData.bookmarks[+el.dataset.i]; el.onclick = e => (e.ctrlKey || e.metaKey) ? newTab(b.url, false) : nav(cur, b.url); el.onauxclick = e => { if (e.button === 1) newTab(b.url, false); }; el.oncontextmenu = e => { e.preventDefault(); e.stopPropagation(); Menu.show(e.clientX, e.clientY, [{ label: "Open", action: () => nav(cur, b.url) }, { label: "Open in new tab", action: () => newTab(b.url) }, { label: "Rename…", icon: "edit", action: async () => { const n = await Dialog.prompt("Rename bookmark", "", b.title); if (n) { const all = BrowserData.bookmarks; all[+el.dataset.i].title = n; BrowserData.setBookmarks(all); } } }, { label: "Delete", icon: "trash", danger: true, action: () => { const all = BrowserData.bookmarks; all.splice(+el.dataset.i, 1); BrowserData.setBookmarks(all); } }]); }; });
-    };
-    const offBM = Bus.on("bookmarks", syncBar);
-    /* ---- navigation ---- */
-    const toURL = s => {
-      s = s.trim(); if (!s) return "axos://newtab";
-      if (/^(axos|file|data|blob|about):/i.test(s)) return s;
-      if (/^https?:\/\//i.test(s)) return s;
-      if (/^localhost(:\d+)?(\/|$)/.test(s) || /^[\w-]+(\.[\w-]+)+(:\d+)?(\/\S*)?$/.test(s) && !/\s/.test(s)) return "https://" + s;
-      return SEARCH_ENGINES[BS().search]?.[1] + encodeURIComponent(s);
-    };
-    const nav = (t, input, { push = true, mode, post = null, fresh = false } = {}) => {
-      let url = decodeRedirect(toURL(input)); if (mode) t.mode = mode;
-      if (push) { t.hist = t.hist.slice(0, t.idx + 1); if (t.hist[t.idx] !== url) { t.hist.push(url); t.idx++; } }
-      t.url = url; t.ctl?.abort(); t.ctl = new AbortController(); t.html = null; t.el.innerHTML = ""; t.frame = null; t.el.style.zoom = t.zoom;
-      t.title = url; t.fav = favicon(url); setLoading(t, false);
-      if (url.startsWith("axos:")) return internal(t, url);
-      if (url.startsWith("file:")) return localFile(t, url.slice(7));
-      if (DL_EXT.test(new URL(url).pathname) && !/\.(mp4|webm|mp3|ogg|wav)$/i.test(new URL(url).pathname)) { t.title = "Download"; renderTabs(); syncBar(); downloadURL(url); if (t.hist.length > 1) { t.hist.pop(); t.idx--; t.url = t.hist[t.idx]; return nav(t, t.url, { push: false }); } return internal(t, "axos://downloads"); }
-      const m = modeOf(t);
-      if (m === "direct") return direct(t, url);
-      if (m === "uv") return uv(t, url);
-      return proxied(t, url, { post, fresh });
-    };
-    const setLoading = (t, on) => { t.loading = on; renderTabs(); if (t === cur) syncBar(); let bar = $(".br-load", t.el); if (on && !bar) t.el.appendChild(h(`<div class="br-load"><i></i></div>`)); if (!on && bar) bar.remove(); };
-    const mkFrame = (t, sandbox) => { const f = document.createElement("iframe"); if (sandbox != null) f.setAttribute("sandbox", sandbox); f.setAttribute("allow", "fullscreen; autoplay; clipboard-write"); f.setAttribute("referrerpolicy", "no-referrer"); t.el.appendChild(f); t.frame = f; return f; };
-    const direct = (t, url) => {
-      setLoading(t, true); const f = mkFrame(t, axSandbox(url)); f.src = url;
-      f.onload = () => { setLoading(t, false); t.title = new URL(url).hostname; renderTabs(); };
-      const tip = h(`<div style="position:absolute;right:12px;bottom:12px;z-index:4;max-width:360px;padding:10px 12px;border-radius:8px;background:var(--glass-2);backdrop-filter:blur(20px);border:1px solid var(--border);box-shadow:var(--shadow-sm);font-size:12px;color:var(--text)">Direct mode: if this page stays blank, the website refuses to be embedded. <a href="#" style="color:var(--accent)">Open with AxProxy</a> <button class="ibtn" style="width:20px;height:20px;float:right">${ic("x")}</button></div>`);
-      $("a", tip).onclick = e => { e.preventDefault(); nav(t, url, { push: false, mode: "proxy" }); }; $("button", tip).onclick = () => tip.remove(); t.el.appendChild(tip); setTimeout(() => tip.remove(), 9000);
-      BrowserData.addHistory(url, new URL(url).hostname);
-    };
-    const uv = (t, url) => {
-      const pr = UVPresets.active(); if (!pr || /YOUR-HOST/.test(pr.prefix)) return errorPage(t, url, new Error(pr ? `Preset "${pr.name}" still has YOUR-HOST in its address. Edit it in Settings.` : "No Ultraviolet server is configured."), { uv: true });
-      setLoading(t, true); const f = mkFrame(t, axSandbox(UVPresets.url(url, pr))); f.src = UVPresets.url(url, pr); t.via = pr.name;
-      f.onload = () => { setLoading(t, false); t.title = new URL(url).hostname; renderTabs(); }; BrowserData.addHistory(url, new URL(url).hostname);
-    };
-    const proxied = async (t, url, { post = null, fresh = false } = {}) => {
-      setLoading(t, true); const ctl = t.ctl;
-      let method = "GET", body; if (post != null) { if (AxProxy.worker()) { method = "POST"; body = post; } else { url += (url.includes("?") ? "&" : "?") + post; t.url = url; } }
-      const st = h(`<div class="br-err" style="background:var(--surface)"><div class="in" style="text-align:center"><div class="spinner" style="margin:0 auto 16px"></div><div class="muted gw">Connecting through AxProxy…</div></div></div>`); t.el.appendChild(st);
-      try {
-        const tried = []; const r = await AxProxy.fetch(url, { signal: ctl.signal, fresh: fresh || method !== "GET", method, body, headers: method === "POST" ? { "content-type": "application/x-www-form-urlencoded" } : {}, onTry: g => { tried.push(g.name); const e = $(".gw", st); if (e) e.textContent = `Connecting through ${tried.join(" + ")}…`; } });
-        if (ctl.signal.aborted) return; st.remove();
-        const type = (r.type || "").toLowerCase(); const text = r.text;
-        t.finalUrl = r.finalUrl || url; t.via = r.via;
-        if (/^image\//.test(type) || /^data:image\//.test(text)) return renderDoc(t, `<body style="margin:0;background:#0e0e0e;display:grid;place-items:center;min-height:100vh"><img src="${esc(/^data:/.test(text) ? text : url)}" style="max-width:100%"></body>`, url, false);
-        if (type && !/html|xml|text\/plain|json|javascript|css|^$/.test(type) && !/^\s*</.test(text)) { st.remove(); setLoading(t, false); return internalMsg(t, "This file can't be displayed", `The server sent a file of type ${type}.`, [["Download file", () => downloadURL(url)]]); }
-        if (!/html|xml/.test(type) && !/^\s*</.test(text.slice(0, 200))) return renderDoc(t, `<pre style="white-space:pre-wrap;word-break:break-word;font:13px ui-monospace,monospace;padding:16px;margin:0">${esc(text)}</pre>`, url, false);
-        t.html = text; renderDoc(t, text, t.finalUrl, true);
-      } catch (e) {
-        if (ctl.signal.aborted) return; st.remove(); errorPage(t, url, e);
-      }
-    };
-    const injector = (t, pageUrl) => shimTag(t, pageUrl) + `<script>(function(){var P=parent,ID=${JSON.stringify(t.id)},PAGE=${JSON.stringify(pageUrl)};function abs(u){try{return new URL(u,document.baseURI).href}catch(e){return null}}
-function go(u,nt){if(!u)return;P.postMessage({axb:ID,type:"nav",url:u,newTab:!!nt},"*")}
-document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[href],area[href]");if(!a||e.defaultPrevented&&!a.getAttribute("href"))return;var h=a.getAttribute("href");if(!h||/^javascript:/i.test(h))return;if(h.charAt(0)==="#"){e.preventDefault();var id=decodeURIComponent(h.slice(1)),el=document.getElementById(id)||document.getElementsByName(id)[0];if(el)el.scrollIntoView({behavior:"smooth"});return}var u=abs(h);if(!u)return;if(/^(mailto|tel):/i.test(u))return;var p=u.split("#");if(p[0]===PAGE.split("#")[0]&&p[1]){e.preventDefault();var el2=document.getElementById(decodeURIComponent(p[1]));if(el2)el2.scrollIntoView({behavior:"smooth"});return}e.preventDefault();go(u,e.ctrlKey||e.metaKey||e.shiftKey||a.target==="_blank")},true);
-document.addEventListener("auxclick",function(e){if(e.button!==1)return;var a=e.target.closest&&e.target.closest("a[href],area[href]");if(a){e.preventDefault();go(abs(a.getAttribute("href")),true)}},true);
-document.addEventListener("submit",function(e){var f=e.target;e.preventDefault();var act=f.getAttribute("action");var base=act?abs(act):PAGE;var fd=new FormData(f);if(e.submitter&&e.submitter.name)fd.append(e.submitter.name,e.submitter.value||"");var qs=new URLSearchParams(fd).toString();var u=new URL(base);var m=(f.getAttribute("method")||"get").toLowerCase();if(m==="get"){u.search=qs;go(u.href,f.target==="_blank")}else{P.postMessage({axb:ID,type:"nav",url:u.href,post:qs,newTab:f.target==="_blank"},"*")}},true);
-window.open=function(u){go(abs(u||""),true);return null};
-var lh="";document.addEventListener("mouseover",function(e){var a=e.target.closest&&e.target.closest("a[href],area[href]");var u=a?abs(a.getAttribute("href")):"";if(u!==lh){lh=u;P.postMessage({axb:ID,type:"hover",url:u},"*")}});
-function meta(){var ic=document.querySelector("link[rel~=icon]");P.postMessage({axb:ID,type:"meta",title:document.title,icon:ic?abs(ic.getAttribute("href")):""},"*")}
-document.addEventListener("DOMContentLoaded",meta);window.addEventListener("load",meta);
-document.addEventListener("keydown",function(e){var c=e.ctrlKey||e.metaKey;if(c&&/^[ltwr=+\\-0]$/i.test(e.key)||e.altKey&&/^Arrow(Left|Right)$/.test(e.key)||e.key==="F5"){e.preventDefault();P.postMessage({axb:ID,type:"key",key:e.key,ctrl:c,alt:e.altKey,shift:e.shiftKey},"*")}});
-try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch(e){}
-})();<\/script>`;
-    const renderDoc = (t, html, base, rewrite) => {
-      let out = html;
-      if (rewrite) {
-        try {
-          const doc = new DOMParser().parseFromString(html, "text/html");
-          let baseHref = base; const eb = doc.querySelector("base[href]"); if (eb) { try { baseHref = new URL(eb.getAttribute("href"), base).href; } catch (e) { } } doc.querySelectorAll("base").forEach(b => b.remove());
-          doc.querySelectorAll("meta[http-equiv]").forEach(m => { const k = (m.getAttribute("http-equiv") || "").toLowerCase(); if (k === "refresh") { const mm = (m.getAttribute("content") || "").match(/url\s*=\s*['"]?([^'";]+)/i); if (mm) t.refresh = new URL(mm[1], baseHref).href; m.remove(); } else if (k.includes("security") || k === "x-frame-options") m.remove(); });
-          doc.querySelectorAll("script[integrity],link[integrity]").forEach(s => s.removeAttribute("integrity"));
-          if (!BS().scripts) { doc.querySelectorAll("script").forEach(s => s.remove()); doc.querySelectorAll("noscript").forEach(n => { const d = doc.createElement("div"); d.innerHTML = n.innerHTML; n.replaceWith(d); }); doc.querySelectorAll("img[data-src]").forEach(i => { if (!i.getAttribute("src") || i.getAttribute("src").startsWith("data:")) i.setAttribute("src", i.getAttribute("data-src")); }); }
-          const head = doc.head || doc.documentElement.insertBefore(doc.createElement("head"), doc.body);
-          const bEl = doc.createElement("base"); bEl.href = baseHref; head.prepend(bEl);
-          if (!doc.querySelector("meta[charset]")) { const mc = doc.createElement("meta"); mc.setAttribute("charset", "utf-8"); head.prepend(mc); }
-          const tmp = doc.createElement("template"); tmp.innerHTML = injector(t, base); [...tmp.content.childNodes].reverse().forEach(n => head.insertBefore(n, bEl.nextSibling));
-          t.title = doc.title || new URL(base).hostname; renderTabs();
-          out = "<!DOCTYPE html>" + doc.documentElement.outerHTML;
-        } catch (e) { console.warn(e); }
-      } else out = `<!doctype html><html><head><meta charset="utf-8"><base href="${esc(base)}">${injector(t, base)}</head>${out}</html>`;
-      const f = mkFrame(t, "allow-scripts allow-forms allow-modals"); f.srcdoc = out;
-      f.onload = () => { setLoading(t, false); if (t.refresh) { const r = t.refresh; t.refresh = null; setTimeout(() => t.url === base && nav(t, r), 300); } };
-      setTimeout(() => t.loading && setLoading(t, false), 8000);
-      BrowserData.addHistory(t.url, t.title);
-    };
-    const localFile = (t, path) => {
-      const n = FS.node(path); if (!n) return errorPage(t, "file://" + path, new Error("File not found"));
-      t.title = FS.basename(path); t.fav = ""; renderTabs(); syncBar(); const e = extOf(path);
-      if (e === "html" || e === "htm") { const f = mkFrame(t, "allow-scripts allow-forms allow-modals"); f.srcdoc = FS.readText(path); return; }
-      const f = mkFrame(t, e === "pdf" ? null : "allow-scripts"); f.src = FS.blobURL(path);
-    };
-    const errorPage = (t, url, err, o = {}) => {
-      setLoading(t, false); t.title = "Can't reach this page"; renderTabs();
-      const host = (() => { try { return new URL(url).hostname; } catch (e) { return url; } })();
-      const el = h(`<div class="br-err"><div class="in"><div style="font-size:54px">${o.uv ? "🛡️" : "🦎"}</div><h2>${o.uv ? "Set up your Ultraviolet server" : "Hmm… can't reach this page"}</h2>
-        <p>${o.uv ? "Ultraviolet needs a backend (a Bare/Wisp server plus its service worker) that runs on a real web server — it can't live inside a single HTML file. Point AxBrowser at your own UV or Scramjet instance in Settings → Network & Browser." : `AxProxy couldn't load <b>${esc(host)}</b> through any of its public gateways.`}</p>
-        <p class="dim" style="font-size:12px;font-family:var(--mono)">${esc(err.message || String(err))}</p>
-        <div class="row" style="flex-wrap:wrap;margin-top:16px"><button class="btn primary rt">${ic("refresh")} Try again</button>${o.uv ? "" : `<button class="btn rd">${ic("fileText")} Reader mode</button>`}<button class="btn dr">${ic("globe")} Open directly</button><button class="btn ps">${ic("gear")} Proxy settings</button></div></div></div>`);
-      t.el.appendChild(el);
-      $(".rt", el).onclick = () => nav(t, url, { push: false }); $(".dr", el).onclick = () => nav(t, url, { push: false, mode: "direct" }); $(".ps", el).onclick = () => launch("settings", { page: "network" });
-      const rd = $(".rd", el); if (rd) rd.onclick = () => readerMode(t, url);
-    };
-    const readerMode = async (t, url) => {
-      t.el.innerHTML = ""; setLoading(t, true);
-      try {
-        const md = await AxProxy.reader(url, t.ctl.signal); const title = (md.match(/^Title:\s*(.*)$/m) || [])[1] || url; const body = md.split(/^Markdown Content:\s*$/m)[1] || md;
-        t.title = title; renderTabs();
-        renderDoc(t, `<body style="font:17px/1.65 Georgia,serif;max-width:720px;margin:0 auto;padding:30px 22px;color:#222;background:#fbf8f2"><div style="font:12px system-ui;color:#888;margin-bottom:10px">Reader mode · ${esc(new URL(url).hostname)}</div><h1 style="font-size:30px;line-height:1.25">${esc(title)}</h1>${mdToHTML(body)}</body>`, url, false);
-      } catch (e) { setLoading(t, false); errorPage(t, url, e); }
-    };
-    const internalMsg = (t, title, msg, actions = []) => {
-      const el = h(`<div class="br-err"><div class="in"><h2>${esc(title)}</h2><p>${esc(msg)}</p><div class="row acts"></div></div></div>`);
-      actions.forEach(([l, f]) => { const b = h(`<button class="btn primary">${esc(l)}</button>`); b.onclick = f; $(".acts", el).appendChild(b); }); t.el.appendChild(el);
-    };
-    /* ---- internal pages ---- */
-    const internal = (t, url) => {
-      const page = url.replace(/^axos:\/\//, "").split(/[?#]/)[0] || "newtab"; const el = h(`<div class="internal"></div>`); t.el.appendChild(el); t.fav = "";
-      if (page === "newtab") {
-        t.title = "New Tab";
-        const tiles = [["Wikipedia", "https://en.wikipedia.org/wiki/Main_Page"], ["DuckDuckGo", "https://html.duckduckgo.com/html/"], ["Hacker News", "https://news.ycombinator.com/"], ["Archive.org", "https://archive.org/"], ["Example", "https://example.com/"], ["MDN", "https://developer.mozilla.org/"], ["Lite CNN", "https://lite.cnn.com/"], ["Text NPR", "https://text.npr.org/"]];
-        el.innerHTML = `<div class="ntp"><div class="logo">AxBrowser</div><form class="sb">${ic("search")}<input placeholder="Search ${esc(SEARCH_ENGINES[BS().search][0])} or type a URL" spellcheck="false"></form><div class="tiles">${tiles.map(([n, u]) => `<div class="tile" data-u="${esc(u)}"><span class="ti"><img src="${esc(favicon(u))}" alt="" onerror="this.style.display='none'"></span><span>${esc(n)}</span></div>`).join("")}</div>
-          <div class="note">Websites load through <b>AxProxy</b>, AxOS's built-in rewriting proxy, so they display inside the window even when they block embedding. Connection mode: <b>${{ proxy: "AxProxy", direct: "Direct", uv: "Ultraviolet" }[BS().mode]}</b> · <a href="#" class="cfg" style="color:var(--accent)">Change</a><br>Sign-ins and heavy web apps work best with a dedicated Ultraviolet / Scramjet server.</div></div>`;
-        $("form", el).onsubmit = e => { e.preventDefault(); nav(t, $("input", el).value); };
-        $$(".tile", el).forEach(x => { x.onclick = () => nav(t, x.dataset.u); });
-        $(".cfg", el).onclick = e => { e.preventDefault(); launch("settings", { page: "network" }); };
-        setTimeout(() => t === cur && $("input", el)?.focus(), 60);
-      } else if (page === "history") {
-        t.title = "History"; const hs = BrowserData.history; let last = "";
-        el.innerHTML = `<div class="intpage"><div class="row" style="justify-content:space-between"><h1>History</h1><button class="btn clr">${ic("trash")} Clear browsing data</button></div>${hs.length ? hs.map((x, i) => { const d = new Date(x.time).toDateString(); const hd = d !== last ? `<div class="navhead">${d === new Date().toDateString() ? "Today" : esc(d)}</div>` : ""; last = d; return hd + `<div class="li" data-i="${i}"><span class="dim" style="width:64px;font-size:12px">${fmtTime(new Date(x.time))}</span><img src="${esc(favicon(x.url))}" alt="" onerror="this.style.visibility='hidden'"><span class="ellipsis grow">${esc(x.title || x.url)}</span><span class="dim ellipsis" style="max-width:40%;font-size:12px">${esc(x.url)}</span></div>`; }).join("") : `<div class="empty-state">${ic("history")}No history yet</div>`}</div>`;
-        $$(".li", el).forEach(x => x.onclick = () => nav(t, hs[+x.dataset.i].url));
-        $(".clr", el).onclick = async () => { if (await Dialog.confirm("Clear browsing data", "Delete your AxBrowser history?", { ok: "Clear", danger: true })) { BrowserData.set("history", []); nav(t, "axos://history", { push: false }); } };
-      } else if (page === "bookmarks") {
-        t.title = "Bookmarks"; const bs = BrowserData.bookmarks;
-        el.innerHTML = `<div class="intpage"><h1>Bookmarks</h1>${bs.map((b, i) => `<div class="li" data-i="${i}"><img src="${esc(favicon(b.url))}" alt="" onerror="this.style.visibility='hidden'"><span class="ellipsis grow">${esc(b.title)}</span><span class="dim ellipsis" style="max-width:45%;font-size:12px">${esc(b.url)}</span><button class="ibtn del" style="width:26px;height:26px">${ic("trash")}</button></div>`).join("") || `<div class="empty-state">${ic("bookmark")}No bookmarks</div>`}</div>`;
-        $$(".li", el).forEach(x => { x.onclick = e => { if (e.target.closest(".del")) { const all = BrowserData.bookmarks; all.splice(+x.dataset.i, 1); BrowserData.setBookmarks(all); nav(t, "axos://bookmarks", { push: false }); return; } nav(t, bs[+x.dataset.i].url); }; });
-      } else if (page === "downloads") {
-        t.title = "Downloads"; const ds = BrowserData.downloads;
-        el.innerHTML = `<div class="intpage"><h1>Downloads</h1>${ds.map((d, i) => `<div class="li" data-i="${i}">${fileIconHTML(d.name, d.path && FS.node(d.path), d.path || "", 28)}<div class="grow" style="min-width:0"><div class="ellipsis">${esc(d.name)}</div><div class="dim ellipsis" style="font-size:12px">${d.status === "done" ? fmtSize(d.size) + " · " + esc(d.path || "") : d.status === "error" ? "Failed — " + esc(d.error || "") : "Downloading…"}</div></div>${d.status === "done" && d.path && FS.exists(d.path) ? `<button class="btn sm op">Open</button><button class="btn sm fd">Show in folder</button>` : ""}</div>`).join("") || `<div class="empty-state">${ic("download")}Files you download will appear here. They're saved to your AxOS Downloads folder.</div>`}</div>`;
-        $$(".li", el).forEach(x => { const d = ds[+x.dataset.i]; const op = $(".op", x); if (op) { op.onclick = () => openPath(d.path); $(".fd", x).onclick = () => launch("explorer", { path: FS.dirname(d.path), select: d.path }); } });
-      } else if (page === "about") {
-        t.title = "About AxBrowser";
-        el.innerHTML = `<div class="intpage"><h1>About AxBrowser</h1><p class="muted">Version ${AXOS_VERSION} · part of AxOS</p><div class="card" style="padding:16px;line-height:1.6"><b>How browsing works in AxOS</b><br>Most websites forbid being shown inside an iframe. AxBrowser works around this with <b>AxProxy</b>: pages are fetched through public CORS gateways (Jina Reader, AllOrigins, CodeTabs, cors.lol), rewritten so links, forms and pop-ups stay inside AxBrowser, then rendered in an isolated sandbox.<br><br><b>Ultraviolet / Scramjet</b>: these proxies need a server (service worker + Bare/Wisp backend). If you host one, enter its prefix (e.g. <code>https://your-host/service/</code>) in Settings → Network & Browser and switch the connection mode to Ultraviolet.<br><br><b>Direct</b> mode loads sites in a normal iframe, which works for sites that allow embedding.</div></div>`;
-      } else { t.title = "Not found"; el.innerHTML = `<div class="intpage"><h1>axos://${esc(page)}</h1><p class="muted">This page doesn't exist. Try axos://newtab, axos://history, axos://bookmarks, axos://downloads or axos://about.</p></div>`; }
-      renderTabs(); syncBar();
-    };
-    /* ---- downloads ---- */
-    const downloadURL = async (url) => {
-      const name = decodeURIComponent((new URL(url).pathname.split("/").pop() || "download").replace(/[?#].*$/, "")) || "download";
-      const ds = BrowserData.downloads; const rec = { id: uid(), name, url, status: "progress", time: Date.now() }; ds.unshift(rec); BrowserData.setDownloads(ds);
-      notify("Download started", name, "browser", { silent: true });
-      const upd = p => { const all = BrowserData.downloads; const i = all.findIndex(x => x.id === rec.id); if (i >= 0) { all[i] = { ...all[i], ...p }; BrowserData.setDownloads(all); } };
-      try {
-        const r = await AxProxy.fetch(url, { binary: true }); const dir = FS.home + "/Downloads"; FS.mkdir(dir, true); const nm = FS.uniqueName(dir, name); const p = FS.join(dir, nm);
-        FS.write(p, r.buffer, { mime: r.type }); upd({ status: "done", size: r.buffer.byteLength, path: p, name: nm });
-        Notify.push({ app: "browser", title: "Download complete", body: `${nm} · ${fmtSize(r.buffer.byteLength)}`, actions: [{ label: "Open", primary: true, action: () => openPath(p) }, { label: "Show in folder", action: () => launch("explorer", { path: dir, select: p }) }] });
-      } catch (e) { upd({ status: "error", error: e.message }); notify("Download failed", `${name}: ${e.message}`, "browser"); }
-    };
-    /* ---- messages from pages ---- */
-    const onMsg = e => {
-      const d = e.data; if (!d || !d.axb) return; const t = tabs.find(x => x.id === d.axb); if (!t || !t.frame || e.source !== t.frame.contentWindow) return;
-      const pageHost = AxProxy.hostOf(t.finalUrl || t.url);
-      if (d.type === "nav" && d.url) { const u = decodeRedirect(String(d.url)); if (!/^https?:\/\//i.test(u)) return; if (d.newTab) newTab(u, false); else nav(t, u, { post: d.post == null ? null : String(d.post) }); }
-      else if (d.type === "fetch") {
-        const src = e.source; const tgtHost = AxProxy.hostOf(d.url);
-        AxProxy.request({ url: d.url, method: d.method, headers: d.headers || {}, body: d.body, sameSite: tgtHost === pageHost || tgtHost.endsWith("." + pageHost) || pageHost.endsWith("." + tgtHost) })
-          .then(r => src.postMessage({ axr: d.id, status: r.status, headers: r.headers, buf: r.buf, url: r.url }, "*", [r.buf]))
-          .catch(err => src.postMessage({ axr: d.id, err: err.message || String(err) }, "*"));
-      }
-      else if (d.type === "url" && d.url) { try { const u = new URL(d.url); if (/^https?:$/.test(u.protocol)) { t.url = u.href; t.hist[t.idx] = u.href; if (t === cur) syncBar(); BrowserData.addHistory(t.url, t.title); } } catch (er) { } }
-      else if (d.type === "cookie" && pageHost) AxProxy.setCookie(pageHost, d.str);
-      else if (d.type === "store" && pageHost && d.data && typeof d.data === "object") PxStore.set(pageHost, d.data);
-      else if (d.type === "meta") { if (d.title) t.title = String(d.title).slice(0, 200); if (d.icon && /^https?:/.test(d.icon)) t.fav = d.icon; renderTabs(); BrowserData.addHistory(t.url, t.title); }
-      else if (d.type === "hover" && t === cur) { hov.textContent = d.url ? decodeRedirect(d.url) : ""; hov.classList.toggle("hidden", !d.url); }
-      else if (d.type === "key") keys({ key: d.key, ctrlKey: d.ctrl, metaKey: false, altKey: d.alt, shiftKey: d.shift, preventDefault() { } });
-    };
-    window.addEventListener("message", onMsg);
-    /* ---- toolbar ---- */
-    $(".bk", B).onclick = () => { const t = cur; if (t.idx > 0) { t.idx--; nav(t, t.hist[t.idx], { push: false }); } };
-    $(".fw", B).onclick = () => { const t = cur; if (t.idx < t.hist.length - 1) { t.idx++; nav(t, t.hist[t.idx], { push: false }); } };
-    $(".rl", B).onclick = () => { const t = cur; if (t.loading) { t.ctl?.abort(); setLoading(t, false); } else nav(t, t.url, { push: false, fresh: true }); };
-    $(".hm", B).onclick = () => nav(cur, BS().home || "axos://newtab");
-    $(".br-newtab", win.extra).onclick = () => newTab();
-    $(".star", B).onclick = () => { const t = cur; if (t.url.startsWith("axos:")) return; const all = BrowserData.bookmarks; const i = all.findIndex(b => b.url === t.url); if (i >= 0) all.splice(i, 1); else all.push({ url: t.url, title: (t.title || t.url).slice(0, 60) }); BrowserData.setBookmarks(all); if (i < 0) notify("Bookmark added", t.title, "browser", { silent: true, timeout: 2500 }); };
-    $(".dls", B).onclick = () => newTab("axos://downloads");
-    modeEl.onclick = e => { const t = cur; Menu.at(e.currentTarget, [
-      { label: "AxProxy (built-in)" + (Wisp.enabled ? " · Wisp" : ""), checked: modeOf(t) === "proxy", action: () => nav(t, t.url, { push: false, mode: "proxy" }) },
-      { label: "Direct (iframe)", checked: modeOf(t) === "direct", action: () => nav(t, t.url, { push: false, mode: "direct" }) },
-      { label: "Ultraviolet / Scramjet", checked: modeOf(t) === "uv", sub: () => { const l = UVPresets.list(), a = UVPresets.active(); return (l.length ? l.map(p => ({ label: p.name, checked: modeOf(t) === "uv" && a?.id === p.id, action: () => { Settings.patch("browser", { uvActive: p.id }); nav(t, t.url, { push: false, mode: "uv" }); } })) : [{ label: "No servers yet", disabled: true }]).concat(["-", { label: "Manage servers…", icon: "gear", action: () => launch("settings", { page: "network" }) }]); } },
-      "-", { label: "Reader mode", icon: "fileText", disabled: t.url.startsWith("axos:"), action: () => readerMode(t, t.url) },
-      { label: "Page scripts", checked: BS().scripts, action: () => { Settings.patch("browser", { scripts: !BS().scripts }); nav(t, t.url, { push: false }); } },
-      { label: "Proxy settings…", icon: "gear", action: () => launch("settings", { page: "network" }) },
-    ]); };
-    $(".menu", B).onclick = e => Menu.at(e.currentTarget, [
-      { label: "New tab", icon: "plus", kbd: "Ctrl+T", action: () => newTab() },
-      { label: "New window", icon: "external", action: () => launch("browser", { newWindow: true }) }, "-",
-      { label: "History", icon: "history", action: () => newTab("axos://history") },
-      { label: "Bookmarks", icon: "bookmark", action: () => newTab("axos://bookmarks") },
-      { label: "Downloads", icon: "download", action: () => newTab("axos://downloads") }, "-",
-      { label: `Zoom: ${Math.round(cur.zoom * 100)}%`, icon: "zoomIn", sub: [{ label: "Zoom in", kbd: "Ctrl+=", action: () => zoom(.1) }, { label: "Zoom out", kbd: "Ctrl+-", action: () => zoom(-.1) }, { label: "Reset", kbd: "Ctrl+0", action: () => zoom(0) }] },
-      { label: "Show bookmarks bar", checked: BS().bookmarksBar, action: () => { Settings.patch("browser", { bookmarksBar: !BS().bookmarksBar }); renderBM(); } }, "-",
-      { label: "Save page to Downloads", icon: "save", disabled: !cur.html, action: () => { const dir = FS.home + "/Downloads"; const nm = FS.uniqueName(dir, (cur.title || "page").replace(/[\\/:*?"<>|]/g, "").slice(0, 60) + ".html"); FS.write(FS.join(dir, nm), cur.html); notify("Page saved", nm, "browser"); } },
-      { label: "View page source", icon: "code", disabled: !cur.html, action: () => launch("notepad", { content: cur.html, title: "view-source:" + cur.url }) },
-      { label: "Download link…", icon: "download", action: async () => { const u = await Dialog.prompt("Download a file", "Enter the address of the file to save into ~/Downloads:", "https://"); if (u) downloadURL(toURL(u)); } }, "-",
-      { label: "Settings", icon: "gear", action: () => launch("settings", { page: "network" }) },
-      { label: "About AxBrowser", icon: "info", action: () => newTab("axos://about") },
-    ]);
-    const zoom = d => { const t = cur; t.zoom = d === 0 ? 1 : clamp(Math.round((t.zoom + d) * 10) / 10, .3, 3); t.el.style.zoom = t.zoom; };
-    /* omnibox with suggestions */
-    let sug = null;
-    const closeSug = () => { sug && sug.remove(); sug = null; };
-    omni.onfocus = () => setTimeout(() => omni.select(), 0);
-    omni.oninput = () => {
-      const q = omni.value.trim().toLowerCase(); closeSug(); if (!q) return;
-      const seen = new Set(); const list = [...BrowserData.bookmarks.map(b => ({ ...b, k: "star" })), ...BrowserData.history.map(x => ({ ...x, k: "history" }))].filter(x => (x.url.toLowerCase().includes(q) || (x.title || "").toLowerCase().includes(q)) && !seen.has(x.url) && seen.add(x.url)).slice(0, 6);
-      const items = [{ k: "search", title: omni.value.trim(), url: toURL(omni.value), label: /^https?:/.test(toURL(omni.value)) && !toURL(omni.value).startsWith(SEARCH_ENGINES[BS().search][1]) ? "Go to" : `${SEARCH_ENGINES[BS().search][0]} search` }, ...list];
-      sug = h(`<div class="ctx" style="position:fixed"></div>`); items.forEach((x, i) => { const r = h(`<div class="mi${i === 0 ? " hl" : ""}"><span class="ic">${ic(x.k)}</span><span class="lb ellipsis">${esc(x.title || x.url)}</span><span class="kb ellipsis" style="max-width:40%">${esc(x.label || x.url)}</span></div>`); r.onpointerdown = e => { e.preventDefault(); closeSug(); nav(cur, x.k === "search" ? omni.value : x.url); omni.blur(); }; sug.appendChild(r); });
-      const rc = $(".br-omni", B).getBoundingClientRect(); Object.assign(sug.style, { left: rc.left + "px", top: rc.bottom + 4 + "px", width: rc.width + "px", maxWidth: "none" }); document.body.appendChild(sug); sug._items = items;
-    };
-    omni.onkeydown = e => {
-      e.stopPropagation();
-      if (sug && (e.key === "ArrowDown" || e.key === "ArrowUp")) { e.preventDefault(); const rs = $$(".mi", sug); let i = rs.findIndex(r => r.classList.contains("hl")); rs[i]?.classList.remove("hl"); i = clamp(i + (e.key === "ArrowDown" ? 1 : -1), 0, rs.length - 1); rs[i].classList.add("hl"); const it = sug._items[i]; if (it.k !== "search") omni.value = it.url; return; }
-      if (e.key === "Enter") { const hl = sug && $$(".mi", sug).findIndex(r => r.classList.contains("hl")); const it = sug && hl > 0 ? sug._items[hl] : null; closeSug(); nav(cur, it ? it.url : omni.value); omni.blur(); }
-      else if (e.key === "Escape") { closeSug(); omni.value = cur.url.startsWith("axos://newtab") ? "" : cur.url; omni.blur(); }
-    };
-    omni.onblur = () => setTimeout(closeSug, 150);
-    const keys = e => {
-      const k = e.key.toLowerCase(), c = e.ctrlKey || e.metaKey;
-      if (c && k === "t") { e.preventDefault(); newTab(); }
-      else if (c && k === "w") { e.preventDefault(); closeTab(cur); }
-      else if (c && k === "l") { e.preventDefault(); omni.focus(); omni.select(); }
-      else if ((c && k === "r") || e.key === "F5") { e.preventDefault(); nav(cur, cur.url, { push: false }); }
-      else if (c && (k === "=" || k === "+")) { e.preventDefault(); zoom(.1); }
-      else if (c && k === "-") { e.preventDefault(); zoom(-.1); }
-      else if (c && k === "0") { e.preventDefault(); zoom(0); }
-      else if (c && e.key === "Tab") { e.preventDefault(); const i = tabs.indexOf(cur); select(tabs[(i + (e.shiftKey ? -1 : 1) + tabs.length) % tabs.length]); }
-      else if (e.altKey && e.key === "ArrowLeft") $(".bk", B).click();
-      else if (e.altKey && e.key === "ArrowRight") $(".fw", B).click();
-    };
-    win.el.addEventListener("keydown", keys);
-    win.on("close", () => { window.removeEventListener("message", onMsg); offBM(); tabs.forEach(t => t.ctl?.abort()); closeSug(); });
-    win.browserOpen = (a) => { if (a.file) newTab("file://" + a.file); else if (a.url) newTab(a.url, true, a.mode || null); else newTab(); };
-    const first = args.file || args.path ? "file://" + (args.file || args.path) : args.url || null;
-    newTab(first, true, args.mode || null);
-  },
-});
 /* Tiny markdown renderer (Notepad preview & reader mode) */
 function mdToHTML(md) {
   const lines = String(md).replace(/\r/g, "").split("\n"); let out = "", inCode = false, list = null, para = [];
@@ -4129,6 +3854,718 @@ const Wisp = {
 </script>
 <script>
 /* =====================================================================
+   AxCore: the service-worker engine behind AxBrowser.
+   Scramjet (an interception proxy) runs inside a service worker (sw.js, next to index.html) and rewrites
+   pages the way a real browser would see them: scripts, workers, cookies, WebSockets, history and
+   storage all work. Its network traffic leaves through bare-mux and libcurl.js (real TLS, compiled to
+   WebAssembly) over a Wisp relay, so the relay only ever sees encrypted bytes. AxCore adds relay
+   ranking, a live health check before the first page, and automatic failover to the next relay.
+   It needs AxOS to be opened over http(s) with sw.js and proxy/ beside it. Opened as a local file,
+   AxBrowser falls back to the in-page AxProxy engine.
+   ===================================================================== */
+const AxCore = {
+  state: "idle", error: "", sj: null, conn: null, client: null, relay: null, starting: null, bad: new Map(), info: {},
+  dir: new URL("./", location.href),
+  get supported() { return /^https?:$/.test(location.protocol) && "serviceWorker" in navigator && typeof SharedWorker !== "undefined" && typeof WebAssembly !== "undefined"; },
+  get ready() { return this.state === "ready"; },
+  get scope() { return this.dir.pathname; },
+  why() { if (!/^https?:$/.test(location.protocol)) return "AxOS is open as a local file. Service workers need an http(s) address (GitHub Pages, any static host, or localhost)."; if (!("serviceWorker" in navigator)) return "This browser has no service workers."; if (typeof SharedWorker === "undefined") return "This browser has no shared workers."; return ""; },
+  loadScript(src) { return new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = () => rej(new Error("Couldn't load " + src.split("/").pop())); document.head.appendChild(s); }); },
+  start() {
+    if (this.ready) return Promise.resolve(this);
+    if (this.starting) return this.starting;
+    return this.starting = this._start().catch(e => { this.state = "failed"; this.error = e.message || String(e); this.starting = null; Bus.emit("axcore"); throw e; });
+  },
+  async _start() {
+    this.state = "starting"; this.error = ""; Bus.emit("axcore"); const bad = this.why(); if (bad) throw new Error(bad);
+    const P = this.scope + "proxy/";
+    const probe = await fetch(this.dir.href + "sw.js", { method: "HEAD", cache: "no-store" }).catch(() => null);
+    if (!probe || !probe.ok) throw new Error("sw.js wasn't found next to index.html. Upload sw.js and the proxy folder with it.");
+    if (!window.$scramjetLoadController) await this.loadScript(P + "scramjet.all.js");
+    if (!window.BareMux) await this.loadScript(P + "bare-mux.js");
+    const { ScramjetController } = $scramjetLoadController();
+    this.sj = new ScramjetController({ prefix: this.scope + "service/", files: { wasm: P + "scramjet.wasm.wasm", all: P + "scramjet.all.js", sync: P + "scramjet.sync.js" }, flags: { interceptDownloads: true } });
+    await this.sj.init();
+    this.sj.addEventListener("download", e => Bus.emit("axcore-download", e.download));
+    const reg = await navigator.serviceWorker.register(this.dir.href + "sw.js?v=1", { scope: this.dir.href });
+    await navigator.serviceWorker.ready;
+    if (!navigator.serviceWorker.controller) await Promise.race([new Promise(r => navigator.serviceWorker.addEventListener("controllerchange", r, { once: true })), sleep(4000)]);
+    if (!navigator.serviceWorker.controller) { await reg.update().catch(() => { }); await sleep(600); }
+    if (!navigator.serviceWorker.controller) throw new Error("The service worker started but didn't take control of this page. Reload AxOS once and try again.");
+    this.conn = new BareMux.BareMuxConnection(P + "bm-worker.js");
+    this.client = new BareMux.BareClient();
+    await this.pickRelay();
+    this.state = "ready"; Bus.emit("axcore"); return this;
+  },
+  /* ---- relays ---- */
+  transport: () => AxCore.scope + "proxy/libcurl-transport.mjs",
+  candidates() { const now = Date.now(); return Wisp.order().filter(s => (this.bad.get(s.id) || 0) < now); },
+  async setRelay(s) { await this.conn.setTransport(this.transport(), [{ wisp: s.url }]); this.relay = s; Bus.emit("axcore"); },
+  /* wait briefly for the first relay probes, pick the best one, then prove it can fetch a page */
+  async pickRelay() {
+    Wisp.warm(); const t0 = Date.now(), fresh = () => Object.values(Wisp.health).filter(x => x && Date.now() - Math.max(x.ok || 0, x.last || 0) < 120000).length;
+    while (Date.now() - t0 < 2600 && fresh() < 4) await sleep(120);
+    let best = null, lastErr = null, tried = 0;
+    for (const s of this.candidates()) {
+      if (tried >= 3) break; tried++;
+      try { await this.setRelay(s); const ms = await this.check(); Wisp.note(s.id, true, ms); if (!best || ms < best.ms) best = { s, ms }; if (ms < 900) break; }
+      catch (e) { lastErr = e; Wisp.note(s.id, false, 0); this.bad.set(s.id, Date.now() + 3 * 60000); }
+    }
+    if (!best) throw new Error("No Wisp relay answered" + (lastErr ? " (" + lastErr.message + ")" : "") + ". Check Settings > Network & Browser.");
+    if (this.relay !== best.s) await this.setRelay(best.s); this.info.ms = best.ms; return best.s;
+  },
+  /* one real request through the current relay: https://example.com/ */
+  async check(timeout = 9000) {
+    const t0 = performance.now(); const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), timeout);
+    try { const r = await this.client.fetch("https://example.com/", { signal: ctl.signal }); if (!r || r.status >= 500) throw new Error("status " + (r && r.status)); await r.arrayBuffer?.().catch(() => { }); return Math.round(performance.now() - t0); }
+    finally { clearTimeout(tm); }
+  },
+  /* the current relay failed a real page: mark it, move to the next one */
+  async failover() {
+    if (this.relay) { Wisp.note(this.relay.id, false, 0); this.bad.set(this.relay.id, Date.now() + 3 * 60000); }
+    const s = this.candidates()[0]; if (!s) { this.bad.clear(); throw new Error("Every Wisp relay failed"); }
+    await this.setRelay(s); try { const ms = await this.check(); Wisp.note(s.id, true, ms); this.info.ms = ms; } catch (e) { Wisp.note(s.id, false, 0); this.bad.set(s.id, Date.now() + 3 * 60000); throw e; }
+    return s;
+  },
+  /* ---- frames ---- */
+  frame(el) { return this.sj.createFrame(el); },
+  encode(url) { return this.sj.encodeUrl(url); },
+  decode(src) { try { return this.sj.decodeUrl(new URL(src, location.href).href); } catch (e) { return ""; } },
+  /* Scramjet shows its own error page inside the frame. Read it so AxBrowser can show a better one. */
+  errorOf(doc) {
+    try {
+      if (!doc || doc.title !== "Scramjet" || !/error loading/i.test(doc.body?.innerText || "")) return null;
+      const m = [...doc.querySelectorAll("textarea,pre,code,#cause,#errorTrace")].map(e => e.value || e.textContent).join(" ").trim();
+      return { message: m.replace(/^Message:\s*/i, "") || "The connection failed" };
+    } catch (e) { return null; }
+  },
+  status() { return this.ready ? "AxCore · " + (this.relay ? this.relay.name : "no relay") : this.state === "starting" ? "AxCore starting…" : this.state === "failed" ? "AxCore unavailable" : "AxCore"; },
+};
+</script>
+<script>
+/* =====================================================================
+   AxBrowser: tabs, address bar, menus, find, devtools and internal pages.
+   Pages load through one of four engines:
+     AxCore    service-worker proxy (Scramjet) over a Wisp relay. The full web, when AxOS is opened over http(s).
+     AxProxy   in-page rewriting proxy (works from a local file; simpler sites)
+     Direct    a plain iframe (only sites that allow embedding)
+     UV        your own Ultraviolet / Scramjet server
+   "Auto" uses AxCore when it can run and falls back to AxProxy on its own.
+   ===================================================================== */
+const BX_KEYWORDS = { g: ["Google", "https://www.google.com/search?q="], ddg: ["DuckDuckGo", "https://html.duckduckgo.com/html/?q="], yt: ["YouTube", "https://www.youtube.com/results?search_query="], w: ["Wikipedia", "https://en.wikipedia.org/w/index.php?search="], gh: ["GitHub", "https://github.com/search?q="], mdn: ["MDN", "https://developer.mozilla.org/en-US/search?q="], so: ["Stack Overflow", "https://stackoverflow.com/search?q="], r: ["Reddit", "https://www.reddit.com/search/?q="], a: ["Amazon", "https://www.amazon.com/s?k="] };
+const BX_TILES = [["YouTube", "https://www.youtube.com/"], ["Wikipedia", "https://en.wikipedia.org/wiki/Main_Page"], ["GitHub", "https://github.com/"], ["Reddit", "https://www.reddit.com/"], ["DuckDuckGo", "https://duckduckgo.com/"], ["Hacker News", "https://news.ycombinator.com/"], ["Archive.org", "https://archive.org/"], ["MDN", "https://developer.mozilla.org/"]];
+const BX_SB_CORE = "allow-scripts allow-same-origin allow-forms allow-modals allow-pointer-lock allow-downloads";
+const BX_SB_REWRITE = "allow-scripts allow-forms allow-modals";
+const BX_ENGINES = { auto: ["Automatic", "AxCore when it can run, otherwise AxProxy. Recommended."], core: ["AxCore", "Service-worker engine. The most complete: logins, video sites, web apps, WebSockets. Needs AxOS opened over http(s)."], rewrite: ["AxProxy", "Rewrites pages inside AxOS. Works from a local file; fine for simple sites."], direct: ["Direct", "A plain frame. Only sites that allow being embedded will show."], uv: ["Ultraviolet / Scramjet server", "Your own proxy server, set up in Settings > Network & Browser."] };
+/* fetch through whatever network path is alive: AxCore's real network stack, else AxProxy */
+async function bxFetchText(url, signal) {
+  if (AxCore.ready && AxCore.client) { const r = await AxCore.client.fetch(url, { signal }); return await r.text(); }
+  const r = await AxProxy.fetch(url, { signal }); return r.text;
+}
+function bxHost(u) { try { return new URL(u).hostname.replace(/^www\./, ""); } catch (e) { return ""; } }
+function bxFmtURL(u) {
+  if (!u || /^axos:\/\/newtab/.test(u)) return `<span class="ph">Search or enter address</span>`;
+  if (/^axos:/.test(u)) return `<b>${esc(u.replace(/^axos:\/\//, "AxOS · "))}</b>`;
+  try { const x = new URL(u); if (!/^https?:$/.test(x.protocol)) return esc(u); const p = (x.pathname === "/" ? "" : x.pathname) + x.search + x.hash; return `<b>${esc(x.host.replace(/^www\./, ""))}</b>${esc(p)}`; } catch (e) { return esc(u); }
+}
+registerApp("browser", {
+  name: "AxBrowser", icon: "globe", colors: ["#38bdf8", "#2563eb"], w: 1180, h: 760, minW: 520, minH: 320, single: true, keywords: "web internet chrome edge firefox proxy ultraviolet scramjet browser",
+  onReopen(win, a) { if (a.url || a.file || a.path) win.browserOpen({ url: a.url, file: a.file || a.path, mode: a.mode }); },
+  launch(win, args) {
+    Wisp.warm(); if (AxCore.supported) AxCore.start().catch(() => { });
+    const B = win.body; $(".ttl", win.el).style.display = "none"; win.extra.style.flex = "1"; win.extra.style.minWidth = "0"; win.tbar.style.paddingLeft = "6px"; win.tbar.style.height = "40px";
+    win.extra.innerHTML = `<div class="bx-tabs"><div class="bx-strip"></div><button class="bx-new" data-tip="New tab (Ctrl+T)" aria-label="New tab">${ic("plus")}</button><div class="bx-drag"></div><button class="bx-ts" data-tip="Search tabs (Ctrl+Shift+A)" aria-label="Search tabs">${ic("chevL")}</button></div>`;
+    B.innerHTML = `<div class="bx"><div class="bx-bar"><button class="ibtn bk" data-tip="Back (Alt+←)">${ic("arrowL")}</button><button class="ibtn fw" data-tip="Forward (Alt+→)">${ic("arrowR")}</button><button class="ibtn rl" data-tip="Reload (Ctrl+R)">${ic("refresh")}</button><button class="ibtn hm" data-tip="Home">${ic("home")}</button>
+      <div class="bx-omni"><button class="bx-chip" data-tip="Site information"></button><div class="bx-url"></div><input spellcheck="false" autocomplete="off" aria-label="Address bar" placeholder="Search or enter address"><div class="acts"><button class="bx-zoom" data-tip="Reset zoom"></button><button class="ibtn star" data-tip="Bookmark this page (Ctrl+D)">${ic("star")}</button></div></div>
+      <button class="ibtn dls" data-tip="Downloads (Ctrl+J)">${ic("download")}</button><button class="ibtn menu" data-tip="Menu">${ic("moreV")}</button><div class="bx-prog"><i></i></div></div>
+      <div class="bx-bm"></div><div class="bx-view"></div><div class="bx-st"></div></div>`;
+    const strip = $(".bx-strip", win.extra), view = $(".bx-view", B), omni = $(".bx-omni input", B), omniBox = $(".bx-omni", B), urlEl = $(".bx-url", B), chip = $(".bx-chip", B), prog = $(".bx-prog", B), statEl = $(".bx-st", B), root = $(".bx", B);
+    let tabs = [], cur = null; const closed = []; let sug = null, sugTimer = 0, sugSeq = 0, pop = null, hc = null, findBar = null, saveTimer = 0;
+    const BS = () => Settings.get("browser");
+    const modeOf = t => { const m = t.mode || BS().mode; return m === "proxy" || !m ? "auto" : m; };
+    const isInternal = u => /^axos:/.test(u || ""); const isFile = u => /^file:/.test(u || "");
+    /* ============================ tabs ============================ */
+    const paintTab = t => {
+      const el = t.tabEl; if (!el) return; el.classList.toggle("on", t === cur); el.classList.toggle("pinned", !!t.pinned); el.classList.toggle("audible", !!t.audible && !t.muted); el.classList.toggle("muted", !!t.muted);
+      const fav = $(".fav", el); const want = t.loading ? "L" : t.fav ? "I" + t.fav : isInternal(t.url) ? "H" : "G";
+      if (fav.dataset.k !== want) { fav.dataset.k = want; fav.innerHTML = t.loading ? `<span class="sp"></span>` : t.fav ? `<img src="${esc(t.fav)}" alt="" referrerpolicy="no-referrer">` : ic(isInternal(t.url) ? "home" : "globe"); const im = $("img", fav); if (im) im.onerror = () => { t.fav = ""; paintTab(t); }; }
+      $(".tt", el).textContent = t.title || t.url || "New Tab"; const au = $(".au", el); au.innerHTML = ic(t.muted ? "volumeX" : "volume"); au.dataset.tip = t.muted ? "Unmute tab" : "Mute tab";
+    };
+    const renderTabs = () => { tabs.forEach(paintTab); win.setTitle((cur?.title || "New Tab") + " — AxBrowser"); queueSave(); };
+    const orderDom = () => { tabs.forEach(t => strip.appendChild(t.tabEl)); };
+    const buildTabEl = (t, anim) => {
+      const el = h(`<div class="bx-tab${anim ? " enter" : ""}"><span class="fav"></span><span class="tt"></span><button class="au">${ic("volume")}</button><button class="x" aria-label="Close tab">${ic("x")}</button></div>`); t.tabEl = el; strip.appendChild(el);
+      el.addEventListener("pointerdown", e => { hideHC(); if (e.button === 1) { e.preventDefault(); closeTab(t); return; } if (e.button !== 0 || e.target.closest(".x,.au")) return; if (cur !== t) select(t); startDrag(t, e); });
+      el.addEventListener("auxclick", e => { if (e.button === 1) e.preventDefault(); });
+      $(".x", el).onclick = e => { e.stopPropagation(); closeTab(t); };
+      $(".au", el).onclick = e => { e.stopPropagation(); toggleMute(t); };
+      el.addEventListener("dblclick", e => { e.stopPropagation(); if (!e.target.closest(".x,.au")) togglePin(t); });
+      el.addEventListener("contextmenu", e => { e.preventDefault(); e.stopPropagation(); tabMenu(t, e.clientX, e.clientY); });
+      el.addEventListener("pointerenter", () => { clearTimeout(hc?.t); hc = { t: setTimeout(() => showHC(t), 650) }; }); el.addEventListener("pointerleave", hideHC);
+      if (anim) requestAnimationFrame(() => requestAnimationFrame(() => el.classList.remove("enter")));
+    };
+    const showHC = t => { hideHC(); if (!t.tabEl || !t.tabEl.isConnected) return; const r = t.tabEl.getBoundingClientRect(); const el = h(`<div class="bx-hc"><b>${esc(t.title || "New Tab")}</b><span>${esc(isInternal(t.url) ? "AxOS" : t.url.replace(/^https?:\/\//, "").slice(0, 80))}</span></div>`); document.body.appendChild(el); const w = el.offsetWidth; el.style.left = clamp(r.left, 6, innerWidth - w - 6) + "px"; el.style.top = r.bottom + 8 + "px"; requestAnimationFrame(() => el.classList.add("on")); hc = { el }; };
+    const hideHC = () => { if (hc) { clearTimeout(hc.t); hc.el?.remove(); hc = null; } };
+    const startDrag = (t, e) => {
+      const x0 = e.clientX; let dragging = false, target = tabs.indexOf(t); const i0 = target; const rects = tabs.map(x => x.tabEl.getBoundingClientRect()); const w = rects[i0].width; const pinN = tabs.filter(x => x.pinned).length;
+      const move = ev => {
+        if (!(ev.buttons & 1)) return up(); const dx = ev.clientX - x0; if (!dragging && Math.abs(dx) > 5) { dragging = true; t.tabEl.classList.add("drag"); tabs.forEach(x => x !== t && x.tabEl.classList.add("shift")); } if (!dragging) return;
+        const lo = t.pinned ? rects[0].left : rects[pinN]?.left ?? rects[0].left, hi = t.pinned ? rects[Math.max(0, pinN - 1)].right : rects[tabs.length - 1].right; const d = clamp(dx, lo - rects[i0].left, hi - rects[i0].right); t.tabEl.style.transform = `translateX(${d}px)`;
+        const c = rects[i0].left + d + w / 2; let ni = i0; rects.forEach((r, k) => { const mid = (r.left + r.right) / 2; if (k < i0 && c < mid) ni = Math.min(ni, k); if (k > i0 && c > mid) ni = Math.max(ni, k); });
+        if (t.pinned) ni = Math.min(ni, pinN - 1); else ni = Math.max(ni, pinN); target = ni;
+        tabs.forEach((x, k) => { if (x === t) return; x.tabEl.style.transform = k >= target && k < i0 ? `translateX(${w}px)` : k <= target && k > i0 ? `translateX(${-w}px)` : ""; });
+      };
+      const up = () => { removeEventListener("pointermove", move); removeEventListener("pointerup", up); removeEventListener("pointercancel", up); if (!dragging) return; t.tabEl.classList.remove("drag"); tabs.forEach(x => { x.tabEl.classList.remove("shift"); x.tabEl.style.transform = ""; }); if (target !== i0) { tabs.splice(i0, 1); tabs.splice(target, 0, t); orderDom(); queueSave(); } };
+      addEventListener("pointermove", move); addEventListener("pointerup", up); addEventListener("pointercancel", up);
+    };
+    const newTab = (url, o = {}) => {
+      const t = { id: uid(), url: "", title: "New Tab", fav: "", pinned: !!o.pinned, loading: false, zoom: 1, mode: o.mode || null, opener: o.opener || null, hist: [], idx: -1, el: h(`<div class="bx-page hid"></div>`), tabEl: null, engine: "", via: "" };
+      view.appendChild(t.el); let at = tabs.length;
+      if (o.pinned) at = tabs.filter(x => x.pinned).length;
+      else if (o.after && tabs.includes(o.after)) { at = tabs.indexOf(o.after) + 1; while (tabs[at] && tabs[at].opener === o.after && !tabs[at].pinned) at++; }
+      tabs.splice(at, 0, t); buildTabEl(t, true); orderDom();
+      if (o.lazy) { t.lazy = o.lazy; t.url = o.lazy; t.hist = [o.lazy]; t.idx = 0; t.title = o.title || o.lazy; t.fav = isInternal(o.lazy) ? "" : favicon(o.lazy); renderTabs(); return t; }
+      if (o.activate !== false) select(t); renderTabs();
+      nav(t, url || BS().home || "axos://newtab", { push: true });
+      if (o.activate !== false && !url) setTimeout(() => { if (cur === t) { omni.focus(); omni.select(); } }, 30);
+      return t;
+    };
+    const select = t => {
+      if (cur && cur !== t) { cur.lastShown = Date.now(); closeFind(); }
+      cur = t; tabs.forEach(x => x.el.classList.toggle("hid", x !== t)); hideHC(); closeSug(); renderTabs(); syncBar(); if (t.lazy) { const u = t.lazy; t.lazy = null; nav(t, u, { push: false }); }
+      requestAnimationFrame(() => t.tabEl?.scrollIntoView({ block: "nearest", inline: "nearest" })); t.frame?.contentWindow?.focus?.();
+    };
+    const destroy = t => { t.ctl?.abort(); clearInterval(t.poll); t.el.remove(); };
+    const closeTab = (t, o = {}) => {
+      const i = tabs.indexOf(t); if (i < 0) return; if (!o.quiet && !isInternal(t.url) && t.url) closed.unshift({ url: t.url, title: t.title, pinned: t.pinned, idx: i }); closed.length = Math.min(closed.length, 20);
+      if (tabs.length === 1) { destroy(t); tabs.splice(i, 1); queueSave(true); return win.close(); }
+      let nxt = cur; if (cur === t) nxt = (t.opener && tabs.includes(t.opener) && t.opener) || tabs[i + 1] || tabs[i - 1];
+      tabs.splice(i, 1); destroy(t); const el = t.tabEl; el.classList.add("leave"); setTimeout(() => el.remove(), 260);
+      if (nxt !== cur) select(nxt); else renderTabs();
+    };
+    const closeMany = list => list.forEach(t => closeTab(t, { quiet: false }));
+    const reopenClosed = () => { const c = closed.shift(); if (!c) return notify("Nothing to reopen", "No tabs closed recently.", "browser", { silent: true, timeout: 2000 }); const t = newTab(c.url, { pinned: c.pinned }); return t; };
+    const togglePin = t => { t.pinned = !t.pinned; tabs.splice(tabs.indexOf(t), 1); const pn = tabs.filter(x => x.pinned).length; tabs.splice(t.pinned ? pn : pn, 0, t); orderDom(); renderTabs(); };
+    const toggleMute = t => { t.muted = !t.muted; applyMute(t); renderTabs(); };
+    const tabMenu = (t, x, y) => Menu.show(x, y, [
+      { label: "New tab to the right", icon: "plus", action: () => newTab(null, { after: t }) }, "-",
+      { label: "Reload", icon: "refresh", action: () => nav(t, t.url, { push: false, fresh: true }) },
+      { label: "Duplicate", icon: "copy", action: () => newTab(t.url, { after: t }) },
+      { label: t.pinned ? "Unpin tab" : "Pin tab", icon: "pin", action: () => togglePin(t) },
+      { label: t.muted ? "Unmute site" : "Mute site", icon: t.muted ? "volume" : "volumeX", action: () => toggleMute(t) }, "-",
+      { label: "Close tab", icon: "x", kbd: "Ctrl+W", action: () => closeTab(t) },
+      { label: "Close other tabs", disabled: tabs.length < 2, action: () => closeMany(tabs.filter(v => v !== t && !v.pinned)) },
+      { label: "Close tabs to the right", disabled: tabs.indexOf(t) === tabs.length - 1, action: () => closeMany(tabs.slice(tabs.indexOf(t) + 1).filter(v => !v.pinned)) },
+      { label: "Reopen closed tab", icon: "undo", kbd: "Ctrl+Shift+T", disabled: !closed.length, action: reopenClosed },
+    ]);
+    const tabSearch = e => Menu.at(e.currentTarget || $(".bx-ts", win.extra), tabs.map(t => ({ label: (t.title || t.url || "New Tab").slice(0, 60), checked: t === cur ? true : undefined, iconHTML: t === cur ? undefined : ic("globe"), action: () => select(t) })));
+    $(".bx-new", win.extra).onclick = () => newTab(); $(".bx-ts", win.extra).onclick = tabSearch;
+    strip.addEventListener("wheel", e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { strip.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
+    /* ============================ session ============================ */
+    function queueSave(now) {
+      clearTimeout(saveTimer); const run = () => { if (BS().restore === false) return; Settings.patch("browser", { session: tabs.filter(t => t.url && !(isFile(t.url))).map(t => ({ url: t.url, title: t.title, pinned: !!t.pinned })).slice(0, 30), sessionAt: Date.now() }); };
+      if (now) run(); else saveTimer = setTimeout(run, 800);
+    }
+    /* ============================ chrome sync ============================ */
+    const engineName = t => ({ core: "AxCore", rewrite: "AxProxy", direct: "Direct", uv: "Ultraviolet", internal: "AxOS", file: "Local file" })[t.engine] || "";
+    const syncBar = () => {
+      const t = cur; if (!t) return;
+      if (document.activeElement !== omni) { omni.value = isInternal(t.url) && /newtab/.test(t.url) ? "" : t.url; urlEl.innerHTML = bxFmtURL(t.url); }
+      $(".bk", B).disabled = !canBack(t); $(".fw", B).disabled = !canFwd(t);
+      $(".rl", B).innerHTML = ic(t.loading ? "x" : "refresh"); $(".rl", B).dataset.tip = t.loading ? "Stop" : "Reload (Ctrl+R)";
+      const secure = /^https:/.test(t.url) && (t.engine === "core" || t.engine === "rewrite" || t.engine === "uv"); const web = /^https?:/.test(t.url);
+      chip.className = "bx-chip" + (secure ? " ok" : web && t.engine === "direct" ? "" : web ? " warn" : "");
+      chip.innerHTML = ic(isInternal(t.url) || isFile(t.url) ? "home" : secure ? "lock" : web ? "alert" : "globe") + (web || isInternal(t.url) ? `<span>${t.engine === "core" ? `<span class="em">AxCore</span>` : esc(engineName(t))}</span>` : "");
+      const bm = BrowserData.bookmarks.some(b => b.url === t.url); const st = $(".star", B); st.innerHTML = ic(bm ? "starFill" : "star"); st.style.color = bm ? "var(--accent)" : "";
+      const z = $(".bx-zoom", B); z.classList.toggle("on", Math.abs(t.zoom - 1) > .01); z.textContent = Math.round(t.zoom * 100) + "%";
+      renderBM();
+    };
+    let prog_t = 0; const progress = { start() { clearTimeout(prog_t); prog.classList.add("on"); const i = $("i", prog); i.style.transition = "none"; i.style.width = "0"; void i.offsetWidth; i.style.transition = ""; i.style.width = "14%"; let w = 14; const step = () => { w += (88 - w) * .12; i.style.width = w + "%"; prog_t = setTimeout(step, 420); }; prog_t = setTimeout(step, 300); }, done() { clearTimeout(prog_t); const i = $("i", prog); i.style.width = "100%"; prog_t = setTimeout(() => { prog.classList.remove("on"); }, 260); } };
+    const setLoading = (t, on) => { if (t.loading === on) return; t.loading = on; paintTab(t); if (t === cur) { syncBar(); on ? progress.start() : progress.done(); } if (on) { t.lt = Date.now(); } };
+    const status = (txt) => { statEl.textContent = txt || ""; statEl.classList.toggle("on", !!txt); };
+    const renderBM = () => {
+      const bar = $(".bx-bm", B); if (!BS().bookmarksBar) { bar.style.display = "none"; return; } bar.style.display = ""; const all = BrowserData.bookmarks;
+      bar.innerHTML = all.map((b, i) => `<span class="b" data-i="${i}" draggable="true" title="${esc(b.url)}"><img src="${esc(favicon(b.url))}" alt="" onerror="this.style.display='none'"><span>${esc(b.title)}</span></span>`).join("") || `<span style="font-size:12px;padding:4px 6px;color:var(--text-3)">Press the star in the address bar to bookmark a page</span>`;
+      const fit = () => { const kids = $$(".b", bar); const maxW = bar.clientWidth - 40; let used = 0, hide = 0; kids.forEach(k => { used += k.offsetWidth + 2; if (used > maxW) { k.style.display = "none"; hide++; } }); if (hide) { bar.insertAdjacentHTML("beforeend", `<button class="ibtn more" style="width:26px;height:26px">${ic("chevL")}</button>`); $(".more", bar).onclick = e => Menu.at(e.currentTarget, all.slice(all.length - hide).map(b => ({ label: b.title, iconHTML: `<img src="${esc(favicon(b.url))}" width="14" height="14" alt="">`, action: () => nav(cur, b.url) }))); } };
+      requestAnimationFrame(fit);
+      $$(".b", bar).forEach(el => { const i = +el.dataset.i; const b = all[i]; el.onclick = e => (e.ctrlKey || e.metaKey) ? newTab(b.url, { activate: false, after: cur }) : nav(cur, b.url); el.onauxclick = e => { if (e.button === 1) newTab(b.url, { activate: false, after: cur }); };
+        el.ondragstart = e => { e.dataTransfer.setData("text/ax-bm", String(i)); e.dataTransfer.effectAllowed = "move"; }; el.ondragover = e => { e.preventDefault(); el.classList.add("dragover"); }; el.ondragleave = () => el.classList.remove("dragover"); el.ondrop = e => { e.preventDefault(); const from = +e.dataTransfer.getData("text/ax-bm"); if (!isNaN(from) && from !== i) { const a = BrowserData.bookmarks; const [m] = a.splice(from, 1); a.splice(i, 0, m); BrowserData.setBookmarks(a); } };
+        el.oncontextmenu = e => { e.preventDefault(); e.stopPropagation(); Menu.show(e.clientX, e.clientY, [{ label: "Open", action: () => nav(cur, b.url) }, { label: "Open in new tab", action: () => newTab(b.url, { after: cur }) }, "-", { label: "Rename…", icon: "edit", action: async () => { const n = await Dialog.prompt("Rename bookmark", "", b.title); if (n) { const a = BrowserData.bookmarks; a[i].title = n; BrowserData.setBookmarks(a); } } }, { label: "Delete", icon: "trash", danger: true, action: () => { const a = BrowserData.bookmarks; a.splice(i, 1); BrowserData.setBookmarks(a); } }]); }; });
+    };
+    const offBM = Bus.on("bookmarks", () => { syncBar(); }); const offAC = Bus.on("axcore", () => { if (cur) syncBar(); });
+    /* ============================ navigation ============================ */
+    const toURL = s => {
+      s = String(s || "").trim(); if (!s) return "axos://newtab";
+      if (/^(axos|file|data|blob|about):/i.test(s)) return s; if (/^https?:\/\//i.test(s)) return s;
+      const kw = /^([a-z]{1,4})\s+(.+)$/i.exec(s); if (kw && BX_KEYWORDS[kw[1].toLowerCase()]) return BX_KEYWORDS[kw[1].toLowerCase()][1] + encodeURIComponent(kw[2]);
+      if (/^(localhost|127\.0\.0\.1)(:\d+)?(\/|$)/.test(s) || (/^[\w-]+(\.[\w-]+)+(:\d+)?(\/\S*)?$/.test(s) && !/\s/.test(s) && /\.[a-z]{2,}(:\d+)?(\/|$|\?|#)/i.test(s))) return "https://" + s;
+      if (/^\d{1,3}(\.\d{1,3}){3}(:\d+)?(\/\S*)?$/.test(s)) return "http://" + s;
+      return (SEARCH_ENGINES[BS().search] || SEARCH_ENGINES.ddg)[1] + encodeURIComponent(s);
+    };
+    const canBack = t => t.idx > 0, canFwd = t => t.idx < t.hist.length - 1;
+    const goBack = t => { if (canBack(t)) { t.idx--; nav(t, t.hist[t.idx], { push: false }); } };
+    const goFwd = t => { if (canFwd(t)) { t.idx++; nav(t, t.hist[t.idx], { push: false }); } };
+    const clearPage = t => { clearInterval(t.poll); t.poll = 0; t.ctl?.abort(); t.ctl = new AbortController(); t.el.innerHTML = ""; t.frame = null; t.sf = null; t.html = null; t.errored = null; hideFind(t); };
+    const nav = async (t, input, { push = true, mode, post = null, fresh = false, retry = 0 } = {}) => {
+      let url = decodeRedirect(toURL(input)); if (mode) t.mode = mode;
+      if (push) { t.hist = t.hist.slice(0, t.idx + 1); if (t.hist[t.idx] !== url) { t.hist.push(url); t.idx++; } }
+      if (t === cur && document.activeElement === omni) omni.blur();
+      t.url = url; t.title = isInternal(url) ? "New Tab" : url; t.fav = ""; t.pending = true; t.zoom = t.zoom || 1; clearPage(t); t.el.style.zoom = ""; t.engine = ""; t.via = "";
+      if (isInternal(url)) { t.engine = "internal"; return internal(t, url); }
+      if (isFile(url)) { t.engine = "file"; return localFile(t, url.slice(7)); }
+      let u; try { u = new URL(url); } catch (e) { return errorPage(t, url, new Error("That address isn't valid"), { kind: "invalid" }); }
+      if (!/^https?:$/.test(u.protocol)) return errorPage(t, url, new Error(u.protocol + " addresses can't be opened here"), { kind: "invalid" });
+      t.title = bxHost(url) || url; t.fav = favicon(url); t.zoom = BS().zoomSites?.[bxHost(url)] || 1; setLoading(t, true); renderTabs(); syncBar();
+      if (DL_EXT.test(u.pathname) && !/\.(mp4|webm|mp3|ogg|wav|m4a)$/i.test(u.pathname)) { setLoading(t, false); if (t.hist.length > 1) { t.hist.pop(); t.idx--; t.url = t.hist[t.idx]; downloadURL(url); return nav(t, t.url, { push: false }); } downloadURL(url); return internal(t, "axos://downloads"); }
+      const m = modeOf(t);
+      if (m === "direct") return direct(t, url);
+      if (m === "uv") return uv(t, url);
+      if (m === "rewrite") return rewrite(t, url, { post, fresh });
+      /* auto and core */
+      if (AxCore.supported && AxCore.state !== "failed") return core(t, url, { fresh });
+      if (m === "core") return errorPage(t, url, new Error(AxCore.error || AxCore.why() || "AxCore isn't available here"), { kind: "core" });
+      t.note = AxCore.error || AxCore.why(); return rewrite(t, url, { post, fresh });
+    };
+    /* ---------- engine: AxCore ---------- */
+    const connecting = (t, title, sub) => { $(".bx-ovl", t.el)?.remove(); const o = h(`<div class="bx-ovl"><div class="bx-conn"><div class="ring"></div><b>${esc(title)}</b><small>${esc(sub || "")}</small></div></div>`); t.el.appendChild(o); return o; };
+    const core = async (t, url, { fresh = false, tries = 0 } = {}) => {
+      const my = t.ctl; let ovl = null; if (!AxCore.ready) ovl = connecting(t, "Starting AxCore", "Setting up the secure connection");
+      try { await AxCore.start(); } catch (e) {
+        if (my.signal.aborted) return; ovl?.remove();
+        if (modeOf(t) === "core") return errorPage(t, url, e, { kind: "core" });
+        t.note = e.message; return rewrite(t, url, {});
+      }
+      if (my.signal.aborted || t.ctl !== my) return; ovl?.remove();
+      t.engine = "core"; t.via = AxCore.relay ? AxCore.relay.name : ""; syncBar();
+      const f = document.createElement("iframe"); f.setAttribute("sandbox", BX_SB_CORE); f.setAttribute("allow", "fullscreen; autoplay; clipboard-write; encrypted-media; picture-in-picture; gamepad; microphone; camera; geolocation"); t.el.appendChild(f); t.frame = f; t.sf = AxCore.frame(f);
+      const sf = t.sf; sf.addEventListener("urlchange", ev => { if (t.sf !== sf) return; onCoreURL(t, ev.url); }); sf.addEventListener("contextInit", ev => { if (t.sf !== sf) return; onCoreContext(t, ev); });
+      let seenLoad = false; f.addEventListener("load", () => { if (t.frame !== f || t.ctl !== my) return; seenLoad = true; onCoreLoad(t, url, tries); });
+      status(isInternal(url) ? "" : "Connecting via " + (t.via || "AxCore") + "…"); sf.go(url);
+      t.loadTimer = setTimeout(() => { if (t.frame === f && !seenLoad && t.loading) { /* very slow: keep waiting, just tell the user */ status("Still waiting for " + bxHost(url) + "…"); } }, 9000);
+      t.poll = setInterval(() => pollCore(t), 900);
+    };
+    const onCoreURL = (t, url) => {
+      url = String(url); if (!/^https?:/i.test(url)) return;
+      if (url === t.url) return; if (t.pending) { t.hist[t.idx] = url; } else { t.hist = t.hist.slice(0, t.idx + 1); t.hist.push(url); t.idx++; }
+      t.url = url; t.fav = favicon(url); if (t === cur) { if (document.activeElement !== omni) { omni.value = url; urlEl.innerHTML = bxFmtURL(url); } syncBar(); }
+      const z = BS().zoomSites?.[bxHost(url)]; if (z && Math.abs(z - t.zoom) > .001) { t.zoom = z; applyZoom(t); }
+    };
+    const onCoreContext = (t, ev) => {
+      const w = ev.window; try { if (!t.frame || w !== t.frame.contentWindow) return; } catch (e) { return; }
+      try {
+        const d = w.document; applyZoom(t);
+        w.addEventListener("keydown", e => forwardKey(e), true);
+        w.addEventListener("pointerdown", () => { Menu.closeAll(); closeSug(); if (document.activeElement === omni) omni.blur(); hideHC(); }, true);
+        d.addEventListener("contextmenu", e => pageMenu(t, e), true);
+        d.addEventListener("mouseover", e => { const a = e.target.closest && e.target.closest("a[href]"); const u = a ? pageHref(a) : ""; status(u); }, true);
+        d.addEventListener("mouseout", e => { if (!e.relatedTarget) status(""); }, true);
+        d.addEventListener("click", e => pageClick(t, e), true); d.addEventListener("auxclick", e => { if (e.button === 1) pageClick(t, e, true); }, true);
+        w.open = (u, target) => { if (!u) return null; try { if (!w.navigator.userActivation.isActive) { status("A pop-up was blocked"); return null; } } catch (er) { } const abs = (() => { try { return new URL(String(u), t.url).href; } catch (er) { return ""; } })(); if (/^https?:/.test(abs)) openFromPage(t, abs, { background: false }); return null; };
+        w.addEventListener("wheel", e => { if (e.ctrlKey) { e.preventDefault(); zoom(e.deltaY < 0 ? .1 : -.1); } }, { passive: false });
+      } catch (e) { console.warn("AxBrowser context hook:", e); }
+    };
+    const pageHref = a => { try { const raw = a.getAttribute("href") || ""; if (!raw || raw[0] === "#") return ""; const abs = new URL(raw, a.ownerDocument.baseURI).href; const dec = AxCore.decode(abs); return /^https?:/.test(dec) ? dec : /^https?:/.test(abs) ? abs : ""; } catch (e) { return ""; } };
+    const pageClick = (t, e, aux) => {
+      const a = e.target.closest && e.target.closest("a[href],area[href]"); if (!a) return; const u = pageHref(a); if (!u) return;
+      const mod = e.ctrlKey || e.metaKey || e.shiftKey || aux; const blank = (a.getAttribute("target") || "").toLowerCase() === "_blank";
+      if (mod || blank) { e.preventDefault(); e.stopPropagation(); if (!e.isTrusted) { status("A pop-up was blocked"); return; } openFromPage(t, u, { background: mod && !(e.shiftKey && !e.ctrlKey && !e.metaKey) ? true : mod }); }
+    };
+    /* a page asked for a new tab: put it right after the page that opened it and switch to it, like a real browser */
+    const popupOK = t => { const now = Date.now(); t.pops = (t.pops || []).filter(x => now - x < 10000); if (t.pops.length >= 4) { status("Too many pop-ups were blocked"); return false; } t.pops.push(now); return true; };
+    const openFromPage = (t, url, { background = false } = {}) => { if (!popupOK(t)) return null; return newTab(url, { after: t, opener: t, activate: !background }); };
+    const onCoreLoad = async (t, url, tries) => {
+      clearTimeout(t.loadTimer); const f = t.frame; let doc = null; try { doc = f.contentDocument; } catch (e) { }
+      const err = AxCore.errorOf(doc);
+      if (err) {
+        /* is the relay at fault or the site? one real request tells us */
+        status("Checking connection…");
+        let relayOK = true; try { await AxCore.check(7000); } catch (e) { relayOK = false; }
+        if (t.frame !== f) return;
+        if (!relayOK && tries < 2) { try { const s = await AxCore.failover(); t.via = s.name; status("Switched to " + s.name); } catch (e) { } return core(t, t.url, { tries: tries + 1 }); }
+        status(""); setLoading(t, false); return errorPage(t, t.url, new Error(err.message), { kind: relayOK ? "site" : "relay", via: t.via });
+      }
+      status(""); t.pending = false; setLoading(t, false); if (AxCore.relay && Wisp.health[AxCore.relay.id]) Wisp.health[AxCore.relay.id].streak = 0;
+      pollCore(t); applyZoom(t); applyMute(t);
+      if (BS().history !== false) BrowserData.addHistory(t.url, t.title);
+    };
+    const pollCore = t => {
+      let d = null, w = null; try { w = t.frame?.contentWindow; d = w?.document; } catch (e) { return; } if (!d || !d.documentElement || AxCore.errorOf(d)) return;
+      let ch = false; const title = d.title && d.title !== "Scramjet" ? d.title : ""; if (title && title !== t.title) { t.title = title.slice(0, 200); ch = true; }
+      const ln = d.querySelector("link[rel~=icon],link[rel='shortcut icon']"); if (ln) { const hr = ln.getAttribute("href"); if (hr) { try { const abs = new URL(hr, d.baseURI).href; const dec = AxCore.decode(abs); const fav = /^https?:/.test(dec) ? dec : abs; if (fav && fav !== t.fav && /^https?:/.test(fav)) { t.fav = fav; ch = true; } } catch (e) { } } }
+      const media = [...d.querySelectorAll("video,audio")]; const au = media.some(m => !m.paused && !m.ended && m.readyState > 2 && !m.muted && m.volume > 0); if (au !== !!t.audible) { t.audible = au; ch = true; }
+      if (t.muted) media.forEach(m => { if (!m.muted) { m.muted = true; m.dataset.axm = "1"; } });
+      if (ch) { paintTab(t); if (t === cur) { win.setTitle((t.title || "New Tab") + " — AxBrowser"); } }
+      if (t.title && t.pendingHist !== t.url + t.title && !t.loading) { t.pendingHist = t.url + t.title; BrowserData.addHistory(t.url, t.title); }
+    };
+    const applyMute = t => { try { const d = t.frame?.contentDocument; if (!d) return; d.querySelectorAll("video,audio").forEach(m => { if (t.muted) { if (!m.muted) { m.muted = true; m.dataset.axm = "1"; } } else if (m.dataset.axm) { m.muted = false; delete m.dataset.axm; } }); } catch (e) { } };
+    const applyZoom = t => { if (t.engine === "core") { try { const d = t.frame?.contentDocument; if (d?.documentElement) d.documentElement.style.zoom = t.zoom === 1 ? "" : t.zoom; } catch (e) { } t.el.style.zoom = ""; } else t.el.style.zoom = t.zoom === 1 ? "" : t.zoom; };
+    const zoom = d => { const t = cur; if (!t) return; t.zoom = d === 0 ? 1 : clamp(Math.round((t.zoom + d) * 10) / 10, .3, 4); applyZoom(t); const host = bxHost(t.url); if (host && !isInternal(t.url)) { const z = { ...(BS().zoomSites || {}) }; if (t.zoom === 1) delete z[host]; else z[host] = t.zoom; Settings.patch("browser", { zoomSites: z }); } syncBar(); };
+    /* ---------- engine: direct / uv / local ---------- */
+    const mkFrame = (t, sandbox) => { const f = document.createElement("iframe"); if (sandbox != null) f.setAttribute("sandbox", sandbox); f.setAttribute("allow", "fullscreen; autoplay; clipboard-write; encrypted-media"); f.setAttribute("referrerpolicy", "no-referrer"); t.el.appendChild(f); t.frame = f; return f; };
+    const direct = (t, url) => {
+      t.engine = "direct"; const f = mkFrame(t, axSandbox(url)); f.src = url; const my = t.ctl;
+      f.onload = () => { if (t.ctl !== my) return; setLoading(t, false); t.pending = false; renderTabs(); syncBar(); };
+      const tip = h(`<div style="position:absolute;right:12px;bottom:12px;z-index:5;max-width:380px;padding:11px 13px;border-radius:12px;background:var(--glass-2);backdrop-filter:blur(20px);border:1px solid var(--border-2);box-shadow:var(--shadow-sm);font-size:12px;color:var(--text);line-height:1.5">Direct mode only shows sites that allow being embedded. If this stays blank, <a href="#" style="color:var(--accent)">open it with the proxy</a>. <button class="ibtn" style="width:20px;height:20px;float:right">${ic("x")}</button></div>`);
+      $("a", tip).onclick = e => { e.preventDefault(); nav(t, url, { push: false, mode: "auto" }); }; $("button", tip).onclick = () => tip.remove(); t.el.appendChild(tip); setTimeout(() => tip.remove(), 10000);
+      BrowserData.addHistory(url, bxHost(url)); syncBar();
+    };
+    const uv = (t, url) => {
+      t.engine = "uv"; const pr = UVPresets.active(); if (!pr || /YOUR-HOST/.test(pr.prefix)) return errorPage(t, url, new Error(pr ? `Preset "${pr.name}" still has YOUR-HOST in its address.` : "No Ultraviolet server is configured."), { kind: "uv" });
+      const f = mkFrame(t, axSandbox(UVPresets.url(url, pr))); f.src = UVPresets.url(url, pr); t.via = pr.name; const my = t.ctl; f.onload = () => { if (t.ctl !== my) return; setLoading(t, false); t.pending = false; renderTabs(); syncBar(); }; BrowserData.addHistory(url, bxHost(url)); syncBar();
+    };
+    const localFile = (t, path) => {
+      const n = FS.node(path); if (!n) return errorPage(t, "file://" + path, new Error("File not found"), { kind: "invalid" });
+      t.title = FS.basename(path); t.fav = ""; setLoading(t, false); renderTabs(); syncBar(); const e = extOf(path);
+      if (e === "html" || e === "htm") { const f = mkFrame(t, "allow-scripts allow-forms allow-modals"); f.srcdoc = FS.readText(path); return; }
+      const f = mkFrame(t, e === "pdf" ? null : "allow-scripts"); f.src = FS.blobURL(path);
+    };
+    /* ---------- engine: AxProxy (in-page rewriting) ---------- */
+    const injector = (t, pageUrl) => shimTag(t, pageUrl) + `<script>(function(){var P=parent,ID=${JSON.stringify(t.id)},PAGE=${JSON.stringify(pageUrl)};function abs(u){try{return new URL(u,document.baseURI).href}catch(e){return null}}
+function go(u,nt,bg){if(!u)return;P.postMessage({axb:ID,type:"nav",url:u,newTab:!!nt,bg:!!bg},"*")}
+document.addEventListener("click",function(e){var a=e.target.closest&&e.target.closest("a[href],area[href]");if(!a||e.defaultPrevented&&!a.getAttribute("href"))return;var h=a.getAttribute("href");if(!h||/^javascript:/i.test(h))return;if(h.charAt(0)==="#"){e.preventDefault();var id=decodeURIComponent(h.slice(1)),el=document.getElementById(id)||document.getElementsByName(id)[0];if(el)el.scrollIntoView({behavior:"smooth"});return}var u=abs(h);if(!u)return;if(/^(mailto|tel):/i.test(u))return;var p=u.split("#");if(p[0]===PAGE.split("#")[0]&&p[1]){e.preventDefault();var el2=document.getElementById(decodeURIComponent(p[1]));if(el2)el2.scrollIntoView({behavior:"smooth"});return}e.preventDefault();var bg=e.ctrlKey||e.metaKey,nw=bg||e.shiftKey||a.target==="_blank";if(nw&&!e.isTrusted){P.postMessage({axb:ID,type:"blocked"},"*");return}go(u,nw,bg)},true);
+document.addEventListener("auxclick",function(e){if(e.button!==1)return;var a=e.target.closest&&e.target.closest("a[href],area[href]");if(a){e.preventDefault();go(abs(a.getAttribute("href")),true,true)}},true);
+document.addEventListener("submit",function(e){var f=e.target;e.preventDefault();var act=f.getAttribute("action");var base=act?abs(act):PAGE;var fd=new FormData(f);if(e.submitter&&e.submitter.name)fd.append(e.submitter.name,e.submitter.value||"");var qs=new URLSearchParams(fd).toString();var u=new URL(base);var m=(f.getAttribute("method")||"get").toLowerCase();if(m==="get"){u.search=qs;go(u.href,f.target==="_blank")}else{P.postMessage({axb:ID,type:"nav",url:u.href,post:qs,newTab:f.target==="_blank"},"*")}},true);
+window.open=function(u){if(!(navigator.userActivation&&navigator.userActivation.isActive)){P.postMessage({axb:ID,type:"blocked"},"*");return null}go(abs(u||""),true);return null};
+var lh="";document.addEventListener("mouseover",function(e){var a=e.target.closest&&e.target.closest("a[href],area[href]");var u=a?abs(a.getAttribute("href")):"";if(u!==lh){lh=u;P.postMessage({axb:ID,type:"hover",url:u},"*")}});
+function meta(){var ic=document.querySelector("link[rel~=icon]");P.postMessage({axb:ID,type:"meta",title:document.title,icon:ic?abs(ic.getAttribute("href")):""},"*")}
+document.addEventListener("DOMContentLoaded",meta);window.addEventListener("load",meta);
+document.addEventListener("keydown",function(e){var c=e.ctrlKey||e.metaKey;if(c&&/^[ltwrfdjp=+\\-0]$/i.test(e.key)||c&&e.shiftKey&&/^[ta]$/i.test(e.key)||e.altKey&&/^Arrow(Left|Right)$/.test(e.key)||e.key==="F5"||e.key==="F11"||e.key==="Escape"){if(e.key!=="Escape")e.preventDefault();P.postMessage({axb:ID,type:"key",key:e.key,ctrl:c,alt:e.altKey,shift:e.shiftKey},"*")}});
+document.addEventListener("contextmenu",function(e){e.preventDefault();var a=e.target.closest&&e.target.closest("a[href]"),im=e.target.closest&&e.target.closest("img");P.postMessage({axb:ID,type:"ctx",x:e.clientX,y:e.clientY,link:a?abs(a.getAttribute("href")):"",img:im?(im.currentSrc||im.src):"",sel:String(getSelection()||"").slice(0,200)},"*")},true);
+addEventListener("wheel",function(e){if(e.ctrlKey){e.preventDefault();P.postMessage({axb:ID,type:"zoomwheel",d:e.deltaY<0?1:-1},"*")}},{passive:false});
+addEventListener("message",function(e){var d=e.data;if(!d||d.axf==null)return;try{var s=getSelection();if(d.axf==="clear"){s.removeAllRanges();return}var found=window.find(d.q,false,!!d.back,true,false,false,false);var n=0;if(d.count&&d.q){var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),q=d.q.toLowerCase(),x;while(x=w.nextNode()){var tx=x.nodeValue.toLowerCase(),i=-1;while((i=tx.indexOf(q,i+1))>=0)n++}}P.postMessage({axb:ID,type:"found",found:found,n:n},"*")}catch(er){}});
+try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch(e){}
+})();<\/script>`;
+    const rewrite = async (t, url, { post = null, fresh = false } = {}) => {
+      t.engine = "rewrite"; setLoading(t, true); const ctl = t.ctl; syncBar();
+      let method = "GET", body; if (post != null) { if (AxProxy.worker()) { method = "POST"; body = post; } else { url += (url.includes("?") ? "&" : "?") + post; t.url = url; } }
+      const st = connecting(t, "Connecting through AxProxy", t.note ? "AxCore isn't available here, so AxProxy is loading this page" : "Fetching " + bxHost(url)); const sub = $("small", st);
+      try {
+        const tried = []; const r = await AxProxy.fetch(url, { signal: ctl.signal, fresh: fresh || method !== "GET", method, body, headers: method === "POST" ? { "content-type": "application/x-www-form-urlencoded" } : {}, onTry: g => { tried.push(g.name); if (sub) sub.textContent = "Trying " + tried.join(" + ") + "…"; } });
+        if (ctl.signal.aborted) return; st.remove(); const type = (r.type || "").toLowerCase(); const text = r.text; t.finalUrl = r.finalUrl || url; t.via = r.via || "";
+        if (/^image\//.test(type) || /^data:image\//.test(text)) return renderDoc(t, `<body style="margin:0;background:#0e0e0e;display:grid;place-items:center;min-height:100vh"><img src="${esc(/^data:/.test(text) ? text : url)}" style="max-width:100%"></body>`, url, false);
+        if (type && !/html|xml|text\/plain|json|javascript|css|^$/.test(type) && !/^\s*</.test(text)) { setLoading(t, false); return errorPage(t, url, new Error(`The server sent a file of type ${type}`), { kind: "file" }); }
+        if (!/html|xml/.test(type) && !/^\s*</.test(text.slice(0, 200))) return renderDoc(t, `<body style="margin:0;background:#fff;color:#111"><pre style="white-space:pre-wrap;word-break:break-word;font:13px ui-monospace,monospace;padding:16px;margin:0">${esc(text)}</pre></body>`, url, false);
+        t.html = text; renderDoc(t, text, t.finalUrl, true);
+      } catch (e) { if (ctl.signal.aborted) return; st.remove(); setLoading(t, false); errorPage(t, url, e, { kind: "site" }); }
+    };
+    const renderDoc = (t, html, base, doRewrite) => {
+      let out = html;
+      if (doRewrite) {
+        try {
+          const doc = new DOMParser().parseFromString(html, "text/html"); let baseHref = base; const eb = doc.querySelector("base[href]"); if (eb) { try { baseHref = new URL(eb.getAttribute("href"), base).href; } catch (e) { } } doc.querySelectorAll("base").forEach(b => b.remove());
+          doc.querySelectorAll("meta[http-equiv]").forEach(m => { const k = (m.getAttribute("http-equiv") || "").toLowerCase(); if (k === "refresh") { const mm = (m.getAttribute("content") || "").match(/url\s*=\s*['"]?([^'";]+)/i); if (mm) t.refresh = new URL(mm[1], baseHref).href; m.remove(); } else if (k.includes("security") || k === "x-frame-options") m.remove(); });
+          doc.querySelectorAll("script[integrity],link[integrity]").forEach(s => s.removeAttribute("integrity"));
+          if (!BS().scripts) { doc.querySelectorAll("script").forEach(s => s.remove()); doc.querySelectorAll("noscript").forEach(n => { const d = doc.createElement("div"); d.innerHTML = n.innerHTML; n.replaceWith(d); }); doc.querySelectorAll("img[data-src]").forEach(i => { if (!i.getAttribute("src") || i.getAttribute("src").startsWith("data:")) i.setAttribute("src", i.getAttribute("data-src")); }); }
+          const head = doc.head || doc.documentElement.insertBefore(doc.createElement("head"), doc.body); const bEl = doc.createElement("base"); bEl.href = baseHref; head.prepend(bEl);
+          if (!doc.querySelector("meta[charset]")) { const mc = doc.createElement("meta"); mc.setAttribute("charset", "utf-8"); head.prepend(mc); }
+          const tmp = doc.createElement("template"); tmp.innerHTML = injector(t, base); [...tmp.content.childNodes].reverse().forEach(n => head.insertBefore(n, bEl.nextSibling));
+          t.title = doc.title || bxHost(base); renderTabs(); out = "<!DOCTYPE html>" + doc.documentElement.outerHTML;
+        } catch (e) { console.warn(e); }
+      } else out = `<!doctype html><html><head><meta charset="utf-8"><base href="${esc(base)}">${injector(t, base)}</head>${out}</html>`;
+      const f = mkFrame(t, BX_SB_REWRITE); f.srcdoc = out; const my = t.ctl;
+      f.onload = () => { if (t.ctl !== my) return; setLoading(t, false); t.pending = false; applyZoom(t); if (t.refresh) { const r = t.refresh; t.refresh = null; setTimeout(() => t.url === base && nav(t, r), 300); } };
+      setTimeout(() => { if (t.ctl === my && t.loading) setLoading(t, false); }, 8000); if (BS().history !== false) BrowserData.addHistory(t.url, t.title); syncBar();
+    };
+    const readerMode = async (t, url) => {
+      clearPage(t); setLoading(t, true);
+      try { const md = await AxProxy.reader(url, t.ctl.signal); const title = (md.match(/^Title:\s*(.*)$/m) || [])[1] || url; const body = md.split(/^Markdown Content:\s*$/m)[1] || md; t.title = title; t.engine = "rewrite"; renderTabs();
+        renderDoc(t, `<body style="font:17px/1.65 Georgia,serif;max-width:720px;margin:0 auto;padding:30px 22px;color:#222;background:#fbf8f2"><div style="font:12px system-ui;color:#888;margin-bottom:10px">Reader mode · ${esc(bxHost(url))}</div><h1 style="font-size:30px;line-height:1.25">${esc(title)}</h1>${mdToHTML(body)}</body>`, url, false);
+      } catch (e) { setLoading(t, false); errorPage(t, url, e, { kind: "site" }); }
+    };
+    /* ---------- errors ---------- */
+    const errorPage = (t, url, err, o = {}) => {
+      setLoading(t, false); status(""); $(".bx-ovl", t.el)?.remove(); t.title = "Can't open this page"; t.fav = ""; t.errored = o.kind || "site"; renderTabs(); syncBar();
+      const host = bxHost(url) || url; const msg = String(err.message || err); let title = "This page can't be reached", body = `<b>${esc(host)}</b> didn't respond the way a browser expects.`, tips = [], icon = "alert";
+      if (o.kind === "invalid") { title = "That address isn't valid"; body = esc(msg); }
+      else if (o.kind === "core") { title = "AxCore couldn't start"; body = esc(msg); tips = ["Open AxOS from an http(s) address with <code>sw.js</code> and the <code>proxy</code> folder beside <code>index.html</code>", "Or use the AxProxy engine, which works anywhere"]; }
+      else if (o.kind === "relay") { title = "The relay isn't answering"; body = `AxBrowser couldn't get through the Wisp relay${o.via ? " <b>" + esc(o.via) + "</b>" : ""} and the next ones didn't answer either.`; tips = ["Public relays come and go. Try again in a moment", "Add your own relay in Settings, or use a personal gateway"]; }
+      else if (o.kind === "uv") { title = "Set up your Ultraviolet server"; body = esc(msg); icon = "shield"; }
+      else if (o.kind === "file") { title = "This file can't be displayed"; body = esc(msg); icon = "download"; }
+      else if (/resolve|dns|ENOTFOUND|getaddrinfo|name or service|could not resolve|host not found/i.test(msg)) { title = "Can't find " + host; body = "The server's address couldn't be found. Check the spelling or your connection."; tips = ["Check the address for typing mistakes"]; icon = "search"; }
+      else if (/refused|ECONNREFUSED|unreachable/i.test(msg)) { title = host + " refused the connection"; body = "The server is there but isn't accepting connections right now."; }
+      else if (/timed? ?out|timeout|took too long/i.test(msg)) { title = host + " took too long to respond"; body = "The connection started but never finished."; tips = ["Try again, the site or the relay may be busy"]; icon = "timer"; }
+      else if (/cert|ssl|tls|handshake/i.test(msg)) { title = "Secure connection failed"; body = "A private connection to " + esc(host) + " couldn't be set up."; icon = "lock"; }
+      const el = h(`<div class="bx-err"><div class="in"><div class="ico">${ic(icon)}</div><h2>${esc(title)}</h2><p>${body}</p>${tips.length ? `<ul>${tips.map(x => `<li>${x}</li>`).join("")}</ul>` : ""}<div class="det">${esc(msg.slice(0, 300))}</div><div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn primary rt">${ic("refresh")} Try again</button>${o.kind === "relay" ? `<button class="btn sw">${ic("network")} Switch relay</button>` : ""}${o.kind !== "invalid" && o.kind !== "uv" && modeOf(t) !== "rewrite" ? `<button class="btn px">${ic("shield")} Use AxProxy</button>` : ""}${o.kind === "site" || o.kind === "relay" ? `<button class="btn rd">${ic("fileText")} Reader mode</button>` : ""}<button class="btn ps">${ic("gear")} Browser settings</button></div></div></div>`);
+      t.el.appendChild(el); $(".rt", el).onclick = () => nav(t, url, { push: false, fresh: true });
+      const sw = $(".sw", el); if (sw) sw.onclick = async () => { sw.disabled = true; sw.textContent = "Switching…"; try { await AxCore.failover(); } catch (e) { } nav(t, url, { push: false, fresh: true }); };
+      const px = $(".px", el); if (px) px.onclick = () => nav(t, url, { push: false, mode: "rewrite" });
+      const rd = $(".rd", el); if (rd) rd.onclick = () => readerMode(t, url);
+      $(".ps", el).onclick = () => newTab("axos://settings", { after: t });
+    };
+    /* ---------- downloads ---------- */
+    const dlRecord = (name, url) => { const ds = BrowserData.downloads; const rec = { id: uid(), name, url, status: "progress", time: Date.now(), got: 0, total: 0 }; ds.unshift(rec); BrowserData.setDownloads(ds); return rec; };
+    const dlUpdate = (id, p) => { const all = BrowserData.downloads; const i = all.findIndex(x => x.id === id); if (i >= 0) { all[i] = { ...all[i], ...p }; BrowserData.setDownloads(all); } };
+    const dlSave = (rec, buf, type) => { const dir = FS.home + "/Downloads"; FS.mkdir(dir, true); const nm = FS.uniqueName(dir, rec.name); const p = FS.join(dir, nm); FS.write(p, buf, { mime: type }); dlUpdate(rec.id, { status: "done", size: buf.byteLength, path: p, name: nm }); Notify.push({ app: "browser", title: "Download complete", body: `${nm} · ${fmtSize(buf.byteLength)}`, actions: [{ label: "Open", primary: true, action: () => openPath(p) }, { label: "Show in folder", action: () => launch("explorer", { path: dir, select: p }) }] }); };
+    const downloadURL = async url => {
+      const name = decodeURIComponent((new URL(url).pathname.split("/").pop() || "download").replace(/[?#].*$/, "")) || "download"; const rec = dlRecord(name, url); notify("Download started", name, "browser", { silent: true }); showDownloads();
+      try {
+        if (AxCore.ready) { const r = await AxCore.client.fetch(url); const total = +(r.headers.get?.("content-length") || 0); const rd = r.body.getReader(); const chunks = []; let got = 0, lastU = 0; for (;;) { const { done, value } = await rd.read(); if (done) break; chunks.push(value); got += value.length; if (Date.now() - lastU > 300) { lastU = Date.now(); dlUpdate(rec.id, { got, total }); } } const out = new Uint8Array(got); let o = 0; for (const c of chunks) { out.set(c, o); o += c.length; } dlSave(rec, out.buffer, r.headers.get?.("content-type") || ""); }
+        else { const r = await AxProxy.fetch(url, { binary: true }); dlSave(rec, r.buffer, r.type); }
+      } catch (e) { dlUpdate(rec.id, { status: "error", error: e.message }); notify("Download failed", `${name}: ${e.message}`, "browser"); }
+    };
+    const offDL = Bus.on("axcore-download", async d => {
+      const name = d.filename || decodeURIComponent((new URL(d.url).pathname.split("/").pop() || "download")); const rec = dlRecord(name, d.url); showDownloads();
+      try { const buf = await new Response(d.body).arrayBuffer(); dlSave(rec, buf, d.type); } catch (e) { dlUpdate(rec.id, { status: "error", error: e.message }); }
+    });
+    const showDownloads = () => {
+      closePop(); const r = $(".dls", B).getBoundingClientRect(); const ds = BrowserData.downloads.slice(0, 6);
+      pop = h(`<div class="bx-pop" style="width:360px"><h4>Downloads</h4><div class="bx-dl">${ds.length ? ds.map(d => `<div class="d">${fileIconHTML(d.name, d.path && FS.node(d.path), d.path || "", 30)}<div class="k" style="flex:1;min-width:0"><div class="ellipsis" style="font-size:13px">${esc(d.name)}</div><div class="ellipsis" style="font-size:11.5px;color:var(--text-3)">${d.status === "done" ? fmtSize(d.size) : d.status === "error" ? "Failed: " + esc(d.error || "") : d.total ? fmtSize(d.got) + " of " + fmtSize(d.total) : "Downloading…"}</div>${d.status === "progress" ? `<div class="bar"><i${d.total ? ` style="animation:none;width:${Math.round(d.got / d.total * 100)}%"` : ""}></i></div>` : ""}</div>${d.status === "done" && d.path && FS.exists(d.path) ? `<button class="btn sm op" data-p="${esc(d.path)}">Open</button>` : ""}</div>`).join("") : `<div class="sub" style="padding:10px 0">Files you download are saved to your AxOS Downloads folder.</div>`}</div><button class="btn sm all" style="width:100%">Show all downloads</button></div>`);
+      document.body.appendChild(pop); pop.style.top = r.bottom + 6 + "px"; pop.style.left = clamp(r.right - 360, 8, innerWidth - 368) + "px";
+      $$(".op", pop).forEach(b => b.onclick = () => { openPath(b.dataset.p); closePop(); }); $(".all", pop).onclick = () => { closePop(); newTab("axos://downloads", { after: cur }); };
+      setTimeout(() => document.addEventListener("pointerdown", popOutside, true), 0); clearTimeout(pop._t); pop._t = setTimeout(closePop, 9000);
+    };
+    const popOutside = e => { if (pop && !pop.contains(e.target)) closePop(); };
+    const closePop = () => { if (pop) { clearTimeout(pop._t); pop.remove(); pop = null; document.removeEventListener("pointerdown", popOutside, true); } };
+    const offDLb = Bus.on("downloads", () => { if (pop && pop.querySelector(".bx-dl")) { const was = pop.style.left; showDownloads(); } });
+    /* ---------- messages from AxProxy pages ---------- */
+    const onMsg = e => {
+      const d = e.data; if (!d || !d.axb) return; const t = tabs.find(x => x.id === d.axb); if (!t || !t.frame || e.source !== t.frame.contentWindow) return; const pageHost = AxProxy.hostOf(t.finalUrl || t.url);
+      if (d.type === "nav" && d.url) { const u = decodeRedirect(String(d.url)); if (!/^https?:\/\//i.test(u)) return; if (d.newTab) { if (!popupOK(t)) return; openFromPage(t, u, { background: !!d.bg }); } else nav(t, u, { post: d.post == null ? null : String(d.post) }); }
+      else if (d.type === "fetch") { const src = e.source; const tgtHost = AxProxy.hostOf(d.url); AxProxy.request({ url: d.url, method: d.method, headers: d.headers || {}, body: d.body, sameSite: tgtHost === pageHost || tgtHost.endsWith("." + pageHost) || pageHost.endsWith("." + tgtHost) }).then(r => src.postMessage({ axr: d.id, status: r.status, headers: r.headers, buf: r.buf, url: r.url }, "*", [r.buf])).catch(err => src.postMessage({ axr: d.id, err: err.message || String(err) }, "*")); }
+      else if (d.type === "url" && d.url) { try { const u = new URL(d.url); if (/^https?:$/.test(u.protocol)) { t.url = u.href; t.hist[t.idx] = u.href; if (t === cur) syncBar(); BrowserData.addHistory(t.url, t.title); } } catch (er) { } }
+      else if (d.type === "cookie" && pageHost) AxProxy.setCookie(pageHost, d.str);
+      else if (d.type === "store" && pageHost && d.data && typeof d.data === "object") PxStore.set(pageHost, d.data);
+      else if (d.type === "meta") { if (d.title) t.title = String(d.title).slice(0, 200); if (d.icon && /^https?:/.test(d.icon)) t.fav = d.icon; renderTabs(); BrowserData.addHistory(t.url, t.title); }
+      else if (d.type === "hover" && t === cur) status(d.url ? decodeRedirect(d.url) : "");
+      else if (d.type === "key") forwardKey({ key: d.key, ctrlKey: d.ctrl, metaKey: false, altKey: d.alt, shiftKey: d.shift, preventDefault() { } });
+      else if (d.type === "zoomwheel") zoom(d.d * .1);
+      else if (d.type === "blocked") status("A pop-up was blocked");
+      else if (d.type === "ctx") { const r = t.frame.getBoundingClientRect(); pageMenuAt(t, r.left + d.x * (t.zoom || 1), r.top + d.y * (t.zoom || 1), { link: d.link, img: d.img, sel: d.sel }); }
+      else if (d.type === "found") foundResult(d);
+    };
+    window.addEventListener("message", onMsg);
+    /* ============================ internal pages ============================ */
+    const day = ts => { const d = new Date(ts).toDateString(); return d === new Date().toDateString() ? "Today" : d === new Date(Date.now() - 864e5).toDateString() ? "Yesterday" : d; };
+    const internal = (t, url) => {
+      const page = url.replace(/^axos:\/\//, "").split(/[?#]/)[0] || "newtab"; const q = new URLSearchParams((url.split("?")[1] || "").split("#")[0]);
+      const el = h(`<div class="internal"></div>`); t.el.appendChild(el); t.fav = ""; setLoading(t, false); t.pending = false;
+      const P = { newtab: pgNew, history: pgHistory, bookmarks: pgBookmarks, downloads: pgDownloads, settings: pgSettings, about: pgAbout, source: pgSource }[page];
+      if (P) P(t, el, q); else { t.title = "Not found"; el.innerHTML = `<div class="ip"><h1>axos://${esc(page)}</h1><p class="lead">This page doesn't exist. Try newtab, history, bookmarks, downloads, settings or about.</p></div>`; }
+      applyZoom(t); renderTabs(); syncBar();
+    };
+    const connLine = () => AxCore.ready ? { k: "ok", t: `AxCore is ready · relay <b>${esc(AxCore.relay?.name || "?")}</b>${AxCore.info.ms ? " · " + AxCore.info.ms + " ms" : ""}` } : AxCore.state === "starting" ? { k: "wait", t: "AxCore is starting…" } : AxCore.supported ? { k: AxCore.state === "failed" ? "bad" : "wait", t: AxCore.state === "failed" ? "AxCore couldn't start: " + esc(AxCore.error) : "AxCore starts with your first page" } : { k: "wait", t: "Using AxProxy · " + esc(AxCore.why()) };
+    function pgNew(t, el) {
+      t.title = "New Tab"; const eng = () => (SEARCH_ENGINES[BS().search] || SEARCH_ENGINES.ddg)[0]; const tiles = () => BS().tiles || BX_TILES.map(([n, u]) => ({ title: n, url: u }));
+      const draw = () => {
+        const hr = new Date().getHours(), nm = Settings.get("username") || ""; const c = connLine();
+        el.innerHTML = `<div class="nt"><div class="clock"></div><div class="greet">${hr < 5 ? "Still up" : hr < 12 ? "Good morning" : hr < 18 ? "Good afternoon" : "Good evening"}${nm ? ", " + esc(nm) : ""}</div><form class="sb">${ic("search")}<input placeholder="Search ${esc(eng())} or type a web address" spellcheck="false" autocomplete="off"><button type="button" class="eng" data-tip="Change search engine">${esc(eng())}</button></form>
+          <div class="tiles">${tiles().map((x, i) => `<a class="tile" href="#" data-i="${i}"><button class="rm" data-i="${i}" aria-label="Remove">${ic("x")}</button><span class="ti"><img src="${esc(favicon(x.url))}" alt="" onerror="this.style.display='none'"></span><span class="n">${esc(x.title)}</span></a>`).join("")}<a class="tile add" href="#" data-add="1"><span class="ti">${ic("plus")}</span><span class="n">Add shortcut</span></a></div>
+          <div class="status"><i class="${c.k}"></i><span>${c.t}</span>${c.k === "bad" || !AxCore.supported ? `<a href="#" data-set>Details</a>` : `<a href="#" data-set>Settings</a>`}</div></div>`;
+        const tick = () => { const n = new Date(); const ce = $(".clock", el); if (ce) ce.textContent = n.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); }; tick();
+        $("form", el).onsubmit = e => { e.preventDefault(); const v = $("input", el).value.trim(); if (v) nav(t, v); };
+        $(".eng", el).onclick = () => { const ks = Object.keys(SEARCH_ENGINES); Settings.patch("browser", { search: ks[(ks.indexOf(BS().search) + 1) % ks.length] }); draw(); setTimeout(() => $("input", el)?.focus(), 0); };
+        $$(".tile", el).forEach(a => a.onclick = e => { e.preventDefault(); if (e.target.closest(".rm")) { const l = tiles(); l.splice(+e.target.closest(".rm").dataset.i, 1); Settings.patch("browser", { tiles: l }); draw(); return; } if (a.dataset.add) { addTile(); return; } const x = tiles()[+a.dataset.i]; if (e.ctrlKey || e.metaKey) newTab(x.url, { after: t, activate: false }); else nav(t, x.url); });
+        $("[data-set]", el).onclick = e => { e.preventDefault(); nav(t, "axos://settings"); };
+      };
+      const addTile = async () => { const u = await Dialog.prompt("Add shortcut", "Web address", "https://"); if (!u) return; const url = toURL(u); const n = await Dialog.prompt("Name this shortcut", "", bxHost(url)); const l = tiles(); l.push({ title: n || bxHost(url), url }); Settings.patch("browser", { tiles: l }); draw(); };
+      draw(); const off = Bus.on("axcore", () => { if (el.isConnected && !$(".nt input", el)?.value) draw(); }); const iv = setInterval(() => { if (!el.isConnected) { clearInterval(iv); off(); } else { const ce = $(".clock", el); if (ce) ce.textContent = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }); } }, 15000);
+    }
+    function pgHistory(t, el) {
+      t.title = "History"; const draw = (qs = "") => {
+        const all = BrowserData.history; const f = qs ? all.filter(x => (x.title || "").toLowerCase().includes(qs) || x.url.toLowerCase().includes(qs)) : all; let last = "";
+        $(".list", el).innerHTML = f.length ? f.slice(0, 400).map(x => { const dd = day(x.time); const hd = dd !== last ? `<div class="grp">${esc(dd)}</div>` : ""; last = dd; return hd + `<div class="li" data-u="${esc(x.url)}" data-t="${x.time}"><span class="tm">${fmtTime(new Date(x.time))}</span><img class="f" src="${esc(favicon(x.url))}" alt="" onerror="this.style.visibility='hidden'"><span class="ti">${esc(x.title || x.url)}</span><span class="ur">${esc(bxHost(x.url))}</span><button class="ibtn rmv" aria-label="Remove">${ic("x")}</button></div>`; }).join("") : `<div class="empty-state">${ic("history")}${qs ? "Nothing matches" : "No history yet"}</div>`;
+        $$(".li", el).forEach(r => { r.onclick = e => { if (e.target.closest(".rmv")) { BrowserData.set("history", BrowserData.history.filter(x => !(x.url === r.dataset.u && String(x.time) === r.dataset.t))); draw($(".input", el).value.toLowerCase()); return; } nav(t, r.dataset.u); }; r.onauxclick = e => { if (e.button === 1) newTab(r.dataset.u, { after: t, activate: false }); }; });
+      };
+      el.innerHTML = `<div class="ip"><div class="row" style="justify-content:space-between"><h1>History</h1><button class="btn clr">${ic("trash")} Clear browsing data</button></div><div class="tools"><input class="input" placeholder="Search history" spellcheck="false"></div><div class="list"></div></div>`; draw();
+      $(".input", el).oninput = e => draw(e.target.value.trim().toLowerCase()); $(".clr", el).onclick = e => clearMenu(e.currentTarget, () => draw());
+    }
+    const clearData = async what => {
+      if (what.history) { const cut = what.since ? Date.now() - what.since : 0; BrowserData.set("history", BrowserData.history.filter(x => cut && x.time < cut)); }
+      if (what.cookies) { try { const db = await new Promise((res, rej) => { const r = indexedDB.open("$scramjet", 1); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); for (const s of ["cookies"]) if (db.objectStoreNames.contains(s)) await new Promise(res => { const tx = db.transaction(s, "readwrite"); tx.objectStore(s).clear(); tx.oncomplete = res; tx.onerror = res; }); db.close(); } catch (e) { } AxProxy.jar = {}; try { Object.keys(localStorage).filter(k => k.startsWith("axos.pxStore.")).forEach(k => localStorage.removeItem(k)); } catch (e) { } }
+      notify("Browsing data cleared", [what.history && "history", what.cookies && "cookies and site data"].filter(Boolean).join(" and "), "browser", { silent: true, timeout: 2500 });
+    };
+    const clearMenu = (anchor, after) => Menu.at(anchor, [
+      { label: "History · last hour", action: async () => { await clearData({ history: 1, since: 36e5 }); after?.(); } }, { label: "History · last 24 hours", action: async () => { await clearData({ history: 1, since: 864e5 }); after?.(); } }, { label: "History · all time", action: async () => { await clearData({ history: 1 }); after?.(); } }, "-",
+      { label: "Cookies and site data", action: async () => { if (await Dialog.confirm("Clear cookies and site data", "You'll be signed out of websites you used through AxBrowser.", { ok: "Clear", danger: true })) await clearData({ cookies: 1 }); } },
+      { label: "Everything", danger: true, action: async () => { if (await Dialog.confirm("Clear everything", "Delete history, cookies and site data?", { ok: "Clear all", danger: true })) { await clearData({ history: 1, cookies: 1 }); after?.(); } } },
+    ]);
+    function pgBookmarks(t, el) {
+      t.title = "Bookmarks"; const draw = (qs = "") => {
+        const all = BrowserData.bookmarks.map((b, i) => ({ ...b, i })); const f = qs ? all.filter(b => b.title.toLowerCase().includes(qs) || b.url.toLowerCase().includes(qs)) : all;
+        $(".list", el).innerHTML = f.length ? f.map(b => `<div class="li" data-i="${b.i}"><img class="f" src="${esc(favicon(b.url))}" alt="" onerror="this.style.visibility='hidden'"><span class="ti">${esc(b.title)}</span><span class="ur">${esc(b.url)}</span><button class="ibtn ed rmv" aria-label="Rename">${ic("edit")}</button><button class="ibtn dl rmv" aria-label="Delete">${ic("trash")}</button></div>`).join("") : `<div class="empty-state">${ic("bookmark")}${qs ? "Nothing matches" : "No bookmarks yet. Press the star in the address bar."}</div>`;
+        $$(".li", el).forEach(r => { const i = +r.dataset.i; r.onclick = async e => { const b = BrowserData.bookmarks[i]; if (e.target.closest(".dl")) { const a = BrowserData.bookmarks; a.splice(i, 1); BrowserData.setBookmarks(a); draw($(".input", el).value.toLowerCase()); return; } if (e.target.closest(".ed")) { const n = await Dialog.prompt("Rename bookmark", "", b.title); if (n) { const a = BrowserData.bookmarks; a[i].title = n; BrowserData.setBookmarks(a); draw(); } return; } nav(t, b.url); }; });
+      };
+      el.innerHTML = `<div class="ip"><h1>Bookmarks</h1><div class="tools"><input class="input" placeholder="Search bookmarks" spellcheck="false"></div><div class="list"></div></div>`; draw(); $(".input", el).oninput = e => draw(e.target.value.trim().toLowerCase());
+    }
+    function pgDownloads(t, el) {
+      t.title = "Downloads"; const draw = () => { const ds = BrowserData.downloads; $(".list", el).innerHTML = ds.map((d, i) => `<div class="li" data-i="${i}">${fileIconHTML(d.name, d.path && FS.node(d.path), d.path || "", 30)}<div class="ti" style="min-width:0"><div class="ellipsis">${esc(d.name)}</div><div style="font-size:12px;color:var(--text-3)" class="ellipsis">${d.status === "done" ? fmtSize(d.size) + " · " + esc(d.path || "") : d.status === "error" ? "Failed: " + esc(d.error || "") : d.total ? fmtSize(d.got) + " of " + fmtSize(d.total) : "Downloading…"}</div></div>${d.status === "done" && d.path && FS.exists(d.path) ? `<button class="btn sm op">Open</button><button class="btn sm fd">Show in folder</button>` : ""}</div>`).join("") || `<div class="empty-state">${ic("download")}Files you download appear here. They're saved to your AxOS Downloads folder.</div>`; $$(".li", el).forEach(x => { const d = ds[+x.dataset.i]; const op = $(".op", x); if (op) { op.onclick = () => openPath(d.path); $(".fd", x).onclick = () => launch("explorer", { path: FS.dirname(d.path), select: d.path }); } }); };
+      el.innerHTML = `<div class="ip"><div class="row" style="justify-content:space-between"><h1>Downloads</h1><button class="btn clr">Clear list</button></div><div class="list" style="margin-top:14px"></div></div>`; draw(); $(".clr", el).onclick = () => { BrowserData.setDownloads([]); draw(); }; const off = Bus.on("downloads", () => el.isConnected ? draw() : off());
+    }
+    function pgAbout(t, el) {
+      t.title = "About AxBrowser"; el.innerHTML = `<div class="ip"><h1>About AxBrowser</h1><p class="lead">Part of AxOS ${AXOS_VERSION}</p><div class="card"><h3>How pages load</h3><p style="line-height:1.65;color:var(--text-2);margin:0">AxBrowser uses <b>AxCore</b> when it can: <a href="https://github.com/MercuryWorkshop/scramjet" data-ext>Scramjet</a> runs in a service worker and rewrites pages so scripts, cookies, WebSockets and storage all work. Its traffic goes through <b>libcurl.js</b> (real TLS compiled to WebAssembly) and a <b>Wisp</b> relay, so the relay only sees encrypted bytes. If AxCore can't run (for example AxOS is opened as a local file), <b>AxProxy</b> fetches and rewrites pages inside AxOS instead.</p></div><div class="card"><h3>Shortcuts</h3><div style="columns:2;font-size:12.5px;line-height:2;color:var(--text-2)">Ctrl+T new tab<br>Ctrl+W close tab<br>Ctrl+Shift+T reopen tab<br>Ctrl+L address bar<br>Ctrl+F find<br>Ctrl+D bookmark<br>Ctrl+R / F5 reload<br>Ctrl+Tab next tab<br>Ctrl+1…9 go to tab<br>Ctrl++ / Ctrl+− zoom<br>Ctrl+J downloads<br>Ctrl+H history<br>Alt+← / Alt+→ back, forward<br>F12 developer tools<br>F11 full screen</div></div></div>`;
+      $$("[data-ext]", el).forEach(a => a.onclick = e => { e.preventDefault(); newTab(a.href, { after: t }); });
+    }
+    function pgSource(t, el, q) {
+      const u = q.get("url") || ""; t.title = "Source: " + bxHost(u); el.innerHTML = `<div class="ip" style="max-width:none"><h1>Page source</h1><p class="lead">${esc(u)}</p><pre class="src">Loading…</pre></div>`;
+      (async () => { try { const txt = t.srcText || await bxFetchText(u); $(".src", el).textContent = txt; } catch (e) { $(".src", el).textContent = "Couldn't load the source: " + e.message; } })();
+    }
+    function pgSettings(t, el) {
+      t.title = "Browser settings"; const draw = () => {
+        const mode = (BS().mode === "proxy" ? "auto" : BS().mode) || "auto"; const c = connLine(); const relays = Wisp.servers();
+        el.innerHTML = `<div class="ip"><h1>Browser settings</h1><p class="lead">Connection engine, relays, search and privacy.</p>
+          <div class="card"><h3>Connection engine</h3>${Object.entries(BX_ENGINES).map(([k, [n, d]]) => `<div class="opt${mode === k ? " on" : ""}" data-m="${k}"><span class="r"></span><div><b>${n}</b><small>${d}</small></div></div>`).join("")}<div class="srow"><span class="dot ${c.k}"></span><div class="k">${c.t}</div><button class="btn sm" data-restart>${ic("refresh")} Restart AxCore</button></div></div>
+          <div class="card"><h3>Wisp relays</h3><p style="color:var(--text-3);font-size:12px;margin:0 0 6px;line-height:1.5">AxBrowser tries the fastest relay and moves to the next one by itself when a relay stops answering.</p>${relays.map(s => { const hh = Wisp.health[s.id] || {}; const cls = AxCore.relay?.id === s.id ? "ok" : hh.streak >= 2 ? "bad" : hh.ms ? "ok" : "wait"; return `<div class="srow"><span class="dot ${cls}" data-d="${s.id}"></span><div class="k">${esc(s.name)}${AxCore.relay?.id === s.id ? " · <b style='color:var(--accent)'>in use</b>" : ""}<small>${esc(Wisp.host(s))}${hh.ms ? " · " + hh.ms + " ms" : ""}</small></div><button class="btn sm" data-use="${s.id}">Use</button></div>`; }).join("")}<div class="row" style="margin-top:10px;gap:8px"><button class="btn sm" data-test>Test relays</button><button class="btn sm" data-more>Add relays…</button></div></div>
+          <div class="card"><h3>General</h3><div class="srow"><div class="k">Search engine</div><select class="input se" style="width:180px">${Object.entries(SEARCH_ENGINES).map(([k, v]) => `<option value="${k}"${BS().search === k ? " selected" : ""}>${v[0]}</option>`).join("")}</select></div><div class="srow"><div class="k">Home page<small>Leave as axos://newtab for the new tab page</small></div><input class="input hp" style="width:240px" value="${esc(BS().home || "axos://newtab")}"></div>
+          <div class="srow"><div class="k">Show bookmarks bar</div><span class="switch${BS().bookmarksBar ? " on" : ""}" data-sw="bookmarksBar"></span></div><div class="srow"><div class="k">Reopen my tabs next time</div><span class="switch${BS().restore !== false ? " on" : ""}" data-sw="restore"></span></div><div class="srow"><div class="k">Save browsing history</div><span class="switch${BS().history !== false ? " on" : ""}" data-sw="history"></span></div><div class="srow"><div class="k">Run page scripts in AxProxy<small>Turn off for faster, simpler pages</small></div><span class="switch${BS().scripts !== false ? " on" : ""}" data-sw="scripts"></span></div></div>
+          <div class="card"><h3>Privacy</h3><div class="row" style="gap:8px"><button class="btn sm cl">Clear browsing data…</button><button class="btn sm" data-adv>More network options…</button></div></div></div>`;
+        $$("[data-m]", el).forEach(o => o.onclick = () => { Settings.patch("browser", { mode: o.dataset.m }); if (o.dataset.m === "core" || o.dataset.m === "auto") AxCore.start().catch(() => { }).then(draw); draw(); });
+        $("[data-restart]", el).onclick = async () => { AxCore.state = "idle"; AxCore.starting = null; try { const regs = await navigator.serviceWorker?.getRegistrations?.() || []; for (const r of regs) await r.unregister(); } catch (e) { } try { await AxCore.start(); } catch (e) { } draw(); };
+        $$("[data-use]", el).forEach(b => b.onclick = async () => { const s = relays.find(x => x.id === b.dataset.use); b.textContent = "…"; Wisp.patch({ pin: s.id }); if (AxCore.ready) { try { await AxCore.setRelay(s); AxCore.info.ms = await AxCore.check(); } catch (e) { notify("Relay didn't answer", s.name, "browser", { silent: true }); } } draw(); });
+        $("[data-test]", el).onclick = async e => { e.currentTarget.textContent = "Testing…"; await Promise.all(relays.filter(s => s.enabled).map(s => Wisp.probe(s).catch(() => { }))); draw(); };
+        $("[data-more]", el).onclick = () => launch("settings", { page: "network" }); $("[data-adv]", el).onclick = () => launch("settings", { page: "network" });
+        $(".se", el).onchange = e => Settings.patch("browser", { search: e.target.value }); $(".hp", el).onchange = e => Settings.patch("browser", { home: toURL(e.target.value) });
+        $$("[data-sw]", el).forEach(s => s.onclick = () => { const k = s.dataset.sw; const on = !(k === "bookmarksBar" ? BS()[k] : BS()[k] !== false); Settings.patch("browser", { [k]: on }); s.classList.toggle("on", on); if (k === "bookmarksBar") renderBM(); });
+        $(".cl", el).onclick = e => clearMenu(e.currentTarget);
+      }; draw(); const off = Bus.on("axcore", () => el.isConnected ? draw() : off());
+    }
+    /* ============================ page menus, find, devtools ============================ */
+    const copyText = s => { try { navigator.clipboard.writeText(s); } catch (e) { const ta = document.createElement("textarea"); ta.value = s; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); } };
+    const pageMenu = (t, e) => {
+      e.preventDefault(); e.stopPropagation(); const el = e.target; const a = el.closest && el.closest("a[href]"); const im = el.closest && el.closest("img"); let sel = ""; try { sel = String(t.frame.contentWindow.getSelection() || "").slice(0, 200); } catch (er) { }
+      const unwrap = u => { try { const d = AxCore.decode(u); return /^https?:/.test(d) ? d : u; } catch (er) { return u; } };
+      const r = t.frame.getBoundingClientRect(); pageMenuAt(t, r.left + e.clientX * (t.zoom || 1), r.top + e.clientY * (t.zoom || 1), { link: a ? pageHref(a) : "", img: im ? unwrap(im.currentSrc || im.src) : "", sel });
+    };
+    const pageMenuAt = (t, x, y, { link, img, sel }) => {
+      const items = [];
+      if (link) items.push({ label: "Open link in new tab", icon: "external", action: () => openFromPage(t, link, { background: false }) }, { label: "Open link in background tab", action: () => openFromPage(t, link, { background: true }) }, { label: "Copy link address", icon: "link", action: () => copyText(link) }, { label: "Save link as…", icon: "download", action: () => downloadURL(link) }, "-");
+      if (img) items.push({ label: "Open image in new tab", icon: "image", action: () => openFromPage(t, img, { background: false }) }, { label: "Copy image address", icon: "link", action: () => copyText(img) }, { label: "Save image as…", icon: "download", action: () => downloadURL(img) }, "-");
+      if (sel) items.push({ label: "Copy", icon: "copy", kbd: "Ctrl+C", action: () => { try { t.frame.contentWindow.document.execCommand("copy"); } catch (e) { copyText(sel); } } }, { label: `Search ${(SEARCH_ENGINES[BS().search] || SEARCH_ENGINES.ddg)[0]} for “${sel.length > 24 ? sel.slice(0, 24) + "…" : sel}”`, icon: "search", action: () => newTab(sel, { after: t }) }, "-");
+      items.push({ label: "Back", icon: "arrowL", kbd: "Alt+←", disabled: !canBack(t), action: () => goBack(t) }, { label: "Forward", icon: "arrowR", kbd: "Alt+→", disabled: !canFwd(t), action: () => goFwd(t) }, { label: "Reload", icon: "refresh", kbd: "Ctrl+R", action: () => nav(t, t.url, { push: false, fresh: true }) }, "-",
+        { label: "Save page as…", icon: "save", kbd: "Ctrl+S", action: () => savePage(t) }, { label: "Print…", kbd: "Ctrl+P", action: () => printPage(t) }, { label: "View page source", icon: "code", kbd: "Ctrl+U", action: () => viewSource(t) }, { label: "Inspect", icon: "code", kbd: "F12", action: () => devtools(t) });
+      Menu.show(x, y, items);
+    };
+    const savePage = async t => { if (!/^https?:/.test(t.url)) return; try { const txt = t.html || await bxFetchText(t.url); const dir = FS.home + "/Downloads"; FS.mkdir(dir, true); const nm = FS.uniqueName(dir, (t.title || "page").replace(/[\\/:*?"<>|]/g, "").slice(0, 60) + ".html"); FS.write(FS.join(dir, nm), txt); notify("Page saved", nm, "browser"); } catch (e) { notify("Couldn't save the page", e.message, "browser"); } };
+    const printPage = t => { try { t.frame.contentWindow.focus(); t.frame.contentWindow.print(); } catch (e) { notify("Print isn't available for this page", "", "browser", { silent: true }); } };
+    const viewSource = t => { if (!/^https?:/.test(t.url)) return; newTab("axos://source?url=" + encodeURIComponent(t.url), { after: t }); };
+    const devtools = t => {
+      if (t.engine !== "core") { notify("Developer tools", "They work on pages loaded with AxCore. Switch the engine in Browser settings.", "browser", { silent: true, timeout: 3500 }); return; }
+      try { const w = t.frame.contentWindow, d = w.document; if (w.eruda && w.__axEruda) { w.eruda._isInit ? (w.__axEruda.visible = !w.__axEruda.visible, w.__axEruda.visible ? w.eruda.show() : w.eruda.hide()) : 0; return; }
+        const s = d.createElement("script"); s.src = "https://cdn.jsdelivr.net/npm/eruda@3.4.1/eruda.js"; s.onload = () => { try { w.eruda.init(); w.eruda.show(); w.__axEruda = { visible: true }; } catch (e) { notify("Developer tools failed", e.message, "browser"); } }; s.onerror = () => notify("Developer tools", "Couldn't load them from the CDN.", "browser", { silent: true }); (d.head || d.documentElement).appendChild(s); } catch (e) { notify("Developer tools", e.message, "browser"); }
+    };
+    /* find in page */
+    const closeFind = () => { if (!findBar) return; try { cur.frame?.contentWindow?.getSelection?.().removeAllRanges(); cur.frame?.contentWindow?.postMessage({ axf: "clear" }, "*"); } catch (e) { } findBar.remove(); findBar = null; };
+    const hideFind = t => { if (findBar && t === cur) closeFind(); };
+    const showFind = () => {
+      if (!cur || isInternal(cur.url)) return; if (findBar) { const i = $("input", findBar); i.focus(); i.select(); return; }
+      findBar = h(`<div class="bx-find"><input placeholder="Find in page" spellcheck="false"><span class="ct"></span><button class="ibtn pv" data-tip="Previous (Shift+Enter)">${ic("chevL")}</button><button class="ibtn nx" data-tip="Next (Enter)" style="transform:rotate(180deg)">${ic("chevL")}</button><button class="ibtn xx" data-tip="Close (Esc)">${ic("x")}</button></div>`); view.appendChild(findBar);
+      const inp = $("input", findBar); let cnt = 0, at = 0, lastQ = "";
+      const run = back => { const q = inp.value; if (!q) { $(".ct", findBar).textContent = ""; findBar.classList.remove("nomatch"); try { cur.frame.contentWindow.getSelection().removeAllRanges(); } catch (e) { } return; }
+        const t = cur; if (t.engine === "core") { try { const w = t.frame.contentWindow, d = w.document; if (q !== lastQ) { cnt = 0; const tw = d.createTreeWalker(d.body, NodeFilter.SHOW_TEXT), lq = q.toLowerCase(); let n; while ((n = tw.nextNode())) { const tx = n.nodeValue.toLowerCase(); let i = -1; while ((i = tx.indexOf(lq, i + 1)) >= 0) cnt++; } at = 0; lastQ = q; } const ok = w.find(q, false, !!back, true, false, false, false); findBar.classList.toggle("nomatch", !ok && !cnt); if (ok && cnt) { at = ((at + (back ? -1 : 1) - 1 + cnt) % cnt) + 1; if (!at) at = cnt; } $(".ct", findBar).textContent = cnt ? at + "/" + cnt : "0/0"; } catch (e) { } }
+        else if (t.frame) t.frame.contentWindow.postMessage({ axf: "find", q, back: !!back, count: q !== lastQ }, "*"), lastQ = q; };
+      findBar._run = run; inp.oninput = () => { lastQ = ""; run(false); }; inp.onkeydown = e => { e.stopPropagation(); if (e.key === "Enter") run(e.shiftKey); else if (e.key === "Escape") closeFind(); };
+      $(".nx", findBar).onclick = () => run(false); $(".pv", findBar).onclick = () => run(true); $(".xx", findBar).onclick = closeFind; inp.focus();
+    };
+    const foundResult = d => { if (!findBar) return; findBar.classList.toggle("nomatch", !d.found); const ct = $(".ct", findBar); if (d.n != null && d.n >= 0) { findBar._n = d.n; } ct.textContent = d.found ? (findBar._n ? findBar._n + " matches" : "") : "0/0"; };
+    /* ============================ site info ============================ */
+    const siteInfo = () => {
+      closePop(); const t = cur; if (!t) return; const r = chip.getBoundingClientRect(); const web = /^https?:/.test(t.url); const host = bxHost(t.url); const secure = /^https:/.test(t.url) && t.engine !== "direct";
+      const rows = web ? [[secure ? "lock" : "alert", secure ? "Connection is encrypted" : "Connection isn't encrypted", secure ? "TLS ends inside this browser, so the relay only sees scrambled bytes." : "Anything you send to this site could be read on the way."], ["network", "Engine: " + engineName(t), t.engine === "core" ? "Scramjet in a service worker. Full web support." : t.engine === "rewrite" ? "Pages are rewritten inside AxOS. Some sites won't work." : t.engine === "direct" ? "A plain frame." : "Your Ultraviolet server."], t.engine === "core" && AxCore.relay ? ["wifi", "Relay: " + AxCore.relay.name, Wisp.host(AxCore.relay) + (AxCore.info.ms ? " · " + AxCore.info.ms + " ms" : "")] : null].filter(Boolean) : [["home", isInternal(t.url) ? "AxOS page" : "Local file", "This page is part of AxOS and never leaves your device."]];
+      pop = h(`<div class="bx-pop"><h4>${esc(web ? host : isInternal(t.url) ? "AxBrowser" : "Local file")}</h4><div class="sub" style="margin-bottom:6px;word-break:break-all">${esc(web ? t.url : "")}</div>${rows.map(([i, a, b]) => `<div class="row2">${ic(i)}<div class="k">${esc(a)}<small>${esc(b)}</small></div></div>`).join("")}${web ? `<div class="row" style="gap:8px;margin-top:10px;flex-wrap:wrap"><button class="btn sm ch">Change engine</button>${t.engine === "core" ? `<button class="btn sm sr">Switch relay</button>` : ""}<button class="btn sm cp">Copy address</button></div>` : ""}</div>`);
+      document.body.appendChild(pop); pop.style.top = r.bottom + 8 + "px"; pop.style.left = clamp(r.left, 8, innerWidth - 348) + "px"; setTimeout(() => document.addEventListener("pointerdown", popOutside, true), 0);
+      const ch = $(".ch", pop); if (ch) ch.onclick = e => { const a = e.currentTarget; Menu.at(a, Object.entries(BX_ENGINES).map(([k, [n]]) => ({ label: n, checked: modeOf(t) === k, action: () => { closePop(); nav(t, t.url, { push: false, mode: k }); } }))); };
+      const sr = $(".sr", pop); if (sr) sr.onclick = async () => { sr.textContent = "Switching…"; try { const s = await AxCore.failover(); notify("Relay switched", s.name, "browser", { silent: true, timeout: 2200 }); } catch (e) { notify("No other relay answered", e.message, "browser"); } closePop(); syncBar(); };
+      $(".cp", pop)?.addEventListener("click", () => { copyText(t.url); closePop(); });
+    };
+    chip.onclick = () => siteInfo();
+    /* ============================ omnibox ============================ */
+    const closeSug = () => { if (sug) { sug.remove(); sug = null; } sugSeq++; };
+    const sugList = q => {
+      const ql = q.toLowerCase(), engine = (SEARCH_ENGINES[BS().search] || SEARCH_ENGINES.ddg)[0], url = toURL(q), isURL = url !== (SEARCH_ENGINES[BS().search] || SEARCH_ENGINES.ddg)[1] + encodeURIComponent(q);
+      const kw = /^([a-z]{1,4})\s+(.+)$/i.exec(q); const kwe = kw && BX_KEYWORDS[kw[1].toLowerCase()];
+      const first = kwe ? { k: "search", title: `Search ${kwe[0]} for “${kw[2]}”`, url, sub: "" } : isURL ? { k: "nav", title: q, url, sub: "Go to this address" } : { k: "search", title: q, url, sub: `Search ${engine}` };
+      const score = x => { const u = x.url.toLowerCase(), tt = (x.title || "").toLowerCase(); let s = 0; if (u.replace(/^https?:\/\/(www\.)?/, "").startsWith(ql)) s += 6; if (u.includes(ql)) s += 3; if (tt.startsWith(ql)) s += 4; if (tt.includes(ql)) s += 2; return s; };
+      const freq = {}; BrowserData.history.forEach(x => freq[x.url] = (freq[x.url] || 0) + 1);
+      const seen = new Set([first.url]); const hits = [...BrowserData.bookmarks.map(b => ({ ...b, k: "mark" })), ...BrowserData.history.map(x => ({ ...x, k: "hist" }))].map(x => ({ ...x, s: score(x) + (freq[x.url] || 0) * .2 + (x.k === "mark" ? 1.5 : 0) })).filter(x => x.s >= 2 && !seen.has(x.url) && seen.add(x.url)).sort((a, b) => b.s - a.s).slice(0, 5);
+      const tabsHit = tabs.filter(t => t !== cur && ((t.title || "").toLowerCase().includes(ql) || t.url.toLowerCase().includes(ql))).slice(0, 2).map(t => ({ k: "tab", title: t.title || t.url, url: t.url, tab: t, sub: "Switch to this tab" }));
+      return [first, ...tabsHit, ...hits];
+    };
+    const paintSug = (items, remote = []) => {
+      if (!items.length) return closeSug(); const rc = omniBox.getBoundingClientRect(); const all = [...items, ...remote.map(s => ({ k: "remote", title: s, url: toURL(s), sub: "" }))]; const hlOld = sug ? $$(".it", sug).findIndex(r => r.classList.contains("hl")) : 0;
+      if (!sug) { sug = h(`<div class="bx-sug"></div>`); document.body.appendChild(sug); } sug._items = all; const q = omni.value.trim();
+      const icn = { nav: "globe", search: "search", hist: "history", mark: "star", tab: "layers", remote: "search" };
+      sug.innerHTML = all.map((x, i) => `<div class="it${i === Math.max(0, hlOld) && i < all.length ? " hl" : ""}" data-i="${i}"><span class="ic">${x.k === "hist" || x.k === "mark" ? `<img src="${esc(favicon(x.url))}" alt="" onerror="this.replaceWith(document.createRange().createContextualFragment('${ic(icn[x.k]).replace(/'/g, "&#39;").replace(/"/g, "&quot;")}'))">` : ic(icn[x.k] || "search")}</span><span class="lb">${esc(x.title)}</span>${x.sub ? `<span class="sb">${esc(x.sub)}</span>` : x.k === "hist" || x.k === "mark" ? `<span class="sb">${esc(bxHost(x.url))}</span>` : ""}${x.k === "mark" ? `<span class="tag">Bookmark</span>` : ""}</div>`).join("");
+      Object.assign(sug.style, { left: rc.left + "px", top: rc.bottom + 6 + "px", width: rc.width + "px" });
+      $$(".it", sug).forEach(r => { r.onpointerdown = e => { e.preventDefault(); const x = sug._items[+r.dataset.i]; closeSug(); omni.blur(); choose(x, e.ctrlKey || e.metaKey); }; r.onpointermove = () => { if (!r.classList.contains("hl")) { $$(".it.hl", sug).forEach(z => z.classList.remove("hl")); r.classList.add("hl"); } }; });
+    };
+    const choose = (x, newTabToo) => { if (x.tab) return select(x.tab); if (newTabToo) newTab(x.url, { after: cur }); else nav(cur, x.url); };
+    let remoteSug = Promise.resolve([]);
+    const showSug = () => {
+      const q = omni.value.trim(); if (!q) return closeSug(); const my = ++sugSeq; paintSug(sugList(q)); clearTimeout(sugTimer);
+      if (q.length < 2 || /^(https?|file|axos):/i.test(q) || /^[\w-]+(\.[\w-]+)+(\/|$)/.test(q)) return;
+      sugTimer = setTimeout(async () => { try { const txt = await bxFetchText("https://duckduckgo.com/ac/?q=" + encodeURIComponent(q) + "&type=list"); if (my !== sugSeq) return; const j = JSON.parse(txt); const l = (j[1] || []).filter(s => s.toLowerCase() !== q.toLowerCase()).slice(0, 5); if (l.length && my === sugSeq && document.activeElement === omni) paintSug(sugList(q), l); } catch (e) { } }, 160);
+    };
+    let lastKey = "";
+    omni.oninput = e => {
+      showSug(); const q = omni.value; if (lastKey === "Backspace" || lastKey === "Delete" || e.inputType?.startsWith("delete") || !q || /\s/.test(q) || omni.selectionStart !== q.length) return;
+      const ql = q.toLowerCase().replace(/^https?:\/\/(www\.)?/, ""); const hit = [...BrowserData.bookmarks, ...BrowserData.history].map(x => x.url).map(u => { try { const x = new URL(u); return x.host.replace(/^www\./, ""); } catch (er) { return ""; } }).find(hh => hh && hh.startsWith(ql) && hh.length > ql.length);
+      if (hit) { const full = q.slice(0, q.length - ql.length) + hit; omni.value = full; omni.setSelectionRange(q.length, full.length); }
+    };
+    omni.onfocus = () => { omniBox.classList.add("typing"); setTimeout(() => omni.select(), 0); };
+    omni.onblur = () => { omniBox.classList.remove("typing"); setTimeout(() => { closeSug(); if (cur && document.activeElement !== omni) { omni.value = isInternal(cur.url) && /newtab/.test(cur.url) ? "" : cur.url; urlEl.innerHTML = bxFmtURL(cur.url); } }, 120); };
+    urlEl.onclick = () => { omni.focus(); };
+    omni.onkeydown = e => {
+      e.stopPropagation(); lastKey = e.key;
+      if (sug && (e.key === "ArrowDown" || e.key === "ArrowUp")) { e.preventDefault(); const rs = $$(".it", sug); let i = rs.findIndex(r => r.classList.contains("hl")); rs[i]?.classList.remove("hl"); i = (i + (e.key === "ArrowDown" ? 1 : -1) + rs.length) % rs.length; rs[i].classList.add("hl"); rs[i].scrollIntoView({ block: "nearest" }); const it = sug._items[i]; if (it && (it.k === "hist" || it.k === "mark" || it.k === "nav")) { omni.value = it.url; } else if (it && it.k === "remote") omni.value = it.title; return; }
+      if (e.key === "Enter") { e.preventDefault(); let v = omni.value.trim(); const hl = sug ? $$(".it", sug).findIndex(r => r.classList.contains("hl")) : -1; const it = sug && hl > 0 ? sug._items[hl] : null; if (e.ctrlKey && /^[\w-]+$/.test(v)) v = "www." + v + ".com"; closeSug(); omni.blur(); if (it && it.tab) return select(it.tab); const target = it ? it.url : v; if (e.altKey) newTab(target, { after: cur }); else nav(cur, target); }
+      else if (e.key === "Escape") { closeSug(); omni.value = cur.url; omni.blur(); root.focus?.(); }
+      else if (e.key === "Delete" && e.shiftKey && sug) { const hl = $$(".it", sug).findIndex(r => r.classList.contains("hl")); const it = sug._items[hl]; if (it && it.k === "hist") { e.preventDefault(); BrowserData.set("history", BrowserData.history.filter(x => x.url !== it.url)); showSug(); } }
+    };
+    /* ============================ toolbar and menus ============================ */
+    const histMenu = (anchor, dir) => { const t = cur; const list = dir < 0 ? t.hist.slice(0, t.idx).reverse() : t.hist.slice(t.idx + 1); if (!list.length) return; Menu.at(anchor, list.slice(0, 12).map(u => ({ label: (isInternal(u) ? u.replace("axos://", "AxOS · ") : u.replace(/^https?:\/\/(www\.)?/, "")).slice(0, 70), iconHTML: `<img src="${esc(favicon(u))}" width="14" height="14" alt="" onerror="this.style.display='none'">`, action: () => { const k = t.hist.indexOf(u, dir < 0 ? 0 : t.idx + 1); t.idx = dir < 0 ? t.hist.lastIndexOf(u, t.idx - 1) : k; nav(t, u, { push: false }); } }))); };
+    const bk = $(".bk", B), fw = $(".fw", B); bk.onclick = () => goBack(cur); fw.onclick = () => goFwd(cur); bk.oncontextmenu = e => { e.preventDefault(); histMenu(bk, -1); }; fw.oncontextmenu = e => { e.preventDefault(); histMenu(fw, 1); };
+    let hold = 0; [[bk, -1], [fw, 1]].forEach(([b, d]) => { b.addEventListener("pointerdown", () => { hold = setTimeout(() => histMenu(b, d), 520); }); b.addEventListener("pointerup", () => clearTimeout(hold)); b.addEventListener("pointerleave", () => clearTimeout(hold)); });
+    $(".rl", B).onclick = e => { const t = cur; if (t.loading) { t.ctl?.abort(); try { t.frame?.contentWindow?.stop(); } catch (er) { } setLoading(t, false); status(""); t.pending = false; } else nav(t, t.url, { push: false, fresh: true }); };
+    $(".hm", B).onclick = () => nav(cur, BS().home || "axos://newtab");
+    $(".dls", B).onclick = showDownloads; $(".bx-zoom", B).onclick = () => zoom(0);
+    $(".star", B).onclick = e => { const t = cur; if (isInternal(t.url)) return; const all = BrowserData.bookmarks; const i = all.findIndex(b => b.url === t.url); if (i >= 0) all.splice(i, 1); else all.push({ url: t.url, title: (t.title || t.url).slice(0, 60) }); BrowserData.setBookmarks(all); if (i < 0) notify("Bookmark added", t.title, "browser", { silent: true, timeout: 2200 }); };
+    $(".menu", B).onclick = e => Menu.at(e.currentTarget, [
+      { label: "New tab", icon: "plus", kbd: "Ctrl+T", action: () => newTab() },
+      { label: "New window", icon: "external", action: () => launch("browser", { newWindow: true }) },
+      { label: "Reopen closed tab", icon: "undo", kbd: "Ctrl+Shift+T", disabled: !closed.length, action: reopenClosed }, "-",
+      { label: "History", icon: "history", kbd: "Ctrl+H", action: () => newTab("axos://history", { after: cur }) }, { label: "Bookmarks", icon: "bookmark", action: () => newTab("axos://bookmarks", { after: cur }) }, { label: "Downloads", icon: "download", kbd: "Ctrl+J", action: () => newTab("axos://downloads", { after: cur }) }, "-",
+      { label: `Zoom · ${Math.round(cur.zoom * 100)}%`, icon: "zoomIn", sub: [{ label: "Zoom in", kbd: "Ctrl++", action: () => zoom(.1) }, { label: "Zoom out", kbd: "Ctrl+−", action: () => zoom(-.1) }, { label: "Reset", kbd: "Ctrl+0", action: () => zoom(0) }] },
+      { label: "Find in page…", icon: "search", kbd: "Ctrl+F", disabled: isInternal(cur.url), action: showFind }, { label: "Print…", kbd: "Ctrl+P", disabled: isInternal(cur.url), action: () => printPage(cur) },
+      { label: "Save page as…", icon: "save", kbd: "Ctrl+S", disabled: !/^https?:/.test(cur.url), action: () => savePage(cur) }, { label: "Reader mode", icon: "fileText", disabled: !/^https?:/.test(cur.url), action: () => readerMode(cur, cur.url) }, "-",
+      { label: "View page source", icon: "code", kbd: "Ctrl+U", disabled: !/^https?:/.test(cur.url), action: () => viewSource(cur) }, { label: "Developer tools", icon: "code", kbd: "F12", disabled: !/^https?:/.test(cur.url), action: () => devtools(cur) }, "-",
+      { label: "Show bookmarks bar", checked: BS().bookmarksBar, action: () => { Settings.patch("browser", { bookmarksBar: !BS().bookmarksBar }); renderBM(); } }, { label: "Full screen", kbd: "F11", action: () => toggleFS() },
+      { label: "Clear browsing data…", icon: "trash", action: () => clearMenu($(".menu", B)) }, { label: "Settings", icon: "gear", action: () => newTab("axos://settings", { after: cur }) }, { label: "About AxBrowser", icon: "info", action: () => newTab("axos://about", { after: cur }) },
+    ]);
+    const toggleFS = () => { document.fullscreenElement ? document.exitFullscreen() : B.requestFullscreen?.(); };
+    /* ============================ keyboard ============================ */
+    const forwardKey = e => {
+      const k = (e.key || "").toLowerCase(), c = e.ctrlKey || e.metaKey; let done = true;
+      if (c && k === "t" && e.shiftKey) reopenClosed(); else if (c && k === "t") newTab();
+      else if (c && k === "w") closeTab(cur); else if ((c && k === "l") || (e.altKey && k === "d") || e.key === "F6") { omni.focus(); omni.select(); }
+      else if ((c && k === "r") || e.key === "F5") nav(cur, cur.url, { push: false, fresh: true });
+      else if (c && k === "f") showFind(); else if (c && k === "d") $(".star", B).click(); else if (c && k === "j") showDownloads(); else if (c && k === "h") newTab("axos://history", { after: cur });
+      else if (c && k === "p") printPage(cur); else if (c && k === "u") viewSource(cur); else if (c && k === "s") savePage(cur); else if (e.key === "F12") devtools(cur); else if (e.key === "F11") toggleFS();
+      else if (c && e.shiftKey && k === "a") tabSearch({ currentTarget: $(".bx-ts", win.extra) });
+      else if (c && (k === "=" || k === "+")) zoom(.1); else if (c && k === "-") zoom(-.1); else if (c && k === "0") zoom(0);
+      else if (c && e.key === "Tab") select(tabs[(tabs.indexOf(cur) + (e.shiftKey ? -1 : 1) + tabs.length) % tabs.length]);
+      else if (c && e.key === "PageDown") select(tabs[(tabs.indexOf(cur) + 1) % tabs.length]); else if (c && e.key === "PageUp") select(tabs[(tabs.indexOf(cur) - 1 + tabs.length) % tabs.length]);
+      else if (c && /^[1-9]$/.test(k)) select(k === "9" ? tabs[tabs.length - 1] : tabs[+k - 1] || cur);
+      else if (e.altKey && e.key === "ArrowLeft") goBack(cur); else if (e.altKey && e.key === "ArrowRight") goFwd(cur);
+      else if (e.key === "Escape") { if (findBar) closeFind(); else if (cur.loading) $(".rl", B).click(); else done = false; }
+      else done = false;
+      if (done && e.preventDefault) e.preventDefault(); return done;
+    };
+    const docKey = e => { if (!win.isActive || e.defaultPrevented && e.target.closest?.(".bx-omni")) return; if (e.target.closest && e.target.closest(".bx-find input,.bx-omni input") && !(e.ctrlKey || e.metaKey) && e.key !== "F5" && e.key !== "F12") return; if (e.target.closest && e.target.closest(".dialog,.ctx") ) return; forwardKey(e); };
+    document.addEventListener("keydown", docKey, true);
+    /* ============================ lifecycle ============================ */
+    win.on("close", () => { document.removeEventListener("keydown", docKey, true); queueSave(true); window.removeEventListener("message", onMsg); offBM(); offAC(); offDL(); offDLb(); tabs.forEach(destroy); closeSug(); closePop(); hideHC(); closeFind(); });
+    win.browserOpen = a => { if (a.file) newTab("file://" + a.file); else if (a.url) newTab(a.url, { mode: a.mode || null }); else newTab(); };
+    const first = args.file || args.path ? "file://" + (args.file || args.path) : args.url || null;
+    const saved = BS().restore !== false && !first ? (BS().session || []) : [];
+    if (saved.length) {
+      const act = Math.min(BS().sessionActive ?? saved.length - 1, saved.length - 1);
+      saved.forEach((s, i) => { newTab(null, { pinned: s.pinned, activate: false, lazy: s.url, title: s.title }); });
+      const at = tabs[act] || tabs[tabs.length - 1]; select(at);
+    } else newTab(first, { mode: args.mode || null });
+  },
+});
+</script>
+<script>
+/* =====================================================================
    Settings
    ===================================================================== */
 const Backup = {
@@ -4214,7 +4651,8 @@ registerApp("settings", {
       time: () => { const tz = Intl.DateTimeFormat().resolvedOptions().timeZone; return `<h1>Time & language</h1><div class="st-hero"><div class="bigtime" style="font-size:48px" data-live-clock></div><div class="grow muted">${new Date().toLocaleDateString(undefined, { weekday: "long", year: "numeric", month: "long", day: "numeric" })}</div></div>${row("clock", "24-hour clock", "", sw("clock24"))}${row("clock", "Show seconds in taskbar", "", sw("showSeconds"))}${row("globe", "Time zone", esc(tz) + " (synced from your computer)", "")}${row("language", "Display language", esc(navigator.language) + " (from your browser)", "")}`; },
       network: () => { const b = S("browser"); const c = navigator.connection; return `<h1>Network & Browser</h1><div class="st-hero"><div style="width:64px;height:64px;border-radius:50%;background:rgba(var(--accent-rgb),.15);display:grid;place-items:center;color:var(--accent)">${ic(navigator.onLine && S("wifi") ? "wifi" : "wifiOff").replace('class="i ', 'style="width:32px;height:32px" class="i ')}</div><div class="grow"><div style="font-size:18px;font-weight:600">${navigator.onLine && S("wifi") && !S("airplane") ? "AxNet-5G" : "Not connected"}</div><div class="muted">${navigator.onLine ? "Connected, secured" : "No internet access"}${c?.effectiveType ? ` · ${c.effectiveType.toUpperCase()}${c.downlink ? " · ~" + c.downlink + " Mbps" : ""}` : ""}</div></div></div>
         ${row("wifi", "Wi-Fi", "", sw("wifi"))}${row("plane", "Airplane mode", "", sw("airplane"))}
-        <h3>AxBrowser connection</h3>${row("shield", "Connection mode", "How AxBrowser loads websites", sel("b.mode", [["proxy", "AxProxy (built-in rewriting proxy)"], ["direct", "Direct (plain iframe)"], ["uv", "Ultraviolet / Scramjet server"]], b.mode))}
+        <h3>AxBrowser connection</h3>${row("shield", "Connection mode", "How AxBrowser loads websites", sel("b.mode", [["auto", "Automatic (AxCore, falls back to AxProxy)"], ["core", "AxCore (service-worker engine)"], ["rewrite", "AxProxy (in-page rewriting proxy)"], ["direct", "Direct (plain iframe)"], ["uv", "Ultraviolet / Scramjet server"]], b.mode === "proxy" ? "auto" : b.mode))}
+        ${row("cpu", "AxCore", AxCore.ready ? `Ready · relay ${esc(AxCore.relay?.name || "?")}${AxCore.info.ms ? " · " + AxCore.info.ms + " ms" : ""}` : AxCore.supported ? (AxCore.state === "failed" ? "Couldn't start: " + esc(AxCore.error) : "Starts with the first page you open") : esc(AxCore.why()), `<button class="btn sm axcore-open">Browser settings</button>`)}
         ${row("activity", "Gateway health", Object.keys(GATEWAYS).map(k => { const hh = AxProxy.health[k]; return `${GATEWAYS[k].name}: ${hh ? (hh.streak ? `<span style="color:var(--danger)">failing</span>` : `<span style="color:var(--ok)">${hh.ms} ms</span>`) : "untested"}`; }).join(" · ") + (AxProxy.worker() ? ` · <b>Personal gateway in use</b>` : ""), `<button class="btn sm gwreset">Reset</button>`)}${row("network", "AxProxy gateway", "Public CORS gateway used to fetch pages. Auto tries each one in turn.", sel("b.gateway", [["auto", "Automatic (recommended)"], ...Object.entries(GATEWAYS).map(([k, g]) => [k, g.name]), ["custom", "Custom…"]], b.gateway))}
         <div class="srow stack ${b.gateway === "custom" ? "" : "hidden"}"><div class="t">Custom gateway URL</div><div class="d muted" style="font-size:12px;margin:4px 0 8px">The page address is appended (URL-encoded), or substituted for <code>{url}</code>.</div><input class="input" data-btext="customGateway" value="${esc(b.customGateway)}" placeholder="https://my-cors-proxy.example/?url="></div>
         <h3>Personal AxProxy gateway (recommended)</h3><div class="srow stack"><div class="d muted" style="font-size:12.5px;line-height:1.55">Public gateways are shared and rate-limited, so they're slow and fail often. A free Cloudflare Worker gives you your own gateway: faster, no rate limits, real form posts, and logins that keep cookies.<ol style="margin:8px 0 10px 18px;padding:0"><li>Click <b>Copy gateway code</b>.</li><li>Open the Cloudflare dashboard → <b>Workers &amp; Pages</b> → <b>Create</b> → <b>Create Worker</b> → <b>Deploy</b>.</li><li>Click <b>Edit code</b>, replace everything with the copied code, then <b>Deploy</b>.</li><li>Paste the worker's address (like <code>https://axproxy.you.workers.dev</code>) below.</li></ol></div><div class="row" style="flex-wrap:wrap"><button class="btn wcopy">${ic("copy")} Copy gateway code</button><button class="btn wcf">${ic("external")} Open Cloudflare</button></div><div class="row" style="margin-top:10px;flex-wrap:wrap"><input class="input grow" data-btext="workerUrl" value="${esc(b.workerUrl || "")}" placeholder="https://axproxy.your-name.workers.dev" style="min-width:220px"><input class="input" data-btext="workerKey" value="${esc(b.workerKey || "")}" placeholder="Key (optional)" style="width:150px"><button class="btn wtest">Test</button></div><div class="wres dim" style="font-size:12px;margin-top:6px"></div></div>
@@ -4332,6 +4770,7 @@ registerApp("settings", {
         const c = Wisp.cfg(); Wisp.patch({ custom: [...c.custom, { id: "c" + uid(), name: $(".n", body).value.trim() || new URL(u).host, url: u }] }); render();
       });
       q(".wreal", async () => { const out = $(".wres", P); out.textContent = "Loading https://example.com through Wisp…"; const t0 = performance.now(); try { const r = await AxProxy.one({ id: "wisp", name: "Wisp", kind: "wisp" }, "https://example.com/", { binary: false }); out.innerHTML = /Example Domain/.test(r.text) ? `<span style="color:var(--ok)">✓ Worked through ${esc(r.via)} (${Math.round(performance.now() - t0)} ms, HTTP ${r.status}).</span> Real TLS ran inside AxOS; the relay saw only encrypted data.` : `<span style="color:var(--danger)">Loaded, but the page wasn't what we expected (HTTP ${r.status}).</span>`; wpaint(); } catch (e) { out.innerHTML = `<span style="color:var(--danger)">${esc(e.message)}</span>`; } });
+      q(".axcore-open", () => launch("browser", { url: "axos://settings" }));
       q(".gwreset", () => { AxProxy.health = {}; localStorage.removeItem("axos.gwHealth"); AxProxy.cache.clear(); render(); });
       q(".tg", async () => {
         const out = $(".tgres", P); out.innerHTML = [...(AxProxy.worker() ? [["worker", AxProxy.worker()]] : []), ...Object.entries(GATEWAYS)].map(([k, g]) => `<div class="srow" data-g="${k}"><span class="spinner" style="width:16px;height:16px;border-width:2px"></span><div class="tx"><div class="t">${esc(g.name)}</div><div class="d">Testing…</div></div></div>`).join("");

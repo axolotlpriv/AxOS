@@ -17,7 +17,7 @@ Your files and settings are saved in the browser (IndexedDB and localStorage), s
 | **Windows** | Drag, resize from all edges, maximize, minimize, snap to halves, thirds or quarters (drag to an edge, press Alt+Arrow, or hover the maximize button for snap layouts), always-on-top |
 | **Phones & tablets** | Windows open full-screen on small screens, the taskbar compacts itself to fit, apps adapt to their window size, long-press opens context menus, and a single tap opens icons |
 | **File Explorer** | Breadcrumb address bar, search, grid and details views, preview pane, cut/copy/paste, drag and drop, Recycle Bin, upload and download, properties |
-| **AxBrowser** | Tabs, bookmarks, history, downloads saved to `~/Downloads`, reader mode, zoom, and three connection modes (see below) |
+| **AxBrowser** | A full tabbed browser: pinned and draggable tabs, smart address bar, find in page, zoom per site, developer tools, downloads, history, bookmarks, and four connection engines (see below) |
 | **Terminal** | Bash-like shell with pipes, redirects, `&&`/`||`, `$(...)`, variables, tab completion and 100+ commands. Type `cmd` for a Command Prompt that runs `.bat` files |
 | **AxCompat** | Opens Windows `.exe` (PE32/PE32+) and Linux ELF programs (see below) |
 | **Remote Desktop** | Streams and controls your PC through the AxOS Companion app (`companion/`). Gaming mode and work mode, hardware video encoding, controller passthrough, clipboard sync |
@@ -169,9 +169,22 @@ No account? Choose **Pair with an ID and key** in the companion, then use **Add 
 
 ## How the browser loads websites
 
-Most sites refuse to be shown inside an iframe, so AxBrowser has three connection modes.
+Most sites refuse to be shown inside an iframe, so AxBrowser loads them through a connection engine. **Automatic** (the default) uses AxCore when it can run and falls back to AxProxy on its own.
 
-### AxProxy (default)
+### AxCore (service-worker engine)
+
+AxCore is the most complete engine: logins, video sites, web apps, WebSockets, workers, cookies and storage all work. [Scramjet](https://github.com/MercuryWorkshop/scramjet) runs in a service worker (`sw.js`) and rewrites pages the way a real browser would see them. Its network traffic leaves through [bare-mux](https://github.com/MercuryWorkshop/bare-mux) and libcurl.js (real TLS compiled to WebAssembly) over a [Wisp](#wisp-the-real-proxy-backend) relay, so the relay only sees encrypted bytes.
+
+- **Needs:** AxOS opened over `http://` or `https://` (GitHub Pages, any static host, or `localhost`) with `sw.js` and the `proxy/` folder beside `index.html`. Opened as a local file, AxBrowser uses AxProxy instead and says why on the new tab page.
+- **Relay choice:** it ranks relays by a quick handshake, then proves the best one with a real HTTPS request before the first page, trying up to three. If a page fails it checks the relay with another real request: if the relay is at fault it switches to the next one and retries by itself, otherwise it shows the site's error.
+- **New tabs:** links that open a new tab (`target="_blank"`, `window.open`) open right after the tab that opened them and switch to it. Ctrl+click and middle-click open a background tab. Scripts can't open tabs without a click (pop-ups are blocked), and a page can open at most 4 tabs in 10 seconds.
+- **Developer tools:** F12 loads [Eruda](https://github.com/liriliri/eruda) into the page (console, elements, network, storage).
+- **Isolation:** pages in AxCore run on the same web address as AxOS. Scramjet hides AxOS from them and the frame has no pop-up or top-navigation permission, but a service-worker proxy can't be a hard security boundary. Avoid opening untrusted sites while you're signed in to AxOS Cloud.
+- **Third-party code:** `proxy/` holds unmodified, version-pinned copies of Scramjet 1.1.0, bare-mux 2.1.9 and libcurl-transport 1.5.2 (all AGPL-3.0). See `proxy/README.md`.
+- **Your own relay:** `relay/` is a small Node Wisp server you can deploy for free (see `relay/README.md`).
+
+
+### AxProxy (in-page rewriting engine)
 
 AxProxy fetches each page through a gateway, rewrites it so links, forms and pop-ups stay inside AxBrowser, and renders it in a sandbox.
 

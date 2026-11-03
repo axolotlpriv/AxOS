@@ -1,0 +1,12 @@
+# Render blueprint. If you deploy from the repository root, copy this file to the root as render.yaml.
+services:
+  - type: web
+    name: axos-relay
+    runtime: node
+    rootDir: relay
+    buildCommand: npm install --omit=dev
+    startCommand: node server.mjs
+    plan: free
+    envVars:
+      - key: RELAY_SECRET
+        generateValue: true

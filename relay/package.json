@@ -1,0 +1,11 @@
+{
+  "name": "axos-relay",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Personal Wisp relay for AxOS (AxBrowser / AxCore)",
+  "type": "module",
+  "main": "server.mjs",
+  "scripts": { "start": "node server.mjs" },
+  "engines": { "node": ">=18" },
+  "dependencies": { "@mercuryworkshop/wisp-js": "0.5.2" }
+}
