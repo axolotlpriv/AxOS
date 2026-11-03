@@ -27,6 +27,9 @@ Your files and settings are saved in the browser (IndexedDB and localStorage), s
 | **AxPlay** | Steam-style game launcher: store, library, downloads, play time, Big Picture mode with gamepad support, Proton-style compatibility layer for Windows games, native Linux games |
 | **Geometry Dash** | Your [Geometry-Dash-webport](https://github.com/axolotlpriv/Geometry-Dash-webport), loaded live inside a window |
 | **Skyline Coaster Studio** | Your [Skyline](https://github.com/axolotlpriv/Skyline) roller-coaster builder. It opens the latest `index.html` from the repo each time (cached for offline use), and its saves are kept in AxOS |
+| **AxFlix** | Browse about 600 popular movies and series, search any title, and see where to watch it in your country (streaming, free, rent, buy), with trailers |
+| **AxTube** | A YouTube client with search, trending, channels, subscriptions, history, watch-later and comments. No Wisp |
+| **AxTok** | A vertical short-video feed with like, save and pasted links. No Wisp |
 | **Store extras** | Sticky Notes. Install it from the Store or with `apt install` |
 
 ## Personalization
@@ -198,6 +201,34 @@ Wisp is a protocol that carries many TCP connections over one WebSocket. InvisiP
 - **Servers:** **Settings → Network & Browser → Wisp servers** lists 10 public relays (Terbium, Anura, FreeWisp, WebMC, PGIS, Reeyuki, Lunaar, DaydreamX, PeteZah and the Mercury Workshop demo server). Each gets a live status check. You can pin one, switch any off, or add your own `wss://` address.
 - **Automatic failover:** AxProxy uses the fastest relay. If a request fails it tries up to two others, and a relay is only marked as down if another one succeeded where it failed.
 - **Trust:** relays are run by strangers and can disappear. Don't sign in to anything important through them. For private browsing, run your own [wisp-server-python](https://github.com/MercuryWorkshop/wisp-server-python) or similar and add it under **Add a Wisp server**.
+
+## Movies, YouTube and short videos
+
+AxFlix, AxTube and AxTok live in the Start menu. Like everything else, none of them can take the real browser tab anywhere: outside links open in AxBrowser, and players run in frames without popup or top-navigation permission.
+
+### AxFlix
+
+- **Catalog:** about 600 popular movies and series, picked by rating and votes from [IMDb's non-commercial datasets](https://developer.imdb.com/non-commercial-datasets/) and bundled into `index.html` with their posters. IMDb's own pages block scripts, so the data comes from the official dataset files.
+- **Search:** instant over the catalog. Anything else comes from IMDb's title search, which has no CORS support, so it goes through AxProxy (Wisp or your gateway).
+- **Where to watch:** looked up live from JustWatch for the country you pick, with streaming, free, rent and buy options, prices and provider logos, plus a description, age rating and a trailer. JustWatch also has no CORS support, so this goes through Wisp or your personal gateway. Results are cached for a day.
+- **Links:** provider buttons open the service inside AxBrowser. AxFlix doesn't stream or link to pirate sites. Most streaming services need a login and DRM, so use their official app to watch.
+- **My List** is kept on this device.
+- **Credit:** ratings and titles from IMDb, availability from JustWatch.
+
+### AxTube
+
+- **No Wisp:** it connects straight to public [Piped](https://github.com/TeamPiped/Piped) servers, which allow requests from web pages. It tries several at once, remembers the fastest and skips ones that stop answering. A server that answers with an error for one video isn't marked as down. **Settings** in the app lists the servers, tests them and lets you add your own.
+- **Optional YouTube API key:** a free key from Google Cloud makes search and trending use YouTube's own API.
+- **Playback:** YouTube's official embed player when AxOS is served from a web address, or a direct 360p stream otherwise. YouTube's player shows **Error 153** when the page that embeds it sends no referrer, which is the case when AxOS is opened from a local file. Automatic mode handles this, and the watch page has a switch between the two.
+- **Limits:** the public servers are sometimes blocked by YouTube for certain videos (live streams especially). The video still plays through the embed, but details and comments may be missing.
+- **Subscriptions, history, watch-later** stay on this device.
+
+### AxTok
+
+- **No Wisp:** the feed comes from the public trending data at tikwm.com, with open CORS. Videos are plain files in a `<video>` element.
+- **Controls:** scroll or use the arrow keys, **L** to like, **S** to save, **M** for sound, **Space** to pause, double-click to like.
+- **Open link:** paste a TikTok link to play it, with TikTok's own embed player as a fallback.
+- **Limits:** TikTok has no public search, so there isn't any. The data service allows about one request a second and is sometimes unavailable. The trending feed is public and unfiltered.
 
 ## Staying inside AxOS
 
