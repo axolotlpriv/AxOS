@@ -554,6 +554,7 @@ body.taskview-on .win.minimized{ opacity:1; pointer-events:auto; }
 .bx-find{ position:absolute; top:8px; right:14px; z-index:9; display:flex; align-items:center; gap:4px; padding:5px 6px 5px 12px; border-radius:12px; background:var(--glass-2); backdrop-filter:blur(26px) saturate(1.5); border:1px solid var(--border-2); box-shadow:var(--shadow-sm); animation:bxpop .16s var(--ease-out); } .bx-find input{ width:190px; height:28px; border:0; background:transparent; outline:none; font-size:13px; color:var(--text); } .bx-find .ct{ font-size:11.5px; color:var(--text-3); min-width:44px; text-align:right; } .bx-find .ibtn{ width:26px; height:26px; } .bx-find.nomatch input{ color:#f87171; }
 .bx-pop{ position:fixed; z-index:99985; width:340px; border-radius:16px; background:var(--glass-2); backdrop-filter:blur(30px) saturate(1.5); border:1px solid var(--border-2); box-shadow:0 20px 60px rgba(0,0,0,.5); padding:14px; animation:bxpop .16s var(--ease-out); font-size:13px; } .bx-pop h4{ margin:0 0 4px; font-size:14px; font-weight:600; } .bx-pop .sub{ color:var(--text-3); font-size:12px; line-height:1.5; } .bx-pop .row2{ display:flex; align-items:center; gap:10px; padding:9px 0; border-top:1px solid var(--border); } .bx-pop .row2:first-of-type{ border-top:0; } .bx-pop .row2 svg{ width:17px; height:17px; flex:none; color:var(--text-2); } .bx-pop .k{ flex:1; min-width:0; } .bx-pop .k small{ display:block; color:var(--text-3); font-size:11.5px; margin-top:1px; word-break:break-word; }
 .bx-dl{ padding:8px 0; } .bx-dl .d{ display:flex; align-items:center; gap:10px; padding:8px 4px; border-radius:9px; } .bx-dl .d:hover{ background:var(--hover); } .bx-dl .bar{ height:3px; border-radius:2px; background:var(--active); overflow:hidden; margin-top:5px; } .bx-dl .bar i{ display:block; height:100%; width:40%; background:var(--accent); animation:indet 1s ease-in-out infinite; }
+.bx-info{ position:absolute; top:0; left:0; right:0; z-index:5; display:flex; align-items:center; gap:10px; padding:7px 10px 7px 14px; background:var(--glass-2); backdrop-filter:blur(20px) saturate(1.4); border-bottom:1px solid var(--border-2); font-size:12.5px; color:var(--text); animation:bxpop .18s var(--ease-out); } .bx-info > svg{ width:16px; height:16px; color:var(--accent); flex:none; } .bx-info span{ flex:1; min-width:0; } .bx-info .ibtn{ width:24px; height:24px; }
 .bx-ovl{ position:absolute; inset:0; background:var(--surface); display:flex; align-items:center; justify-content:center; z-index:4; }
 .bx-conn{ text-align:center; color:var(--text-2); font-size:13px; } .bx-conn .ring{ width:34px; height:34px; margin:0 auto 14px; border-radius:50%; border:3px solid rgba(var(--accent-rgb),.2); border-top-color:var(--accent); animation:bxspin .8s linear infinite; } .bx-conn b{ display:block; color:var(--text); font-size:14px; margin-bottom:4px; } .bx-conn small{ color:var(--text-3); }
 .bx-err{ position:absolute; inset:0; background:var(--surface); display:flex; align-items:center; justify-content:center; padding:30px; overflow:auto; z-index:4; } .bx-err .in{ max-width:540px; } .bx-err .ico{ width:64px; height:64px; border-radius:20px; display:grid; place-items:center; background:rgba(var(--accent-rgb),.15); color:var(--accent); margin-bottom:18px; } .bx-err .ico svg{ width:32px; height:32px; } .bx-err h2{ font-weight:600; font-size:22px; margin:0 0 8px; } .bx-err p{ color:var(--text-2); line-height:1.6; margin:0 0 8px; } .bx-err .det{ font:11.5px var(--mono); color:var(--text-3); background:var(--surface-2); border-radius:8px; padding:8px 10px; margin:12px 0; word-break:break-word; } .bx-err ul{ color:var(--text-2); line-height:1.7; margin:6px 0 14px 18px; padding:0; }
@@ -3961,9 +3962,13 @@ const AxCore = {
   },
   /* one real request through the current relay: https://example.com/ */
   async check(timeout = 9000) {
-    const t0 = performance.now(); const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), timeout);
-    try { const r = await this.client.fetch("https://example.com/", { signal: ctl.signal }); if (!r || r.status >= 500) throw new Error("status " + (r && r.status)); await r.arrayBuffer?.().catch(() => { }); return Math.round(performance.now() - t0); }
-    finally { clearTimeout(tm); }
+    const t0 = performance.now();
+    for (;;) {
+      const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), timeout);
+      try { const r = await this.client.fetch("https://example.com/", { signal: ctl.signal }); if (!r || r.status >= 500) throw new Error("status " + (r && r.status)); await r.arrayBuffer?.().catch(() => { }); return Math.round(performance.now() - t0); }
+      catch (e) { /* the transport's WebAssembly is still loading in the shared worker: that isn't the relay's fault, wait for it */ if (/wasm not loaded|load_wasm|not ready|no bare clients/i.test(String(e && e.message)) && performance.now() - t0 < 20000) { await sleep(300); continue; } throw e; }
+      finally { clearTimeout(tm); }
+    }
   },
   /* a faster relay has been measured and nothing is loading: switch to it quietly */
   async maybeSwap(busy) {
@@ -4031,7 +4036,7 @@ registerApp("browser", {
       <button class="ibtn dls" data-tip="Downloads (Ctrl+J)">${ic("download")}</button><button class="ibtn menu" data-tip="Menu">${ic("moreV")}</button><div class="bx-prog"><i></i></div></div>
       <div class="bx-bm"></div><div class="bx-view"></div><div class="bx-st"></div></div>`;
     const strip = $(".bx-strip", win.extra), view = $(".bx-view", B), omni = $(".bx-omni input", B), omniBox = $(".bx-omni", B), urlEl = $(".bx-url", B), chip = $(".bx-chip", B), prog = $(".bx-prog", B), statEl = $(".bx-st", B), root = $(".bx", B);
-    let tabs = [], cur = null; const closed = []; let sug = null, sugTimer = 0, sugSeq = 0, pop = null, hc = null, findBar = null, saveTimer = 0;
+    let tabs = [], cur = null, lastPagePtr = 0, lastPageKey = 0, omniDirty = false, refocusing = false; const closed = []; let sug = null, sugTimer = 0, sugSeq = 0, pop = null, hc = null, findBar = null, saveTimer = 0;
     const BS = () => Settings.get("browser");
     const modeOf = t => { const m = t.mode || BS().mode; return m === "proxy" || !m ? "auto" : m; };
     const isInternal = u => /^axos:/.test(u || ""); const isFile = u => /^file:/.test(u || "");
@@ -4206,7 +4211,8 @@ registerApp("browser", {
       try {
         const d = w.document; applyZoom(t);
         w.addEventListener("keydown", e => forwardKey(e), true);
-        w.addEventListener("pointerdown", () => { Menu.closeAll(); closeSug(); if (document.activeElement === omni) omni.blur(); hideHC(); }, true);
+        w.addEventListener("pointerdown", () => { lastPagePtr = Date.now(); Menu.closeAll(); closeSug(); if (document.activeElement === omni) omni.blur(); hideHC(); }, true);
+        w.addEventListener("keydown", () => { lastPageKey = Date.now(); }, true);
         d.addEventListener("contextmenu", e => pageMenu(t, e), true);
         d.addEventListener("mouseover", e => { const a = e.target.closest && e.target.closest("a[href]"); const u = a ? pageHref(a) : ""; status(u); }, true);
         d.addEventListener("mouseout", e => { if (!e.relatedTarget) status(""); }, true);
@@ -4235,11 +4241,24 @@ registerApp("browser", {
         if (!relayOK && tries < 2) { try { const s = await AxCore.failover(); t.via = s.name; status("Switched to " + s.name); } catch (e) { } return core(t, t.url, { tries: tries + 1 }); }
         status(""); setLoading(t, false); return errorPage(t, t.url, new Error(err.message), { kind: relayOK ? "site" : "relay", via: t.via });
       }
+      /* the site answered, but with an empty error page (a 403 to the relay's address, say): say so instead of showing a white page */
+      const bl = blockedOf(t); if (bl && bl.kind === "http") { status(""); setLoading(t, false); return errorPage(t, t.url, new Error(`The site answered with HTTP ${bl.status} and an empty page`), { kind: "blocked", status: bl.status, via: t.via }); }
       status(""); t.pending = false; setLoading(t, false); if (AxCore.relay && Wisp.health[AxCore.relay.id]) Wisp.health[AxCore.relay.id].streak = 0;
-      pollCore(t); applyZoom(t); applyMute(t); AxCore.maybeSwap(coreBusy);
+      pollCore(t); applyZoom(t); applyMute(t); AxCore.maybeSwap(coreBusy); if (bl && bl.kind === "bot") infoBar(t, "This site is checking for bots and may block the relay AxBrowser is using.", [["Try another relay", () => switchAndReload(t)]]);
       if (BS().history !== false) BrowserData.addHistory(t.url, t.title);
     };
     const coreBusy = () => tabs.some(t => t.loading && t.engine === "core");
+    /* sites that refuse shared relays: an empty 4xx/5xx document, or a well-known bot-check page */
+    const blockedOf = t => {
+      try { const w = t.frame?.contentWindow, d = w?.document; if (!d || !d.documentElement) return null; const nv = w.performance?.getEntriesByType?.("navigation")?.[0]; const st = nv?.responseStatus || 0; const txt = (d.body?.innerText || "").trim();
+        const challenge = /__cf_chl|challenge/i.test(d.location?.href || "") || !!d.querySelector("script[src*='challenge-platform'],#challenge-form,#challenge-running,.cf-turnstile,[id^='cf-chl'],script[src*='captcha']");
+        if (st >= 400 && !challenge && txt.length < 40 && d.querySelectorAll("img,video,canvas,svg,iframe,form,input,button").length < 2 && d.scripts.length < 3) return { kind: "http", status: st };
+        if (challenge) return { kind: "bot" };
+        if (/^(just a moment|attention required)|unusual traffic|blocked by network security|confirm you.re not a bot|verify you are human|access denied/i.test((d.title || "") + " " + txt.slice(0, 400))) return { kind: "bot" };
+      } catch (e) { } return null;
+    };
+    const infoBar = (t, msg, actions = []) => { $(".bx-info", t.el)?.remove(); const bar = h(`<div class="bx-info">${ic("info")}<span>${esc(msg)}</span>${actions.map((a, i) => `<button class="btn sm" data-i="${i}">${esc(a[0])}</button>`).join("")}<button class="ibtn xx" aria-label="Dismiss">${ic("x")}</button></div>`); t.el.appendChild(bar); $$("[data-i]", bar).forEach(b => b.onclick = () => { bar.remove(); actions[+b.dataset.i][1](); }); $(".xx", bar).onclick = () => bar.remove(); };
+    const switchAndReload = async t => { status("Switching relay…"); try { const s = await AxCore.failover(); notify("Relay switched", s.name, "browser", { silent: true, timeout: 2000 }); } catch (e) { notify("No other relay answered", e.message, "browser"); } status(""); nav(t, t.url, { push: false, fresh: true }); };
     const pollCore = t => {
       let d = null, w = null; try { w = t.frame?.contentWindow; d = w?.document; } catch (e) { return; } if (!d || !d.documentElement || AxCore.errorOf(d)) return;
       /* the page is usable once it is interactive: don't keep the spinner for slow images */
@@ -4334,12 +4353,13 @@ try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch
       else if (o.kind === "core") { title = "AxCore couldn't start"; body = esc(msg); tips = ["Open AxOS from an http(s) address with <code>sw.js</code> and the <code>proxy</code> folder beside <code>index.html</code>", "Or use the AxProxy engine, which works anywhere"]; }
       else if (o.kind === "relay") { title = "The relay isn't answering"; body = `AxBrowser couldn't get through the Wisp relay${o.via ? " <b>" + esc(o.via) + "</b>" : ""} and the next ones didn't answer either.`; tips = ["Public relays come and go. Try again in a moment", "Add your own relay in Settings, or use a personal gateway"]; }
       else if (o.kind === "uv") { title = "Set up your Ultraviolet server"; body = esc(msg); icon = "shield"; }
+      else if (o.kind === "blocked") { title = `${host} refused this connection` + (o.status ? ` (HTTP ${o.status})` : ""); body = `Some sites block shared proxy relays${o.via ? ", and <b>" + esc(o.via) + "</b> seems to be one of them" : ""}. Another relay or your personal gateway may get through.`; icon = "shield"; tips = ["Switch to another relay and try again", "Sites like this usually work through a personal gateway or your own relay"]; }
       else if (o.kind === "file") { title = "This file can't be displayed"; body = esc(msg); icon = "download"; }
       else if (/resolve|dns|ENOTFOUND|getaddrinfo|name or service|could not resolve|host not found/i.test(msg)) { title = "Can't find " + host; body = "The server's address couldn't be found. Check the spelling or your connection."; tips = ["Check the address for typing mistakes"]; icon = "search"; }
       else if (/refused|ECONNREFUSED|unreachable/i.test(msg)) { title = host + " refused the connection"; body = "The server is there but isn't accepting connections right now."; }
       else if (/timed? ?out|timeout|took too long/i.test(msg)) { title = host + " took too long to respond"; body = "The connection started but never finished."; tips = ["Try again, the site or the relay may be busy"]; icon = "timer"; }
       else if (/cert|ssl|tls|handshake/i.test(msg)) { title = "Secure connection failed"; body = "A private connection to " + esc(host) + " couldn't be set up."; icon = "lock"; }
-      const el = h(`<div class="bx-err"><div class="in"><div class="ico">${ic(icon)}</div><h2>${esc(title)}</h2><p>${body}</p>${tips.length ? `<ul>${tips.map(x => `<li>${x}</li>`).join("")}</ul>` : ""}<div class="det">${esc(msg.slice(0, 300))}</div><div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn primary rt">${ic("refresh")} Try again</button>${o.kind === "relay" ? `<button class="btn sw">${ic("network")} Switch relay</button>` : ""}${o.kind !== "invalid" && o.kind !== "uv" && modeOf(t) !== "rewrite" ? `<button class="btn px">${ic("shield")} Use AxProxy</button>` : ""}${o.kind === "site" || o.kind === "relay" ? `<button class="btn rd">${ic("fileText")} Reader mode</button>` : ""}<button class="btn ps">${ic("gear")} Browser settings</button></div></div></div>`);
+      const el = h(`<div class="bx-err"><div class="in"><div class="ico">${ic(icon)}</div><h2>${esc(title)}</h2><p>${body}</p>${tips.length ? `<ul>${tips.map(x => `<li>${x}</li>`).join("")}</ul>` : ""}<div class="det">${esc(msg.slice(0, 300))}</div><div class="row" style="flex-wrap:wrap;gap:8px"><button class="btn primary rt">${ic("refresh")} Try again</button>${o.kind === "relay" || o.kind === "blocked" ? `<button class="btn sw">${ic("network")} Try another relay</button>` : ""}${o.kind !== "invalid" && o.kind !== "uv" && modeOf(t) !== "rewrite" ? `<button class="btn px">${ic("shield")} Use AxProxy</button>` : ""}${o.kind === "site" || o.kind === "relay" ? `<button class="btn rd">${ic("fileText")} Reader mode</button>` : ""}<button class="btn ps">${ic("gear")} Browser settings</button></div></div></div>`);
       t.el.appendChild(el); $(".rt", el).onclick = () => nav(t, url, { push: false, fresh: true });
       const sw = $(".sw", el); if (sw) sw.onclick = async () => { sw.disabled = true; sw.textContent = "Switching…"; try { await AxCore.failover(); } catch (e) { } nav(t, url, { push: false, fresh: true }); };
       const px = $(".px", el); if (px) px.onclick = () => nav(t, url, { push: false, mode: "rewrite" });
@@ -4552,12 +4572,22 @@ try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch
     };
     let lastKey = "";
     omni.oninput = e => {
+      omniDirty = true;
       showSug(); const q = omni.value; if (lastKey === "Backspace" || lastKey === "Delete" || e.inputType?.startsWith("delete") || !q || /\s/.test(q) || omni.selectionStart !== q.length) return;
       const ql = q.toLowerCase().replace(/^https?:\/\/(www\.)?/, ""); const hit = [...BrowserData.bookmarks, ...BrowserData.history].map(x => x.url).map(u => { try { const x = new URL(u); return x.host.replace(/^www\./, ""); } catch (er) { return ""; } }).find(hh => hh && hh.startsWith(ql) && hh.length > ql.length);
       if (hit) { const full = q.slice(0, q.length - ql.length) + hit; omni.value = full; omni.setSelectionRange(q.length, full.length); }
     };
-    omni.onfocus = () => { omniBox.classList.add("typing"); omni.select(); setTimeout(() => omni.select(), 0); };
-    omni.onblur = () => { omniBox.classList.remove("typing"); setTimeout(() => { closeSug(); if (cur && document.activeElement !== omni) { omni.value = isInternal(cur.url) && /newtab/.test(cur.url) ? "" : cur.url; urlEl.innerHTML = bxFmtURL(cur.url); } }, 120); };
+    omni.onfocus = () => { omniBox.classList.add("typing"); if (refocusing) return; omniDirty = false; omni.select(); setTimeout(() => { if (!omniDirty) omni.select(); }, 0); };
+    /* a page that focuses its own field (an autofocused login box, say) must not steal the address bar while you type */
+    omni.onblur = () => {
+      const v = omni.value, s0 = omni.selectionStart, s1 = omni.selectionEnd, typing = omniDirty;
+      setTimeout(() => {
+        const ae = document.activeElement; const now = Date.now();
+        if (typing && cur && cur.engine === "core" && ae && ae.tagName === "IFRAME" && view.contains(ae) && now - lastPagePtr > 600 && now - lastPageKey > 600) { refocusing = true; omni.focus(); omni.value = v; try { omni.setSelectionRange(s0, s1); } catch (e) { } refocusing = false; return; }
+        omniBlurred();
+      }, 0);
+    };
+    const omniBlurred = () => { omniBox.classList.remove("typing"); setTimeout(() => { closeSug(); if (cur && document.activeElement !== omni) { omni.value = isInternal(cur.url) && /newtab/.test(cur.url) ? "" : cur.url; urlEl.innerHTML = bxFmtURL(cur.url); } }, 120); };
     urlEl.onclick = () => { omni.focus(); };
     omni.onkeydown = e => {
       e.stopPropagation(); lastKey = e.key;
