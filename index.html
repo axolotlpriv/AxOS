@@ -1022,6 +1022,7 @@ body.taskview-on .win{ transition:transform calc(.7s * var(--spd)) var(--spring-
   .st .sidebar,.taskmgr .sidebar{ width:56px; }
   .st .sidebar .navitem span,.st .who .tx,.st .sfind,.taskmgr .sidebar .navitem span{ display:none; }
 }
+.win:focus{ outline:none; }
 </style>
 </head>
 <body>
@@ -1833,6 +1834,9 @@ class Win {
   _wire() {
     const el = this.el;
     el.addEventListener("pointerdown", () => { if (WM.active !== this) this.focus(); }, true);
+    /* clicking something that can't take focus (a canvas, a picture, empty space) still gives the window the keyboard, so app shortcuts like Ctrl+S work */
+    if (!el.hasAttribute("tabindex")) el.setAttribute("tabindex", "-1");
+    el.addEventListener("pointerup", () => setTimeout(() => { const a = document.activeElement; if (!a || a === document.body || !el.contains(a)) { if (!(a && a.tagName === "IFRAME")) el.focus({ preventScroll: true }); } }, 0));
     $(".mn", el).onclick = (e) => { e.stopPropagation(); this.minimize(); };
     const mx = $(".mx", el); if (mx) { mx.onclick = (e) => { e.stopPropagation(); SnapPop.hide(); this.toggleMax(); }; mx.onpointerenter = (e) => { if (e.pointerType !== "mouse") return; clearTimeout(SnapPop.t); SnapPop.t = setTimeout(() => SnapPop.show(this, mx), 420); }; mx.onpointerleave = () => SnapPop.later(); }
     $(".x", el).onclick = (e) => { e.stopPropagation(); this.close(); };
