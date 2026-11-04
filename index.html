@@ -4327,6 +4327,8 @@ registerApp("browser", {
         if (st >= 400 && !challenge && txt.length < 40 && d.querySelectorAll("img,video,canvas,svg,iframe,form,input,button").length < 2 && d.scripts.length < 3) return { kind: "http", status: st };
         /* a 200 that is only a one-line error ("Unknown Error", "Access Denied"): CDNs send these to relay addresses they block */
         if (!challenge && txt.length < 60 && d.documentElement.outerHTML.length < 1200 && d.querySelectorAll("img,video,canvas,svg,iframe,form,input,button,a").length < 1 && /^(unknown error|error\b|forbidden|access denied|request (was )?(blocked|rejected)|not (available|authorized)|bad request|service unavailable)/i.test(txt)) return { kind: "http", status: st >= 400 ? st : 0, said: txt };
+        /* a CDN's own 4xx page (CloudFront's "The request could not be satisfied", Akamai's "Access Denied"): the site never saw the request */
+        if (st >= 400 && !challenge && txt.length < 1500 && d.scripts.length < 3 && /request (could not be satisfied|blocked)|access denied|you don.t have permission to access|error 1020|forbidden/i.test((d.title || "") + " " + txt.slice(0, 500))) return { kind: "http", status: st, said: (d.title || txt).trim().slice(0, 80) };
         if (challenge) return { kind: "bot" };
         if (/^(just a moment|attention required)|unusual traffic|blocked by network security|confirm you.re not a bot|verify you are human|suspect that you.re a robot|press (&|and) hold|access denied/i.test((d.title || "") + " " + txt.slice(0, 400))) return { kind: "bot" };
       } catch (e) { } return null;
