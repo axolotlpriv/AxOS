@@ -38,8 +38,21 @@ async function trim(cache) {
   for (const k of keys) { const r = await cache.match(k); const n = Number(r && r.headers.get("x-ax-size")) || 0; sizes.push(n); total += n; }
   for (let i = 0; i < keys.length && (keys.length - i > MAX_ENTRIES || total > MAX_BYTES); i++) { await cache.delete(keys[i]); total -= sizes[i]; }
 }
+/* Scramjet's rewriter misses a few dynamic import() calls (for example inside `new (await import(...))`). Those
+   resolve against the encoded page address and land on PREFIX + "chunk.js", which isn't a real address. Work out
+   what they meant from the module that asked for them and redirect there. */
+function stray(req) {
+  const u = new URL(req.url), rest = u.pathname.slice(PREFIX.length);
+  if (!rest || /^[a-z][a-z0-9+.-]*(%3A|:)/i.test(rest)) return null;
+  const ref = req.referrer || ""; if (!ref.startsWith(self.location.origin + PREFIX)) return null;
+  const from = realURL(new URL(ref)); if (!from || !/^https?:$/.test(from.protocol)) return null;
+  let to; try { to = new URL(decodeURIComponent(rest) + u.search.replace(/[?&]type=module\b/, "").replace(/^&/, "?") + u.hash, from); } catch (e) { return null; }
+  const mod = req.destination === "script" && /[?&]type=module\b/.test(new URL(ref).search);
+  return self.location.origin + PREFIX + encodeURIComponent(to.href) + (mod ? "?type=module" : "");
+}
 async function handle(event) {
   await scramjet.loadConfig();
+  { const to = stray(event.request); if (to) return Response.redirect(to, 302); }
   if (!scramjet.route(event)) return fetch(event.request);
   const req = event.request;
   await cfgReady;
