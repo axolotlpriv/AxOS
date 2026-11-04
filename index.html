@@ -7508,6 +7508,73 @@ const Tube = {
     return walk(doc.body);
   },
 };
+
+/* =====================================================================
+   YouTube's own data (InnerTube), reached through AxCore when it's running. It answers search, channels,
+   video details and related videos directly, so AxTube doesn't depend on the public Piped servers being up.
+   Playback still uses YouTube's own player (or a Piped stream when AxOS runs from a local file).
+   ===================================================================== */
+const YTI = {
+  ver: "2.20251101.00.00",
+  ok() { return typeof AxCore !== "undefined" && AxCore.ready && !!AxCore.client; },
+  async call(ep, body, timeout = 9000) {
+    const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), timeout);
+    try {
+      const r = await AxCore.client.fetch(`https://www.youtube.com/youtubei/v1/${ep}?prettyPrint=false`, { method: "POST", headers: { "content-type": "application/json", "x-youtube-client-name": "1", "x-youtube-client-version": this.ver }, body: JSON.stringify({ context: { client: { clientName: "WEB", clientVersion: this.ver, hl: (navigator.language || "en").slice(0, 2), gl: Tube.st().region || "US" } }, ...body }), signal: ctl.signal });
+      if (r.status >= 400) throw new Error("YouTube answered " + r.status); return await r.json();
+    } finally { clearTimeout(tm); }
+  },
+  walk(o, key, out = []) { if (Array.isArray(o)) o.forEach(v => this.walk(v, key, out)); else if (o && typeof o === "object") for (const k in o) { if (k === key) out.push(o[k]); this.walk(o[k], key, out); } return out; },
+  t(x) { if (!x) return ""; if (typeof x === "string") return x; if (x.simpleText != null) return x.simpleText; if (x.content != null) return x.content; if (x.runs) return x.runs.map(r => r.text).join(""); return ""; },
+  n(s) { s = String(s || "").replace(/,/g, ""); const m = /([\d.]+)\s*([KMB])?/i.exec(s); if (!m) return null; return Math.round(parseFloat(m[1]) * ({ K: 1e3, M: 1e6, B: 1e9 }[(m[2] || "").toUpperCase()] || 1)); },
+  d(s) { const p = String(s || "").trim().split(":").map(Number); if (!s || p.some(isNaN)) return 0; return p.reduce((a, b) => a * 60 + b, 0); },
+  /* videoRenderer -> the Piped shape the rest of AxTube already understands */
+  vr(v) {
+    const own = v.ownerText || v.longBylineText || v.shortBylineText; const cid = own?.runs?.[0]?.navigationEndpoint?.browseEndpoint?.browseId || "";
+    const live = (v.badges || []).some(b => /LIVE/i.test(JSON.stringify(b))) || /watching/i.test(this.t(v.viewCountText));
+    return { type: "stream", url: "/watch?v=" + v.videoId, title: this.t(v.title), uploaderName: this.t(own), uploaderUrl: cid ? "/channel/" + cid : "", uploaderAvatar: v.channelThumbnailSupportedRenderers?.channelThumbnailWithLinkRenderer?.thumbnail?.thumbnails?.[0]?.url || "", views: this.n(this.t(v.viewCountText)), duration: live ? -1 : this.d(this.t(v.lengthText)), uploadedDate: this.t(v.publishedTimeText) };
+  },
+  /* lockupViewModel (YouTube's newer card format) -> Piped shape */
+  lk(l, ch) {
+    if (!l || l.contentType !== "LOCKUP_CONTENT_TYPE_VIDEO") return null; const m = l.metadata?.lockupMetadataViewModel || {}; const rows = m.metadata?.contentMetadataViewModel?.metadataRows || [];
+    const parts = rows.flatMap(r => (r.metadataParts || []).map(p => (p.text?.content || "").trim())); const badge = this.walk(l.contentImage, "thumbnailBadgeViewModel")[0];
+    const viewsPart = parts.find(x => /views?$|^[\d.,]+[KMB]?$/i.test(x)); const ago = parts.find(x => /ago|streamed|premiered/i.test(x));
+    const cid = ch?.id || this.walk(m, "browseId")[0] || "";
+    return { type: "stream", url: "/watch?v=" + l.contentId, title: m.title?.content || "", uploaderName: ch?.name || parts[0] || "", uploaderUrl: cid ? "/channel/" + cid : "", uploaderAvatar: this.walk(m.image, "sources")[0]?.[0]?.url || "", views: this.n(viewsPart), duration: badge && /LIVE/i.test(badge.text || "") ? -1 : this.d(badge?.text), uploadedDate: ago || "" };
+  },
+  async search(q, filter = "videos") {
+    const params = { videos: "EgIQAQ==", channels: "EgIQAg==", playlists: "EgIQAw==" }[filter] || "";
+    const d = await this.call("search", { query: q, params });
+    if (filter === "channels") return this.walk(d, "channelRenderer").map(c => ({ type: "channel", url: "/channel/" + c.channelId, name: this.t(c.title), thumbnail: ((c.thumbnail?.thumbnails || []).slice(-1)[0]?.url || "").replace(/^\/\//, "https://"), subscribers: this.n(this.t(c.videoCountText)) || 0, description: this.t(c.descriptionSnippet) }));
+    if (filter === "playlists") return [...this.walk(d, "lockupViewModel").filter(l => l.contentType === "LOCKUP_CONTENT_TYPE_PLAYLIST").map(l => ({ type: "playlist", url: "/playlist?list=" + l.contentId, name: l.metadata?.lockupMetadataViewModel?.title?.content || "", thumbnail: this.walk(l.contentImage, "sources")[0]?.[0]?.url || "", uploaderName: "", videos: this.n(this.walk(l.contentImage, "thumbnailBadgeViewModel")[0]?.text) || 0 })), ...this.walk(d, "playlistRenderer").map(pl => ({ type: "playlist", url: "/playlist?list=" + pl.playlistId, name: this.t(pl.title), thumbnail: pl.thumbnails?.[0]?.thumbnails?.[0]?.url || "", uploaderName: this.t(pl.shortBylineText), videos: +pl.videoCount || 0 }))];
+    return this.walk(d, "videoRenderer").map(v => this.vr(v));
+  },
+  /* YouTube retired its Trending page; the closest public view is "most viewed this week" */
+  async trending() { const all = await Promise.all(["a", "new", "official"].map(q => this.call("search", { query: q, params: "CAMSAggD" }).then(d => this.walk(d, "videoRenderer").map(v => this.vr(v))).catch(() => []))); const seen = new Set(); return all.flat().filter(v => v.title && !seen.has(v.url) && seen.add(v.url)).sort((x, y) => (y.views || 0) - (x.views || 0)).slice(0, 40); },
+  async channel(id) {
+    const d = await this.call("browse", { browseId: id, params: "EgZ2aWRlb3PyBgQKAjoA" }); const hv = this.walk(d, "pageHeaderViewModel")[0] || {};
+    const name = this.t(hv.title?.dynamicTextViewModel?.text) || this.walk(d, "channelMetadataRenderer")[0]?.title || "";
+    const avatar = (this.walk(hv.image, "sources")[0] || []).slice(-1)[0]?.url || ""; const parts = this.walk(hv.metadata, "metadataParts").flat().map(p => p.text?.content || ""); const subs = this.n(parts.find(x => /subscriber/i.test(x)));
+    const ch = { name, id }; const vids = [...this.walk(d, "richItemRenderer").map(r => r.content?.videoRenderer ? this.vr(r.content.videoRenderer) : this.lk(r.content?.lockupViewModel, ch)), ...this.walk(d, "gridVideoRenderer").map(v => this.vr(v))].filter(Boolean).map(s => ({ ...s, uploaderName: s.uploaderName || name, uploaderUrl: "/channel/" + id, uploaderAvatar: s.uploaderAvatar || avatar }));
+    return { name, avatarUrl: avatar, subscriberCount: subs || 0, description: this.walk(d, "channelMetadataRenderer")[0]?.description || "", relatedStreams: vids };
+  },
+  async video(id) {
+    const d = await this.call("next", { videoId: id }); const pri = this.walk(d, "videoPrimaryInfoRenderer")[0]; const sec = this.walk(d, "videoSecondaryInfoRenderer")[0]; if (!pri) throw new Error("No video details");
+    const own = sec?.owner?.videoOwnerRenderer || {}; const cid = own.navigationEndpoint?.browseEndpoint?.browseId || this.walk(own, "browseId")[0] || "";
+    const desc = sec?.attributedDescription?.content || this.t(sec?.description) || "";
+    const html = esc(desc).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1">$1</a>').replace(/\n/g, "<br>");
+    const lb = this.walk(pri, "likeButtonViewModel")[0]; const likes = lb ? this.n(this.walk(lb, "title")[0]) : 0;
+    const related = this.walk(d, "lockupViewModel").map(l => this.lk(l)).filter(Boolean).concat(this.walk(d, "compactVideoRenderer").map(v => this.vr(v)));
+    return { title: this.t(pri.title), description: html, uploader: this.t(own.title), uploaderUrl: cid ? "/channel/" + cid : "", uploaderAvatar: (own.thumbnail?.thumbnails || []).slice(-1)[0]?.url || "", uploaderSubscriberCount: this.n(this.t(own.subscriberCountText)) || 0, views: this.n(this.t(pri.viewCount?.videoViewCountRenderer?.viewCount)) || 0, uploadDate: this.t(pri.dateText), likes: likes || 0, relatedStreams: related, videoStreams: [], subtitles: [], chapters: [], viaYT: true };
+  },
+};
+/* prefer YouTube's own data when AxCore is up; the public Piped servers stay as the fallback */
+{
+  const base = { trending: Tube.trending, search: Tube.search, channel: Tube.channel };
+  Tube.trending = async function (region) { if (YTI.ok() && !this.st().key) { try { const l = (await YTI.trending()).map(s => this.item(s)).filter(Boolean); if (l.length > 5) { l.label = "Popular this week"; return l; } } catch (e) { } } return base.trending.call(this, region); };
+  Tube.search = async function (q, filter = "videos") { if (YTI.ok() && !(this.st().key && filter === "videos")) { try { const l = (await YTI.search(q, filter)).map(s => this.item(s)).filter(Boolean); if (l.length) return l; } catch (e) { } } return base.search.call(this, q, filter); };
+  Tube.channel = async function (id) { if (YTI.ok()) { try { const d = await YTI.channel(id); const videos = d.relatedStreams.map(x => this.item(x)).filter(x => x?.kind === "video"); if (videos.length) return { ...d, videos }; } catch (e) { } } return base.channel.call(this, id); };
+}
 const TUBE_CSS = `
 .tb{ --tba:#ff4e45; height:100%; display:flex; background:#0f0f13; color:#f1f1f5; container-type:inline-size; position:relative; } .tb button{ font:inherit; color:inherit; } .tb .mi{ display:block; flex:none; }
 .tb-side{ width:196px; flex:none; padding:10px 8px; display:flex; flex-direction:column; gap:2px; border-right:1px solid rgba(255,255,255,.06); background:#0b0b0f; overflow:auto; } .tb-brand{ display:flex; align-items:center; gap:9px; padding:6px 10px 14px; font-weight:800; font-size:17px; letter-spacing:.02em; } .tb-brand i{ width:28px; height:20px; border-radius:6px; background:var(--tba); display:grid; place-items:center; } .tb-brand i::after{ content:""; border-left:8px solid #fff; border-top:5px solid transparent; border-bottom:5px solid transparent; margin-left:2px; }
@@ -7561,7 +7628,7 @@ registerApp("axtube", {
       side.innerHTML = `<div class="tb-brand"><i></i><b>AxTube</b></div>${items.map(([k, i, n]) => `<button class="tb-nav${view === k ? " on" : ""}" data-go="${k}" title="${n}">${AxMedia.svg(i, 19)}<span>${n}</span></button>`).join("")}${s.subs.length ? `<div class="tb-h6">Subscriptions</div>${s.subs.slice(0, 18).map(c => `<button class="tb-sub" data-ch="${esc(c.id)}" title="${esc(c.name)}">${avatar(c.name, c.avatar)}<span>${esc(c.name)}</span></button>`).join("")}` : ""}`; };
     const go = (v, o = {}) => { view = v; seq++; cur = null; renderSide(); main.scrollTop = 0; ({ home, subs, history, later, settings, search: () => search(o.q, o.filter), watch: () => watch(o.id, o.t), channel: () => channel(o.id), playlist: () => playlist(o.id) }[v] || home)(); };
     /* ---- views ---- */
-    const home = async () => { const my = seq; main.innerHTML = `<h1 class="tb-h">Trending <small>${region}</small></h1>${loading}`; try { const l = await Tube.trending(region); if (my !== seq) return; main.innerHTML = `<h1 class="tb-h">Trending <small>${region}</small></h1><div class="tb-grid">${l.map(card).join("")}</div>`; } catch (e) { if (my === seq) failed(e, home); } };
+    const home = async () => { const my = seq; main.innerHTML = `<h1 class="tb-h">Trending <small>${region}</small></h1>${loading}`; try { const l = await Tube.trending(region); if (my !== seq) return; main.innerHTML = `<h1 class="tb-h">${esc(l.label || "Trending")} <small>${region}</small></h1><div class="tb-grid">${l.map(card).join("")}</div>`; } catch (e) { if (my === seq) failed(e, home); } };
     const search = async (q, filter = "videos") => { const my = seq; input.value = q; main.innerHTML = `<h1 class="tb-h">Results for “${esc(q)}” <button class="tb-pill${filter === "videos" ? " on" : ""}" data-f="videos">Videos</button><button class="tb-pill${filter === "channels" ? " on" : ""}" data-f="channels">Channels</button><button class="tb-pill${filter === "playlists" ? " on" : ""}" data-f="playlists">Playlists</button></h1>${loading}`;
       $$("[data-f]", main).forEach(b => b.onclick = () => go("search", { q, filter: b.dataset.f })); try { const l = await Tube.search(q, filter); if (my !== seq) return; const g = $(".tb-empty", main); g.outerHTML = l.length ? `<div class="tb-grid">${l.map(card).join("")}</div>` : note("No results", "Try different words."); } catch (e) { if (my === seq) failed(e, () => search(q, filter)); } };
     const listView = (title, key, empty) => { const l = Tube.st()[key]; main.innerHTML = `<h1 class="tb-h">${title}${l.length ? `<button class="tb-pill" data-clear="${key}">Clear all</button>` : ""}</h1>${l.length ? `<div class="tb-grid">${l.map(card).join("")}</div>` : note(title, empty)}`; $("[data-clear]", main)?.addEventListener("click", () => { Tube.save({ [key]: [] }); go(view); }); };
@@ -7591,7 +7658,9 @@ registerApp("axtube", {
         if (!pl.querySelector("iframe,video")) { if (AxMedia.canEmbed) embed(t); else AxMedia.noPlayer(pl, id); } $(".tb-wt", main).textContent = m?.title || "YouTube video"; $(".tb-wr", main).innerHTML = `<span class="tb-note">${esc(m?.author_name || "")} · YouTube asks the public servers to prove they aren't bots for some videos (live streams especially), or none answered yet, so details and comments aren't shown. ${AxMedia.canEmbed ? "The video still plays." : "YouTube's own player needs AxOS to be opened from a web address (https://…) instead of a local file, so use the YouTube button to watch this one."}</span><span style="flex:1"></span><button class="tb-pill" data-ext="https://www.youtube.com/watch?v=${id}">${AxMedia.svg("ext", 15)} YouTube</button>`;
         if (m?.title) Tube.search(m.title).then(l => { if (my !== seq || d) return; $(".tb-relw", main).innerHTML = l.filter(x => x.kind === "video" && x.id !== id).slice(0, 14).map(v => `<button class="tb-rel" data-v="${v.id}"><div class="tb-th"><img loading="lazy" src="${Tube.thumb(v.id)}" alt="" referrerpolicy="no-referrer">${v.dur > 0 ? `<span>${AxMedia.dur(v.dur)}</span>` : ""}</div><div style="min-width:0"><div class="tb-ct">${esc(v.title)}</div><div class="tb-cm">${esc(v.channel || "")}</div></div></button>`).join(""); }).catch(() => { }); };
       const early = setTimeout(fallback, 5000);
-      try { d = await Tube.piped(`/streams/${id}`, { ttl: 5 * 60000, valid: x => x && x.title }); } catch (e) { }
+      /* details: YouTube itself (through AxCore) when the player is YouTube's own; Piped when a direct stream is needed */
+      if (YTI.ok() && wantEmbed) { try { d = await YTI.video(id); } catch (e) { } }
+      if (!d) { try { d = await Tube.piped(`/streams/${id}`, { ttl: 5 * 60000, valid: x => x && x.title }); } catch (e) { } }
       clearTimeout(early); if (my !== seq) return; if (!d) { await fallback(); return; }
       const cid = (d.uploaderUrl || "").split("/channel/")[1] || ""; const S = Tube.st(); const sub = subscribed(cid), lat = S.later.some(x => x.id === id);
       const rec = { kind: "video", id, title: d.title, channel: d.uploader, cid, views: d.views, dur: d.duration, ago: "", when: Date.parse(d.uploadDate) || 0 }; Tube.save({ history: [rec, ...S.history.filter(x => x.id !== id)].slice(0, 120) });
