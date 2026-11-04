@@ -534,6 +534,10 @@ body.taskview-on .win.minimized{ opacity:1; pointer-events:auto; }
 .bx-hc{ position:fixed; z-index:99990; max-width:300px; padding:8px 11px; border-radius:10px; background:var(--glass-2); backdrop-filter:blur(24px) saturate(1.4); border:1px solid var(--border-2); box-shadow:var(--shadow-sm); font-size:12px; pointer-events:none; opacity:0; transform:translateY(-4px); transition:opacity .14s,transform .14s; } .bx-hc.on{ opacity:1; transform:none; } .bx-hc b{ display:block; font-weight:600; margin-bottom:2px; word-break:break-word; } .bx-hc span{ color:var(--text-3); word-break:break-all; }
 
 .bx{ display:flex; flex-direction:column; height:100%; position:relative; background:var(--surface); }
+.bx{ container-type:inline-size; container-name:bx; }
+@container bx (max-width:620px){ .bx-bar .hm,.bx-bar .fw{ display:none; } .bx-chip span{ display:none; } .bx-chip{ padding:0 6px; } .bx-omni input{ left:40px; right:40px; } .bx-omni{ margin:0 3px; } .bx-zoom{ display:none !important; }
+  .bx-ntp{ padding:5vh 14px 30px; } .bx-ntp .clock{ font-size:46px; } .bx-ntp .greet{ margin-bottom:18px; } .bx-ntp .sb{ height:46px; padding:0 6px 0 14px; } .bx-ntp .sb .eng{ display:none; } .bx-ntp .tiles{ grid-template-columns:repeat(auto-fill,84px); gap:6px; margin-top:24px; } .bx-ntp .tile .ti{ width:46px; height:46px; } .bx-ntp .status{ text-align:center; border-radius:14px; }
+  .bx-ip{ padding:20px 14px 40px; } .bx-ip .li .ur,.bx-ip .li .tm{ display:none; } .bx-find{ left:8px; right:8px; } .bx-find input{ width:auto; flex:1; } .bx-pop{ width:calc(100vw - 16px) !important; left:8px !important; } }
 .bx-bar{ display:flex; align-items:center; gap:2px; padding:5px 8px 6px; background:var(--surface-2); position:relative; z-index:6; }
 .bx-bar .ibtn{ width:32px; height:32px; } .bx-bar .ibtn:disabled{ opacity:.38; }
 .bx-omni{ position:relative; flex:1; display:flex; align-items:center; gap:4px; height:34px; margin:0 6px; padding:0 4px 0 4px; border-radius:17px; background:var(--surface-3); border:1px solid transparent; min-width:0; transition:background .18s,border-color .18s,box-shadow .25s; }
