@@ -4232,7 +4232,9 @@ registerApp("browser", {
       if (isFile(url)) { t.engine = "file"; return localFile(t, url.slice(7)); }
       let u; try { u = new URL(url); } catch (e) { return errorPage(t, url, new Error("That address isn't valid"), { kind: "invalid" }); }
       if (!/^https?:$/.test(u.protocol)) return errorPage(t, url, new Error(u.protocol + " addresses can't be opened here"), { kind: "invalid" });
-      t.title = bxHost(url) || url; t.fav = favicon(url); t.zoom = BS().zoomSites?.[bxHost(url)] || 1; setLoading(t, true); renderTabs(); syncBar();
+      t.title = bxHost(url) || url; t.fav = favicon(url); t.zoom = BS().zoomSites?.[bxHost(url)] || 1;
+      if (!navigator.onLine) return errorPage(t, url, new Error("Your device is offline"), { kind: "offline" });
+      setLoading(t, true); renderTabs(); syncBar();
       if (DL_EXT.test(u.pathname) && !/\.(mp4|webm|mp3|ogg|wav|m4a)$/i.test(u.pathname)) { setLoading(t, false); if (t.hist.length > 1) { t.hist.pop(); t.idx--; t.url = t.hist[t.idx]; downloadURL(url); return nav(t, t.url, { push: false }); } downloadURL(url); return internal(t, "axos://downloads"); }
       const m = modeOf(t);
       if (m === "direct") return direct(t, url);
@@ -4411,6 +4413,7 @@ try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch
       setLoading(t, false); status(""); $(".bx-ovl", t.el)?.remove(); t.title = "Can't open this page"; t.fav = ""; t.errored = o.kind || "site"; renderTabs(); syncBar();
       const host = bxHost(url) || url; const msg = String(err.message || err); let title = "This page can't be reached", body = `<b>${esc(host)}</b> didn't respond the way a browser expects.`, tips = [], icon = "alert";
       if (o.kind === "invalid") { title = "That address isn't valid"; body = esc(msg); }
+      else if (o.kind === "offline") { title = "You're offline"; body = "Your device isn't connected to the internet. This page will load by itself when the connection comes back."; icon = "wifiOff"; tips = ["Check Wi-Fi or your network cable"]; const back = () => { window.removeEventListener("online", back); if (t.errored === "offline" && t.url === url) nav(t, url, { push: false }); }; window.addEventListener("online", back); }
       else if (o.kind === "core") { title = "AxCore couldn't start"; body = esc(msg); tips = ["Open AxOS from an http(s) address with <code>sw.js</code> and the <code>proxy</code> folder beside <code>index.html</code>", "Or use the AxProxy engine, which works anywhere"]; }
       else if (o.kind === "relay") { title = "The relay isn't answering"; body = `AxBrowser couldn't get through the Wisp relay${o.via ? " <b>" + esc(o.via) + "</b>" : ""} and the next ones didn't answer either.`; tips = ["Public relays come and go. Try again in a moment", "Add your own relay in Settings, or use a personal gateway"]; }
       else if (o.kind === "uv") { title = "Set up your Ultraviolet server"; body = esc(msg); icon = "shield"; }
