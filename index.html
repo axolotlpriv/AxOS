@@ -553,6 +553,7 @@ body.taskview-on .win.minimized{ opacity:1; pointer-events:auto; }
 .bx-bm .b{ display:flex; align-items:center; gap:6px; height:26px; padding:0 9px; border-radius:13px; font-size:12px; white-space:nowrap; max-width:170px; flex:none; } .bx-bm .b span{ overflow:hidden; text-overflow:ellipsis; } .bx-bm .b:hover{ background:var(--hover); } .bx-bm .b img{ width:14px; height:14px; border-radius:2px; } .bx-bm .b.dragover{ box-shadow:-2px 0 0 var(--accent); } .bx-bm .more{ margin-left:auto; flex:none; }
 .bx-view{ flex:1; position:relative; background:var(--surface); min-height:0; overflow:hidden; }
 .bx-page{ position:absolute; inset:0; } .bx-page iframe{ position:absolute; inset:0; width:100%; height:100%; border:0; background:#fff; } .bx-page.hid{ display:none; }
+.bx-page.info iframe{ top:var(--bxi,38px); height:calc(100% - var(--bxi,38px)); }
 .bx-page .internal{ position:absolute; inset:0; overflow:auto; background:var(--surface); color:var(--text); }
 .bx-st{ position:absolute; left:0; bottom:0; max-width:60%; height:22px; padding:0 10px; display:flex; align-items:center; font-size:11.5px; border:1px solid var(--border); border-left:0; border-bottom:0; border-radius:0 8px 0 0; background:var(--surface-2); color:var(--text-2); z-index:8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:none; opacity:0; transition:opacity .12s; } .bx-st.on{ opacity:1; }
 .bx-sug{ position:fixed; z-index:99980; border-radius:14px; background:var(--glass-2); backdrop-filter:blur(30px) saturate(1.5); border:1px solid var(--border-2); box-shadow:0 18px 50px rgba(0,0,0,.45); padding:6px; overflow:hidden; animation:bxpop .14s var(--ease-out); }
@@ -4236,7 +4237,7 @@ registerApp("browser", {
       let u; try { u = new URL(url); } catch (e) { return errorPage(t, url, new Error("That address isn't valid"), { kind: "invalid" }); }
       if (!/^https?:$/.test(u.protocol)) return errorPage(t, url, new Error(u.protocol + " addresses can't be opened here"), { kind: "invalid" });
       t.title = bxHost(url) || url; t.fav = favicon(url); t.zoom = BS().zoomSites?.[bxHost(url)] || 1;
-      if (!navigator.onLine) return errorPage(t, url, new Error("Your device is offline"), { kind: "offline" });
+      dropInfo(t); if (!navigator.onLine) return errorPage(t, url, new Error("Your device is offline"), { kind: "offline" });
       setLoading(t, true); renderTabs(); syncBar();
       if (DL_EXT.test(u.pathname) && !/\.(mp4|webm|mp3|ogg|wav|m4a)$/i.test(u.pathname)) { setLoading(t, false); if (t.hist.length > 1) { t.hist.pop(); t.idx--; t.url = t.hist[t.idx]; downloadURL(url); return nav(t, t.url, { push: false }); } downloadURL(url); return internal(t, "axos://downloads"); }
       const m = modeOf(t);
@@ -4310,24 +4311,29 @@ registerApp("browser", {
       /* the site answered, but with an empty error page (a 403 to the relay's address, say): say so instead of showing a white page */
       const bl = blockedOf(t); if (bl && bl.kind === "http") { status(""); setLoading(t, false); return errorPage(t, t.url, new Error(bl.said ? `The site only answered “${bl.said}”` : `The site answered with HTTP ${bl.status} and an empty page`), { kind: "blocked", status: bl.status, via: t.via }); }
       status(""); t.pending = false; setLoading(t, false); if (AxCore.relay && Wisp.health[AxCore.relay.id]) Wisp.health[AxCore.relay.id].streak = 0;
-      pollCore(t); applyZoom(t); applyMute(t); AxCore.maybeSwap(coreBusy); if (bl && bl.kind === "bot") { const q = searchOf(t.url), acts = [["Try another relay", () => switchAndReload(t)]]; if (q) acts.push(["Search on DuckDuckGo", () => nav(t, SEARCH_ENGINES.ddg[1] + encodeURIComponent(q))]); infoBar(t, q ? "Google is asking the relay AxBrowser uses to prove it isn't a robot. DuckDuckGo doesn't." : "This site is checking for bots and may block the relay AxBrowser is using.", acts); }
+      pollCore(t); applyZoom(t); applyMute(t); AxCore.maybeSwap(coreBusy); /* apps like Spotify load a captcha script for their login form before they've drawn anything: look again once the page has settled */
+      if (bl && bl.kind === "bot") { const at = t.url; setTimeout(() => { if (t.url !== at || t.loading) return; const again = blockedOf(t); if (again && again.kind === "bot") botBar(t); }, 2500); }
       if (BS().history !== false) BrowserData.addHistory(t.url, t.title);
     };
+    const botBar = t => { const q = searchOf(t.url), acts = [["Try another relay", () => switchAndReload(t)]]; if (q) acts.push(["Search on DuckDuckGo", () => nav(t, SEARCH_ENGINES.ddg[1] + encodeURIComponent(q))]); infoBar(t, q ? "Google is asking the relay AxBrowser uses to prove it isn't a robot. DuckDuckGo doesn't." : "This site is checking for bots and may block the relay AxBrowser is using.", acts); };
     /* the search a Google "unusual traffic" page was blocking, if that's what this is */
     const searchOf = u => { try { let x = new URL(u); if (!/(^|\.)google\.[a-z.]+$/.test(x.hostname)) return ""; if (x.pathname.startsWith("/sorry")) x = new URL(x.searchParams.get("continue") || "", x); return x.pathname === "/search" ? x.searchParams.get("q") || "" : ""; } catch (e) { return ""; } };
     const coreBusy = () => tabs.some(t => t.loading && t.engine === "core");
     /* sites that refuse shared relays: an empty 4xx/5xx document, or a well-known bot-check page */
     const blockedOf = t => {
       try { const w = t.frame?.contentWindow, d = w?.document; if (!d || !d.documentElement) return null; const nv = w.performance?.getEntriesByType?.("navigation")?.[0]; const st = nv?.responseStatus || 0; const txt = (d.body?.innerText || "").trim();
-        const challenge = /__cf_chl|challenge/i.test(d.location?.href || "") || !!d.querySelector("script[src*='challenge-platform'],#challenge-form,#challenge-running,.cf-turnstile,[id^='cf-chl'],script[src*='captcha']");
+        /* invisible reCAPTCHA sits on plenty of normal pages (login forms), so it doesn't count; real block pages are caught by their wording below */
+        const challenge = /__cf_chl|challenge/i.test(d.location?.href || "") || !!d.querySelector("#challenge-form,#challenge-running,[id^='cf-chl'],iframe[src*='captcha-delivery.com'],iframe[src*='perimeterx'],#px-captcha") || (txt.length < 1500 && !!d.querySelector("script[src*='challenge-platform'],.cf-turnstile,iframe[src*='hcaptcha.com/captcha']"));
         if (st >= 400 && !challenge && txt.length < 40 && d.querySelectorAll("img,video,canvas,svg,iframe,form,input,button").length < 2 && d.scripts.length < 3) return { kind: "http", status: st };
         /* a 200 that is only a one-line error ("Unknown Error", "Access Denied"): CDNs send these to relay addresses they block */
         if (!challenge && txt.length < 60 && d.documentElement.outerHTML.length < 1200 && d.querySelectorAll("img,video,canvas,svg,iframe,form,input,button,a").length < 1 && /^(unknown error|error\b|forbidden|access denied|request (was )?(blocked|rejected)|not (available|authorized)|bad request|service unavailable)/i.test(txt)) return { kind: "http", status: st >= 400 ? st : 0, said: txt };
         if (challenge) return { kind: "bot" };
-        if (/^(just a moment|attention required)|unusual traffic|blocked by network security|confirm you.re not a bot|verify you are human|access denied/i.test((d.title || "") + " " + txt.slice(0, 400))) return { kind: "bot" };
+        if (/^(just a moment|attention required)|unusual traffic|blocked by network security|confirm you.re not a bot|verify you are human|suspect that you.re a robot|press (&|and) hold|access denied/i.test((d.title || "") + " " + txt.slice(0, 400))) return { kind: "bot" };
       } catch (e) { } return null;
     };
-    const infoBar = (t, msg, actions = []) => { $(".bx-info", t.el)?.remove(); const bar = h(`<div class="bx-info">${ic("info")}<span>${esc(msg)}</span>${actions.map((a, i) => `<button class="btn sm" data-i="${i}">${esc(a[0])}</button>`).join("")}<button class="ibtn xx" aria-label="Dismiss">${ic("x")}</button></div>`); t.el.appendChild(bar); $$("[data-i]", bar).forEach(b => b.onclick = () => { bar.remove(); actions[+b.dataset.i][1](); }); $(".xx", bar).onclick = () => bar.remove(); };
+    /* the bar sits above the page and pushes it down, like a real browser's infobar; it goes away when the tab navigates */
+    const dropInfo = t => { $(".bx-info", t.el)?.remove(); t.el.classList.remove("info"); };
+    const infoBar = (t, msg, actions = []) => { dropInfo(t); const bar = h(`<div class="bx-info">${ic("info")}<span>${esc(msg)}</span>${actions.map((a, i) => `<button class="btn sm" data-i="${i}">${esc(a[0])}</button>`).join("")}<button class="ibtn xx" aria-label="Dismiss">${ic("x")}</button></div>`); t.el.appendChild(bar); t.el.classList.add("info"); t.el.style.setProperty("--bxi", (bar.offsetHeight || 38) + "px"); $$("[data-i]", bar).forEach(b => b.onclick = () => { dropInfo(t); actions[+b.dataset.i][1](); }); $(".xx", bar).onclick = () => dropInfo(t); };
     const switchAndReload = async t => { status("Switching relay…"); try { const s = await AxCore.failover(); notify("Relay switched", s.name, "browser", { silent: true, timeout: 2000 }); } catch (e) { notify("No other relay answered", e.message, "browser"); } status(""); nav(t, t.url, { push: false, fresh: true }); };
     const pollCore = t => {
       let d = null, w = null; try { w = t.frame?.contentWindow; d = w?.document; } catch (e) { return; } if (!d || !d.documentElement || AxCore.errorOf(d)) return;
