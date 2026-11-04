@@ -3966,7 +3966,7 @@ const AxCore = {
     this.sj = new ScramjetController({ prefix: this.scope + "service/", files: { wasm: P + "scramjet.wasm.wasm", all: P + "scramjet.all.js", sync: P + "scramjet.sync.js" }, flags: { interceptDownloads: true } });
     await this.sj.init();
     this.sj.addEventListener("download", e => Bus.emit("axcore-download", e.download));
-    const reg = await navigator.serviceWorker.register(this.dir.href + "sw.js?v=5", { scope: this.dir.href });
+    const reg = await navigator.serviceWorker.register(this.dir.href + "sw.js?v=6", { scope: this.dir.href });
     await navigator.serviceWorker.ready;
     if (!navigator.serviceWorker.controller) await Promise.race([new Promise(r => navigator.serviceWorker.addEventListener("controllerchange", r, { once: true })), sleep(4000)]);
     if (!navigator.serviceWorker.controller) { await reg.update().catch(() => { }); await sleep(600); }
