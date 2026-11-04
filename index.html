@@ -1448,7 +1448,7 @@ const FS = {
   trash(p) {
     p = this.norm(p); if (p.startsWith("/Trash")) { this.rm(p); return; }
     const name = this.uniqueName("/Trash", this.basename(p)); const n = this.node(p); if (!n) return;
-    n._orig = p; n._deleted = Date.now(); this.mv(p, "/Trash/" + name); Sound.play("trash");
+    n._orig = p; n._deleted = Date.now(); this.mv(p, "/Trash/" + name); Sound.play("trash"); return "/Trash/" + name;
   },
   restore(p) { const n = this.node(p); if (!n) return; let dst = n._orig || this.join(this.home, "Desktop", this.basename(p)); if (this.node(dst)) dst = this.join(this.dirname(dst), this.uniqueName(this.dirname(dst), this.basename(dst))); this._parent(dst, true); delete n._orig; delete n._deleted; this.mv(p, dst); },
   emptyTrash() { const t = this.node("/Trash"); t.children = {}; this.changed("/Trash"); Sound.play("trash"); },
@@ -2241,19 +2241,34 @@ const Power = {
    ===================================================================== */
 const FileOps = {
   clip: null, // {op:'copy'|'cut', paths:[]}
+  /* undo for file operations (Ctrl+Z in File Explorer and on the desktop) */
+  undoStack: [],
+  record(type, items, label) { if (!items.length) return; this.undoStack.push({ type, items, label }); if (this.undoStack.length > 40) this.undoStack.shift(); },
+  undo() {
+    const a = this.undoStack.pop(); if (!a) { Sound.play("error"); return false; }
+    for (const it of [...a.items].reverse()) {
+      try {
+        if (a.type === "move" && FS.exists(it.to) && !FS.exists(it.from)) FS.mv(it.to, it.from);
+        else if ((a.type === "copy" || a.type === "create") && FS.exists(it.to)) FS.trash(it.to);
+        else if (a.type === "trash" && FS.exists(it.to)) FS.restore(it.to);
+      } catch (e) { }
+    }
+    notify("Undone", a.label || "", "explorer", { silent: true, timeout: 1800 }); Bus.emit("fs"); return true;
+  },
   copy(paths) { this.clip = { op: "copy", paths: [...paths] }; Bus.emit("clip"); },
   cut(paths) { this.clip = { op: "cut", paths: [...paths] }; Bus.emit("clip"); },
   isCut(p) { return this.clip?.op === "cut" && this.clip.paths.includes(p); },
   paste(dir) {
     if (!this.clip) return [];
-    const out = [];
+    const out = [], moved = [], op = this.clip.op;
     for (const p of this.clip.paths) {
       if (!FS.exists(p)) continue;
       try {
-        if (this.clip.op === "cut") { if (FS.dirname(p) === FS.norm(dir)) continue; const nm = FS.uniqueName(dir, FS.basename(p)); out.push(FS.mv(p, FS.join(dir, nm))); }
-        else { const nm = FS.dirname(p) === FS.norm(dir) ? FS.uniqueName(dir, FS.basename(p).replace(/(\.[^.]+)?$/, " - Copy$1")) : FS.uniqueName(dir, FS.basename(p)); out.push(FS.cp(p, FS.join(dir, nm))); }
+        if (this.clip.op === "cut") { if (FS.dirname(p) === FS.norm(dir)) continue; const nm = FS.uniqueName(dir, FS.basename(p)); const to = FS.mv(p, FS.join(dir, nm)); out.push(to); moved.push({ from: p, to }); }
+        else { const nm = FS.dirname(p) === FS.norm(dir) ? FS.uniqueName(dir, FS.basename(p).replace(/(\.[^.]+)?$/, " - Copy$1")) : FS.uniqueName(dir, FS.basename(p)); const to = FS.cp(p, FS.join(dir, nm)); out.push(to); moved.push({ to }); }
       } catch (e) { Dialog.alert("Couldn't paste", e.message, { icon: "errorC" }); }
     }
+    this.record(op === "cut" ? "move" : "copy", moved, (op === "cut" ? "Move" : "Paste") + " of " + moved.length + " item" + (moved.length === 1 ? "" : "s"));
     if (this.clip.op === "cut") { this.clip = null; Bus.emit("clip"); }
     return out;
   },
@@ -2263,7 +2278,11 @@ const FileOps = {
     if (permanent || inTrash) {
       if (!(await Dialog.confirm(paths.length > 1 ? `Delete ${paths.length} items?` : `Delete "${FS.basename(paths[0])}"?`, "This will permanently delete the selected item(s). You can't undo this.", { icon: "alert", ok: "Delete", danger: true }))) return;
       paths.forEach(p => { try { FS.rm(p); } catch (e) { } }); Sound.play("trash");
-    } else paths.forEach(p => { try { FS.trash(p); } catch (e) { Dialog.alert("Couldn't delete", e.message, { icon: "errorC" }); } });
+    } else {
+      const items = []; paths.forEach(p => { try { const to = FS.trash(p); if (to) items.push({ from: p, to }); } catch (e) { Dialog.alert("Couldn't delete", e.message, { icon: "errorC" }); } });
+      const label = items.length === 1 ? `"${FS.basename(items[0].from)}"` : `${items.length} items`; this.record("trash", items, "Delete of " + label);
+      if (items.length) Notify.push({ app: "explorer", title: "Moved to Recycle Bin", body: label, silent: true, timeout: 5000, actions: [{ label: "Undo", primary: true, action: () => this.undo() }] });
+    }
   },
   async rename(path, newName) {
     if (newName == null) newName = await Dialog.prompt("Rename", "", FS.basename(path));
@@ -2273,9 +2292,9 @@ const FileOps = {
     if (FS.exists(dst)) { Dialog.alert("Rename failed", `There's already a file named "${newName}" here.`, { icon: "alert" }); return path; }
     const oe = extOf(FS.basename(path)), ne = extOf(newName);
     if (FS.node(path).type === "file" && oe !== ne && oe && !(await Dialog.confirm("Change file extension?", "If you change a file name extension, the file might become unusable.\nAre you sure you want to change it?", { icon: "alert", ok: "Yes" }))) return path;
-    try { return FS.mv(path, dst); } catch (e) { Dialog.alert("Rename failed", e.message, { icon: "errorC" }); return path; }
+    try { const to = FS.mv(path, dst); this.record("move", [{ from: path, to }], "Rename"); return to; } catch (e) { Dialog.alert("Rename failed", e.message, { icon: "errorC" }); return path; }
   },
-  newFolder(dir) { const n = FS.uniqueName(dir, "New folder"); FS.mkdir(FS.join(dir, n)); return FS.join(dir, n); },
+  newFolder(dir) { const n = FS.uniqueName(dir, "New folder"); FS.mkdir(FS.join(dir, n)); this.record("create", [{ to: FS.join(dir, n) }], "New folder"); return FS.join(dir, n); },
   newFile(dir, name, content = "") { const n = FS.uniqueName(dir, name); FS.write(FS.join(dir, n), content); return FS.join(dir, n); },
   async newShortcut(dir) {
     const t = await Dialog.prompt("Create Shortcut", "Type the location of the item, an app name, or a web address:", "", { placeholder: "e.g. browser, ~/Documents, https://example.com" });
@@ -2503,6 +2522,7 @@ const Desktop = {
     document.addEventListener("keydown", e => {
       if (WM.active || Lock.locked || Menu.open() || $("#modal-layer").children.length || e.target.matches("input,textarea,[contenteditable]")) return;
       const paths = this.selPaths();
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z" && !e.shiftKey) { e.preventDefault(); FileOps.undo(); return; }
       if (e.key === "Delete" && paths.length) FileOps.del(paths, e.shiftKey);
       else if (e.key === "F2" && this.sel.size === 1) this.startRename([...this.sel][0]);
       else if (e.key === "Enter" && this.sel.size) $$("#icons .dicon.sel").forEach(el => this.open(el._it));
@@ -3364,6 +3384,7 @@ registerApp("explorer", {
     C.addEventListener("keydown", e => {
       if (e.target.matches("input")) return; const k = e.key.toLowerCase(), ctrl = e.ctrlKey || e.metaKey;
       if (e.key === "Enter") { e.preventDefault(); if (e.altKey) { st.sel.size === 1 && FileOps.properties([...st.sel][0]); } else sel().forEach(openItem); }
+      else if (ctrl && k === "z" && !e.shiftKey) { e.preventDefault(); FileOps.undo(); render(); }
       else if (e.key === "Delete") FileOps.del(sel(), e.shiftKey);
       else if (e.key === "F2" && st.sel.size === 1) startRename([...st.sel][0]);
       else if (e.key === "F5") { e.preventDefault(); render(); }
