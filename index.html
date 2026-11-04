@@ -3971,7 +3971,7 @@ const AxCore = {
     this.sj = new ScramjetController({ prefix: this.scope + "service/", files: { wasm: P + "scramjet.wasm.wasm", all: P + "scramjet.all.js", sync: P + "scramjet.sync.js" }, flags: { interceptDownloads: true } });
     await this.sj.init();
     this.sj.addEventListener("download", e => Bus.emit("axcore-download", e.download));
-    const reg = await navigator.serviceWorker.register(this.dir.href + "sw.js?v=8", { scope: this.dir.href });
+    const reg = await navigator.serviceWorker.register(this.dir.href + "sw.js?v=9", { scope: this.dir.href });
     await navigator.serviceWorker.ready;
     if (!navigator.serviceWorker.controller) await Promise.race([new Promise(r => navigator.serviceWorker.addEventListener("controllerchange", r, { once: true })), sleep(4000)]);
     if (!navigator.serviceWorker.controller) { await reg.update().catch(() => { }); await sleep(600); }
@@ -4310,9 +4310,11 @@ registerApp("browser", {
       /* the site answered, but with an empty error page (a 403 to the relay's address, say): say so instead of showing a white page */
       const bl = blockedOf(t); if (bl && bl.kind === "http") { status(""); setLoading(t, false); return errorPage(t, t.url, new Error(bl.said ? `The site only answered “${bl.said}”` : `The site answered with HTTP ${bl.status} and an empty page`), { kind: "blocked", status: bl.status, via: t.via }); }
       status(""); t.pending = false; setLoading(t, false); if (AxCore.relay && Wisp.health[AxCore.relay.id]) Wisp.health[AxCore.relay.id].streak = 0;
-      pollCore(t); applyZoom(t); applyMute(t); AxCore.maybeSwap(coreBusy); if (bl && bl.kind === "bot") infoBar(t, "This site is checking for bots and may block the relay AxBrowser is using.", [["Try another relay", () => switchAndReload(t)]]);
+      pollCore(t); applyZoom(t); applyMute(t); AxCore.maybeSwap(coreBusy); if (bl && bl.kind === "bot") { const q = searchOf(t.url), acts = [["Try another relay", () => switchAndReload(t)]]; if (q) acts.push(["Search on DuckDuckGo", () => nav(t, SEARCH_ENGINES.ddg[1] + encodeURIComponent(q))]); infoBar(t, q ? "Google is asking the relay AxBrowser uses to prove it isn't a robot. DuckDuckGo doesn't." : "This site is checking for bots and may block the relay AxBrowser is using.", acts); }
       if (BS().history !== false) BrowserData.addHistory(t.url, t.title);
     };
+    /* the search a Google "unusual traffic" page was blocking, if that's what this is */
+    const searchOf = u => { try { let x = new URL(u); if (!/(^|\.)google\.[a-z.]+$/.test(x.hostname)) return ""; if (x.pathname.startsWith("/sorry")) x = new URL(x.searchParams.get("continue") || "", x); return x.pathname === "/search" ? x.searchParams.get("q") || "" : ""; } catch (e) { return ""; } };
     const coreBusy = () => tabs.some(t => t.loading && t.engine === "core");
     /* sites that refuse shared relays: an empty 4xx/5xx document, or a well-known bot-check page */
     const blockedOf = t => {

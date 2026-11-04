@@ -42,7 +42,7 @@ async function trim(cache) {
    resolve against the encoded page address and land on PREFIX + "chunk.js", which isn't a real address. Work out
    what they meant from the module that asked for them and redirect there. */
 function stray(req) {
-  const u = new URL(req.url), rest = u.pathname.slice(PREFIX.length);
+  const u = new URL(req.url); if (!u.pathname.startsWith(PREFIX)) return null; const rest = u.pathname.slice(PREFIX.length);
   if (!rest || /^[a-z][a-z0-9+.-]*(%3A|:)/i.test(rest)) return null;
   const ref = req.referrer || ""; if (!ref.startsWith(self.location.origin + PREFIX)) return null;
   const from = realURL(new URL(ref)); if (!from || !/^https?:$/.test(from.protocol)) return null;
