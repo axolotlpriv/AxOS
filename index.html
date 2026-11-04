@@ -531,6 +531,7 @@ body.taskview-on .win.minimized{ opacity:1; pointer-events:auto; }
 .bx-tab.pinned.audible::after{ display:none; }
 .bx-new,.bx-ts{ align-self:center; width:28px; height:28px; border:0; border-radius:50%; background:transparent; color:var(--text-2); display:grid; place-items:center; flex:none; } .bx-new:hover,.bx-ts:hover{ background:var(--hover); color:var(--text); } .bx-new svg,.bx-ts svg{ width:15px; height:15px; }
 .bx-drag{ flex:1; min-width:40px; height:100%; }
+.bx-strip.drop{ box-shadow:inset 0 -2px 0 var(--accent); }
 .bx-hc{ position:fixed; z-index:99990; max-width:300px; padding:8px 11px; border-radius:10px; background:var(--glass-2); backdrop-filter:blur(24px) saturate(1.4); border:1px solid var(--border-2); box-shadow:var(--shadow-sm); font-size:12px; pointer-events:none; opacity:0; transform:translateY(-4px); transition:opacity .14s,transform .14s; } .bx-hc.on{ opacity:1; transform:none; } .bx-hc b{ display:block; font-weight:600; margin-bottom:2px; word-break:break-word; } .bx-hc span{ color:var(--text-3); word-break:break-all; }
 
 .bx{ display:flex; flex-direction:column; height:100%; position:relative; background:var(--surface); }
@@ -4163,6 +4164,8 @@ registerApp("browser", {
     ]);
     const tabSearch = e => Menu.at(e.currentTarget || $(".bx-ts", win.extra), tabs.map(t => ({ label: (t.title || t.url || "New Tab").slice(0, 60), checked: t === cur ? true : undefined, iconHTML: t === cur ? undefined : ic("globe"), action: () => select(t) })));
     $(".bx-new", win.extra).onclick = () => newTab(); $(".bx-ts", win.extra).onclick = tabSearch;
+    const dropURL = e => { const dt = e.dataTransfer; if (!dt) return ""; const u = (dt.getData("text/uri-list") || dt.getData("text/plain") || "").split("\n").map(s => s.trim()).find(s => s && !s.startsWith("#")) || ""; if (!u) return ""; const dec = (() => { try { const d = AxCore.decode(u); return /^https?:/.test(d) ? d : u; } catch (er) { return u; } })(); return /^https?:\/\//i.test(dec) ? dec : /^[\w-]+(\.[\w-]+)+/.test(dec) ? "https://" + dec : ""; };
+    [strip, $(".bx-new", win.extra)].forEach(z => { z.addEventListener("dragover", e => { if (e.dataTransfer?.types?.some(x => /uri-list|text\/plain/.test(x))) { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; strip.classList.add("drop"); } }); z.addEventListener("dragleave", () => strip.classList.remove("drop")); z.addEventListener("drop", e => { strip.classList.remove("drop"); const u = dropURL(e); if (!u) return; e.preventDefault(); const onTab = e.target.closest && e.target.closest(".bx-tab"); const t = onTab && tabs.find(x => x.tabEl === onTab); if (t) { select(t); nav(t, u); } else newTab(u); }); });
     strip.addEventListener("wheel", e => { if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { strip.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false });
     /* ============================ session ============================ */
     function queueSave(now) {
@@ -4547,10 +4550,12 @@ try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch
     const pageMenu = (t, e) => {
       e.preventDefault(); e.stopPropagation(); const el = e.target; const a = el.closest && el.closest("a[href]"); const im = el.closest && el.closest("img"); let sel = ""; try { sel = String(t.frame.contentWindow.getSelection() || "").slice(0, 200); } catch (er) { }
       const unwrap = u => { try { const d = AxCore.decode(u); return /^https?:/.test(d) ? d : u; } catch (er) { return u; } };
-      const r = t.frame.getBoundingClientRect(); pageMenuAt(t, r.left + e.clientX * (t.zoom || 1), r.top + e.clientY * (t.zoom || 1), { link: a ? pageHref(a) : "", img: im ? unwrap(im.currentSrc || im.src) : "", sel });
+      const vid = el.closest && el.closest("video,audio");
+      const r = t.frame.getBoundingClientRect(); pageMenuAt(t, r.left + e.clientX * (t.zoom || 1), r.top + e.clientY * (t.zoom || 1), { link: a ? pageHref(a) : "", img: im ? unwrap(im.currentSrc || im.src) : "", sel, media: vid, mediaSrc: vid ? unwrap(vid.currentSrc || vid.src || "") : "" });
     };
-    const pageMenuAt = (t, x, y, { link, img, sel }) => {
+    const pageMenuAt = (t, x, y, { link, img, sel, media, mediaSrc }) => {
       const items = [];
+      if (media) items.push({ label: media.paused ? "Play" : "Pause", icon: "play", action: () => media.paused ? media.play().catch(() => { }) : media.pause() }, { label: media.muted ? "Unmute" : "Mute", icon: media.muted ? "volume" : "volumeX", action: () => { media.muted = !media.muted; } }, { label: "Loop", checked: !!media.loop, action: () => { media.loop = !media.loop; } }, { label: "Show controls", checked: !!media.controls, action: () => { media.controls = !media.controls; } }, ...(/^https?:/.test(mediaSrc || "") ? [{ label: "Save " + (media.tagName === "AUDIO" ? "audio" : "video") + " as…", icon: "download", action: () => downloadURL(mediaSrc) }, { label: "Copy " + (media.tagName === "AUDIO" ? "audio" : "video") + " address", icon: "link", action: () => copyText(mediaSrc) }] : []), "-");
       if (link) items.push({ label: "Open link in new tab", icon: "external", action: () => openFromPage(t, link, { background: false }) }, { label: "Open link in background tab", action: () => openFromPage(t, link, { background: true }) }, { label: "Copy link address", icon: "link", action: () => copyText(link) }, { label: "Save link as…", icon: "download", action: () => downloadURL(link) }, "-");
       if (img) items.push({ label: "Open image in new tab", icon: "image", action: () => openFromPage(t, img, { background: false }) }, { label: "Copy image address", icon: "link", action: () => copyText(img) }, { label: "Save image as…", icon: "download", action: () => downloadURL(img) }, "-");
       if (sel) items.push({ label: "Copy", icon: "copy", kbd: "Ctrl+C", action: () => { try { t.frame.contentWindow.document.execCommand("copy"); } catch (e) { copyText(sel); } } }, { label: `Search ${(SEARCH_ENGINES[BS().search] || SEARCH_ENGINES.ddg)[0]} for “${sel.length > 24 ? sel.slice(0, 24) + "…" : sel}”`, icon: "search", action: () => newTab(sel, { after: t }) }, "-");
