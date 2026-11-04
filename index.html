@@ -4427,7 +4427,8 @@ try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch
     };
     /* ---------- errors ---------- */
     const errorPage = (t, url, err, o = {}) => {
-      setLoading(t, false); status(""); $(".bx-ovl", t.el)?.remove(); t.title = "Can't open this page"; t.fav = ""; t.errored = o.kind || "site"; renderTabs(); syncBar();
+      /* drop the page behind the error: its poll would keep renaming the tab, and a hidden frame could keep playing sound */
+      clearPage(t); setLoading(t, false); status(""); t.title = "Can't open this page"; t.fav = ""; t.errored = o.kind || "site"; renderTabs(); syncBar();
       const host = bxHost(url) || url; const msg = String(err.message || err); let title = "This page can't be reached", body = `<b>${esc(host)}</b> didn't respond the way a browser expects.`, tips = [], icon = "alert";
       if (o.kind === "invalid") { title = "That address isn't valid"; body = esc(msg); }
       else if (o.kind === "offline") { title = "You're offline"; body = "Your device isn't connected to the internet. This page will load by itself when the connection comes back."; icon = "wifiOff"; tips = ["Check Wi-Fi or your network cable"]; const back = () => { window.removeEventListener("online", back); if (t.errored === "offline" && t.url === url) nav(t, url, { push: false }); }; window.addEventListener("online", back); }
