@@ -372,6 +372,9 @@ body.wm-drag.rz-ns{ cursor:ns-resize; } body.wm-drag.rz-ew{ cursor:ew-resize; } 
 
 #calendar-fly{ right:10px; width:340px; overflow:hidden; display:flex; flex-direction:column; max-height:calc(100vh - var(--tb-space) - 24px); }
 .notif-center{ max-height:330px; overflow:auto; padding:12px; display:flex; flex-direction:column; gap:8px; }
+.notif-center .tm{ white-space:nowrap; flex:none; margin-left:8px; font-size:11px; color:var(--text-3); }
+body.fly-open #toasts{ opacity:0; pointer-events:none; transform:translateY(8px); }
+#toasts{ transition:opacity .2s, transform .2s; }
 .notif-center .hd{ display:flex; justify-content:space-between; align-items:center; font-weight:600; padding:0 4px 4px; }
 .cal{ padding:14px 16px 16px; border-top:1px solid var(--border); }
 .cal .hd{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
@@ -975,15 +978,15 @@ body.taskview-on .win{ transition:transform calc(.7s * var(--spd)) var(--spring-
 .snap-pop button{ border:0; border-radius:4px; background:var(--surface-4); transition:background .15s,transform .4s var(--spring-bouncy); }
 .snap-pop button:hover{ background:var(--accent); transform:scale(.96); }
 /* ---- components adapt to their own window size ---- */
-.fx,.st,.axp,.tm,.clockapp{ container-type:inline-size; }
+.fx,.st,.axp,.taskmgr,.clockapp{ container-type:inline-size; }
 @container (max-width:620px){
   .fx .sidebar{ display:none; } .fx .srch{ width:130px; } .fx .preview-pane{ display:none; }
   .fx .toolbar .btn.sm span,.fx .toolbar .upl{ display:none; }
   .fx .list .fi,.fx .list .lh{ grid-template-columns:minmax(120px,1fr) 80px; } .fx .list .fi > span:nth-child(2),.fx .list .fi > span:nth-child(3),.fx .list .lh span:nth-child(2),.fx .list .lh span:nth-child(3){ display:none; }
 }
 @container (max-width:680px){
-  .st .sidebar,.tm .sidebar,.clockapp .sidebar{ width:56px; padding:10px 6px; }
-  .st .sidebar .navitem span,.st .who .tx,.st .sfind,.tm .sidebar .navitem span,.clockapp .sidebar .navitem span{ display:none; }
+  .st .sidebar,.taskmgr .sidebar,.clockapp .sidebar{ width:56px; padding:10px 6px; }
+  .st .sidebar .navitem span,.st .who .tx,.st .sfind,.taskmgr .sidebar .navitem span,.clockapp .sidebar .navitem span{ display:none; }
   .st .who{ padding:4px 0 12px; justify-content:center; } .st .who .avatar{ width:40px; height:40px; font-size:16px; }
   .st .page{ padding:18px 16px 30px; } .srow{ flex-wrap:wrap; padding:12px 14px; } .srow .tx{ min-width:150px; }
   .st-hero .mon{ width:140px; }
@@ -1016,8 +1019,8 @@ body.taskview-on .win{ transition:transform calc(.7s * var(--spd)) var(--spring-
   #taskbar .tb-center{ max-width:calc(100% - 200px); }
   .fx .srch{ width:120px; }
   .fx .preview-pane{ display:none; }
-  .st .sidebar,.tm .sidebar{ width:56px; }
-  .st .sidebar .navitem span,.st .who .tx,.st .sfind,.tm .sidebar .navitem span{ display:none; }
+  .st .sidebar,.taskmgr .sidebar{ width:56px; }
+  .st .sidebar .navitem span,.st .who .tx,.st .sfind,.taskmgr .sidebar .navitem span{ display:none; }
 }
 </style>
 </head>
@@ -2523,8 +2526,9 @@ const Desktop = {
    ===================================================================== */
 const Shell = {
   started: false, battery: null,
-  closeFlyouts(except) { ["startmenu", "calendar-fly", "quick-fly"].forEach(id => { if (id !== except) $("#" + id).classList.remove("open"); }); $$(".tb-preview").forEach(e => e.remove()); },
-  toggle(id) { const el = $("#" + id); const open = !el.classList.contains("open"); this.closeFlyouts(id); Menu.closeAll(); if (open) { ({ startmenu: Start, "calendar-fly": CalFly, "quick-fly": QuickFly })[id].render(); if (id !== "startmenu") Motion.stagger($$(".qs-tile,.qs-slider,.notif-item,.cal .grid > div", el).slice(0, 60), { y: 10, scale: .92, step: 8, dur: 520 }); } el.classList.toggle("open", open); if (open && id === "startmenu") setTimeout(() => $("#startmenu input")?.focus(), 60); },
+  syncFly() { document.body.classList.toggle("fly-open", ["startmenu", "calendar-fly", "quick-fly"].some(id => $("#" + id)?.classList.contains("open"))); },
+  closeFlyouts(except) { ["startmenu", "calendar-fly", "quick-fly"].forEach(id => { if (id !== except) $("#" + id).classList.remove("open"); }); this.syncFly(); $$(".tb-preview").forEach(e => e.remove()); },
+  toggle(id) { const el = $("#" + id); const open = !el.classList.contains("open"); this.closeFlyouts(id); Menu.closeAll(); if (open) { ({ startmenu: Start, "calendar-fly": CalFly, "quick-fly": QuickFly })[id].render(); if (id !== "startmenu") Motion.stagger($$(".qs-tile,.qs-slider,.notif-item,.cal .grid > div", el).slice(0, 60), { y: 10, scale: .92, step: 8, dur: 520 }); } el.classList.toggle("open", open); this.syncFly(); if (open && id === "startmenu") setTimeout(() => $("#startmenu input")?.focus(), 60); },
 };
 document.addEventListener("pointerdown", e => {
   if (!e.target.closest(".flyout,#taskbar,.ctx,#modal-layer")) Shell.closeFlyouts();
@@ -5274,7 +5278,7 @@ registerApp("notepad", {
   name: "Notepad", icon: "notepad", colors: ["#60a5fa", "#2563eb"], w: 820, h: 560, minW: 340, keywords: "text editor write code markdown",
   launch(win, args) {
     const B = win.body; const st = { path: null, dirty: false, wrap: localStorage.getItem("axos.npWrap") !== "0", nums: localStorage.getItem("axos.npNums") === "1", md: false, size: +(localStorage.getItem("axos.npSize") || 13.5) };
-    B.innerHTML = `<div class="np"><div class="menubar"><button data-m="file">File</button><button data-m="edit">Edit</button><button data-m="view">View</button><span class="grow"></span><button class="runbtn hidden" style="display:flex;align-items:center;gap:6px;color:var(--ok)">${ic("play")} Run</button></div><div class="findbar hidden"><input class="input fq" placeholder="Find" style="width:180px"><input class="input rq" placeholder="Replace with" style="width:180px"><button class="btn sm fn">Find next</button><button class="btn sm rp">Replace</button><button class="btn sm ra">Replace all</button><label class="row" style="font-size:12px;gap:4px"><input type="checkbox" class="mc"> Match case</label><span class="grow"></span><button class="ibtn fx">${ic("x")}</button></div><div class="edwrap"><div class="gutter hidden">1</div><textarea spellcheck="false"></textarea><div class="md hidden"></div></div><div class="statusbar"><span class="pos">Ln 1, Col 1</span><span class="chars"></span><span class="grow"></span><span class="ty">Plain text</span><span>UTF-8</span><span class="zm">100%</span></div></div>`;
+    B.innerHTML = `<div class="np"><div class="menubar"><button data-m="file">File</button><button data-m="edit">Edit</button><button data-m="view">View</button><span class="grow"></span><button class="runbtn hidden" style="display:flex;align-items:center;gap:6px;color:var(--ok)">${ic("play")} Run</button></div><div class="findbar hidden"><input class="input fq" placeholder="Find" style="width:180px"><input class="input rq" placeholder="Replace with" style="width:180px"><button class="btn sm fn">Find next</button><button class="btn sm rp">Replace</button><button class="btn sm ra">Replace all</button><label class="row" style="font-size:12px;gap:4px"><input type="checkbox" class="mc"> Match case</label><span class="grow"></span><button class="ibtn fbx">${ic("x")}</button></div><div class="edwrap"><div class="gutter hidden">1</div><textarea spellcheck="false"></textarea><div class="md hidden"></div></div><div class="statusbar"><span class="pos">Ln 1, Col 1</span><span class="chars"></span><span class="grow"></span><span class="ty">Plain text</span><span>UTF-8</span><span class="zm">100%</span></div></div>`;
     const ta = $("textarea", B), gut = $(".gutter", B), md = $(".md", B);
     const name = () => st.path ? FS.basename(st.path) : (args.title || "Untitled");
     const setTitle = () => { win.setTitle(`${st.dirty ? "• " : ""}${name()} - Notepad`); const e = st.path ? extOf(st.path) : ""; $(".ty", B).textContent = st.path ? fileTypeLabel(st.path, FS.node(st.path)) : "Plain text"; $(".runbtn", B).classList.toggle("hidden", !["sh", "bat", "cmd", "html", "htm"].includes(e)); };
@@ -5311,10 +5315,10 @@ registerApp("notepad", {
       else if (c && (k === "=" || k === "+")) { e.preventDefault(); zoom(1); } else if (c && k === "-") { e.preventDefault(); zoom(-1); } else if (c && k === "0") { e.preventDefault(); zoom(0); }
       else if (e.key === "F5") { e.preventDefault(); document.execCommand("insertText", false, new Date().toLocaleString()); }
     };
-    $(".fn", B).onclick = () => find(); $(".fq", B).onkeydown = e => { e.stopPropagation(); if (e.key === "Enter") find(); if (e.key === "Escape") $(".fx", B).click(); };
+    $(".fn", B).onclick = () => find(); $(".fq", B).onkeydown = e => { e.stopPropagation(); if (e.key === "Enter") find(); if (e.key === "Escape") $(".fbx", B).click(); };
     $(".rp", B).onclick = () => { const q = $(".fq", B).value; const sel = ta.value.slice(ta.selectionStart, ta.selectionEnd); if (sel && ($(".mc", B).checked ? sel === q : sel.toLowerCase() === q.toLowerCase())) { ta.focus(); document.execCommand("insertText", false, $(".rq", B).value); } find(); };
     $(".ra", B).onclick = () => { const q = $(".fq", B).value; if (!q) return; const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $(".mc", B).checked ? "g" : "gi"); const n = (ta.value.match(re) || []).length; ta.focus(); ta.select(); document.execCommand("insertText", false, ta.value.replace(re, $(".rq", B).value)); notify("Replace all", `Replaced ${n} occurrence(s).`, "notepad", { silent: true, timeout: 2000 }); };
-    $(".fx", B).onclick = () => { $(".findbar", B).classList.add("hidden"); ta.focus(); };
+    $(".fbx", B).onclick = () => { $(".findbar", B).classList.add("hidden"); ta.focus(); };
     win.on("focus", () => setTimeout(() => { if (!B.contains(document.activeElement)) ta.focus(); }, 0));
     if (args.path) load(FS.norm(args.path)); else if (args.content != null) { ta.value = args.content; st.dirty = !!args.content && !args.title?.startsWith("view-source"); }
     setTitle(); apply(); pos(); setTimeout(() => ta.focus(), 40);
@@ -7234,8 +7238,8 @@ const Flix = {
   },
 };
 const FLIX_CSS = `
-.fx{ --fxa:#ff3d6e; height:100%; display:flex; flex-direction:column; background:#0a0a0f; color:#f3f3f7; position:relative; container-type:inline-size; }
-.fx button{ font:inherit; color:inherit; } .fx .mi{ display:block; flex:none; }
+.flx{ --fxa:#ff3d6e; height:100%; display:flex; flex-direction:column; background:#0a0a0f; color:#f3f3f7; position:relative; container-type:inline-size; }
+.flx button{ font:inherit; color:inherit; } .flx .mi{ display:block; flex:none; }
 .fx-top{ display:flex; align-items:center; gap:14px; padding:10px 18px; background:linear-gradient(180deg,#0a0a0f,rgba(10,10,15,.82)); border-bottom:1px solid rgba(255,255,255,.06); flex-wrap:wrap; z-index:3; }
 .fx-logo{ font:800 21px/1 var(--font,system-ui); letter-spacing:.14em; color:var(--fxa); text-shadow:0 0 22px rgba(255,61,110,.45); }
 .fx-nav{ display:flex; gap:2px; } .fx-nav button{ background:none; border:0; padding:7px 12px; border-radius:8px; cursor:pointer; color:#b6b6c4; font-size:13.5px; } .fx-nav button:hover{ color:#fff; background:rgba(255,255,255,.07); } .fx-nav button.on{ color:#fff; background:rgba(255,255,255,.12); font-weight:600; }
@@ -7285,7 +7289,7 @@ registerApp("axflix", {
   launch(win, args) {
     AxMedia.css("fx-css", FLIX_CSS);
     const B = win.body; let view = args.view || "home", q = args.q || "", region = Flix.st().region, token = 0, searchSeq = 0;
-    B.innerHTML = `<div class="fx"><div class="fx-top"><div class="fx-logo">AXFLIX</div><nav class="fx-nav"><button data-v="home">Home</button><button data-v="movies">Movies</button><button data-v="series">Series</button><button data-v="list">My List</button></nav><div class="fx-grow"></div><label class="fx-search">${AxMedia.svg("search", 16)}<input type="search" placeholder="Search movies and series" spellcheck="false" autocomplete="off"></label><select class="fx-region" title="Where to watch: country">${FLIX_REGIONS.map(([c, n]) => `<option value="${c}"${c === region ? " selected" : ""}>${c} · ${esc(n)}</option>`).join("")}</select></div><div class="fx-main"></div><div class="fx-modal hidden"></div></div>`;
+    B.innerHTML = `<div class="flx"><div class="fx-top"><div class="fx-logo">AXFLIX</div><nav class="fx-nav"><button data-v="home">Home</button><button data-v="movies">Movies</button><button data-v="series">Series</button><button data-v="list">My List</button></nav><div class="fx-grow"></div><label class="fx-search">${AxMedia.svg("search", 16)}<input type="search" placeholder="Search movies and series" spellcheck="false" autocomplete="off"></label><select class="fx-region" title="Where to watch: country">${FLIX_REGIONS.map(([c, n]) => `<option value="${c}"${c === region ? " selected" : ""}>${c} · ${esc(n)}</option>`).join("")}</select></div><div class="fx-main"></div><div class="fx-modal hidden"></div></div>`;
     const main = $(".fx-main", B), modal = $(".fx-modal", B), input = $("input", B);
     const inList = id => Flix.st().list.some(x => x.id === id);
     const slim = x => ({ id: x.id, t: x.t, y: x.y, ty: x.ty, r: x.r, p: x.p, g: x.g, rt: x.rt, v: x.v });
