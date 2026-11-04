@@ -3948,7 +3948,7 @@ const Wisp = {
    AxBrowser falls back to the in-page AxProxy engine.
    ===================================================================== */
 const AxCore = {
-  state: "idle", error: "", sj: null, conn: null, client: null, relay: null, starting: null, bad: new Map(), info: {},
+  conns: [80, 60, 12], state: "idle", error: "", sj: null, conn: null, client: null, relay: null, starting: null, bad: new Map(), info: {},
   dir: new URL("./", location.href),
   get supported() { return /^https?:$/.test(location.protocol) && "serviceWorker" in navigator && typeof SharedWorker !== "undefined" && typeof WebAssembly !== "undefined"; },
   get ready() { return this.state === "ready"; },
@@ -3971,7 +3971,7 @@ const AxCore = {
     this.sj = new ScramjetController({ prefix: this.scope + "service/", files: { wasm: P + "scramjet.wasm.wasm", all: P + "scramjet.all.js", sync: P + "scramjet.sync.js" }, flags: { interceptDownloads: true } });
     await this.sj.init();
     this.sj.addEventListener("download", e => Bus.emit("axcore-download", e.download));
-    const reg = await navigator.serviceWorker.register(this.dir.href + "sw.js?v=6", { scope: this.dir.href });
+    const reg = await navigator.serviceWorker.register(this.dir.href + "sw.js?v=7", { scope: this.dir.href });
     await navigator.serviceWorker.ready;
     if (!navigator.serviceWorker.controller) await Promise.race([new Promise(r => navigator.serviceWorker.addEventListener("controllerchange", r, { once: true })), sleep(4000)]);
     if (!navigator.serviceWorker.controller) { await reg.update().catch(() => { }); await sleep(600); }
@@ -3995,7 +3995,7 @@ const AxCore = {
     if (!gw || !ok(gw)) return pref === "gateway" ? [] : wisp; if (pref === "gateway") return [gw]; if (pref === "wisp") return wisp; return [...wisp, gw];
   },
   async setRelay(s) {
-    if (s.kind === "gateway") await this.conn.setTransport(this.scope + "proxy/ax-gateway.mjs", [{ url: s.url, key: s.key }]); else await this.conn.setTransport(this.transport(), [{ wisp: s.url }]);
+    if (s.kind === "gateway") await this.conn.setTransport(this.scope + "proxy/ax-gateway.mjs", [{ url: s.url, key: s.key }]); else await this.conn.setTransport(this.transport(), [this.conns ? { wisp: s.url, connections: this.conns } : { wisp: s.url }]);
     this.relay = s; Bus.emit("axcore");
   },
   note(s, ok, ms) { if (s.kind !== "gateway") Wisp.note(s.id, ok, ms); },
