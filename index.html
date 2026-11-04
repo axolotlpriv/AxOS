@@ -4339,6 +4339,8 @@ registerApp("browser", {
       let d = null, w = null; try { w = t.frame?.contentWindow; d = w?.document; } catch (e) { return; } if (!d || !d.documentElement || AxCore.errorOf(d)) return;
       /* the page is usable once it is interactive: don't keep the spinner for slow images */
       if (t.loading && d.body && d.body.childElementCount > 0 && ((d.readyState !== "loading" && Date.now() - (t.lt || 0) > 1200) || Date.now() - (t.lt || 0) > 12000)) { t.pending = false; setLoading(t, false); status(""); if (BS().history !== false) BrowserData.addHistory(t.url, t.title); }
+      /* Scramjet doesn't always announce a navigation (the page a form POST lands on, say): read the frame's address too */
+      try { const real = AxCore.decode(w.location.href); if (!t.pending && !t.loading && /^https?:/i.test(real) && real !== t.url && real.split("#")[0] !== t.url.split("#")[0]) onCoreURL(t, real); } catch (e) { }
       let ch = false; const title = d.title && d.title !== "Scramjet" ? d.title : ""; if (title && title !== t.title) { t.title = title.slice(0, 200); ch = true; }
       const ln = d.querySelector("link[rel~=icon],link[rel='shortcut icon']"); if (ln) { const hr = ln.getAttribute("href"); if (hr) { try { const abs = new URL(hr, d.baseURI).href; const dec = AxCore.decode(abs); const fav = /^https?:/.test(dec) ? dec : abs; if (fav && fav !== t.fav && /^https?:/.test(fav)) { t.fav = fav; ch = true; } } catch (e) { } } }
       const media = [...d.querySelectorAll("video,audio")]; const au = media.some(m => !m.paused && !m.ended && m.readyState > 2 && !m.muted && m.volume > 0); if (au !== !!t.audible) { t.audible = au; ch = true; }
