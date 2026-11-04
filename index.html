@@ -519,6 +519,7 @@ body.taskview-on .win.minimized{ opacity:1; pointer-events:auto; }
 .bx-tab.on::after{ right:-9px; left:auto; top:auto; bottom:0; width:9px; height:9px; opacity:1; background:radial-gradient(circle at 100% 0,transparent 8.5px,var(--surface-2) 9px); }
 .bx-tab.pinned{ width:38px; min-width:38px; max-width:38px; flex:0 0 38px; padding:0; justify-content:center; } .bx-tab.pinned .tt,.bx-tab.pinned .x{ display:none; }
 .bx-tab.enter{ width:0; min-width:0; flex-basis:0; padding:0; opacity:0; } .bx-tab.leave{ width:0 !important; min-width:0 !important; flex-basis:0 !important; padding:0 !important; opacity:0; pointer-events:none; overflow:hidden; }
+.bx-tab.zz .fav{ opacity:.5; filter:grayscale(.6); } .bx-tab.zz .tt{ opacity:.75; }
 .bx-tab.drag{ z-index:9; transition:none; box-shadow:0 6px 22px rgba(0,0,0,.35); background:var(--surface-2); color:var(--text); opacity:.96; }
 .bx-tab.shift{ transition:transform .2s var(--ease-out); }
 .bx-tab .fav{ width:16px; height:16px; flex:none; display:grid; place-items:center; position:relative; }
@@ -4123,7 +4124,7 @@ registerApp("browser", {
       addEventListener("pointermove", move); addEventListener("pointerup", up); addEventListener("pointercancel", up);
     };
     const newTab = (url, o = {}) => {
-      const t = { id: uid(), url: "", title: "New Tab", fav: "", pinned: !!o.pinned, loading: false, zoom: 1, mode: o.mode || null, opener: o.opener || null, hist: [], idx: -1, el: h(`<div class="bx-page hid"></div>`), tabEl: null, engine: "", via: "" };
+      const t = { id: uid(), lastShown: Date.now(), url: "", title: "New Tab", fav: "", pinned: !!o.pinned, loading: false, zoom: 1, mode: o.mode || null, opener: o.opener || null, hist: [], idx: -1, el: h(`<div class="bx-page hid"></div>`), tabEl: null, engine: "", via: "" };
       view.appendChild(t.el); let at = tabs.length;
       if (o.pinned) at = tabs.filter(x => x.pinned).length;
       else if (o.after && tabs.includes(o.after)) { at = tabs.indexOf(o.after) + 1; while (tabs[at] && tabs[at].opener === o.after && !tabs[at].pinned) at++; }
@@ -4136,10 +4137,19 @@ registerApp("browser", {
     };
     const select = t => {
       if (cur && cur !== t) { cur.lastShown = Date.now(); closeFind(); }
-      cur = t; tabs.forEach(x => x.el.classList.toggle("hid", x !== t)); hideHC(); closeSug(); renderTabs(); syncBar(); if (t.lazy) { const u = t.lazy; t.lazy = null; nav(t, u, { push: false }); }
+      cur = t; t.lastShown = Date.now(); t.discarded = false; t.tabEl?.classList.remove("zz"); tabs.forEach(x => x.el.classList.toggle("hid", x !== t)); hideHC(); closeSug(); renderTabs(); syncBar(); if (t.lazy) { const u = t.lazy; t.lazy = null; nav(t, u, { push: false }); }
       const reveal = () => t.tabEl?.scrollIntoView({ block: "nearest", inline: "nearest" }); requestAnimationFrame(reveal); setTimeout(() => { if (cur === t) reveal(); }, 340); t.frame?.contentWindow?.focus?.();
     };
     const destroy = t => { t.ctl?.abort(); clearInterval(t.poll); t.el.remove(); };
+    /* memory saver: every page shares AxOS's own process, so tabs you haven't looked at for a while are unloaded
+       (they reload when you open them). Never the current tab, a tab playing sound, or one still loading. */
+    const discard = t => { if (t === cur || t.audible || t.loading || !t.frame || isInternal(t.url)) return false; const u = t.url; clearPage(t); t.lazy = u; t.discarded = true; t.tabEl?.classList.add("zz"); paintTab(t); return true; };
+    const memSaver = () => {
+      if (BS().memSaver === false) return; const now = Date.now(), loaded = tabs.filter(t => t.frame && t !== cur);
+      loaded.filter(t => now - (t.lastShown || now) > 20 * 60000).forEach(discard);
+      const live = tabs.filter(t => t.frame && t !== cur).sort((a, b) => (a.lastShown || 0) - (b.lastShown || 0)); while (live.length > 7) discard(live.shift());
+    };
+    const memTimer = setInterval(memSaver, 60000);
     const closeTab = (t, o = {}) => {
       const i = tabs.indexOf(t); if (i < 0) return; if (!o.quiet && !isInternal(t.url) && t.url) closed.unshift({ url: t.url, title: t.title, pinned: t.pinned, idx: i }); closed.length = Math.min(closed.length, 20);
       if (tabs.length === 1) { destroy(t); tabs.splice(i, 1); queueSave(true); return win.close(); }
@@ -4532,7 +4542,7 @@ try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch
           <div class="card"><h3>Connection path</h3><p style="color:var(--text-3);font-size:12px;margin:0 0 8px;line-height:1.5">AxCore can reach the web through a Wisp relay (a WebSocket) or through your personal gateway (a Cloudflare Worker over plain HTTPS, useful where WebSockets are blocked).</p>${[["auto", "Automatic", "Wisp relays first, your gateway if they all fail"], ["wisp", "Wisp relays only", ""], ["gateway", "Personal gateway only", AxProxy.worker() ? "Using " + esc(AxProxy.worker().base) : "Not set up yet. Add the gateway in Settings > Network & Browser."]].map(([k, n, d]) => `<div class="opt${(BS().path || "auto") === k ? " on" : ""}" data-path="${k}"><span class="r"></span><div><b>${n}</b>${d ? `<small>${d}</small>` : ""}</div></div>`).join("")}</div>
           <div class="card"><h3>Wisp relays</h3><p style="color:var(--text-3);font-size:12px;margin:0 0 6px;line-height:1.5">AxBrowser tries the fastest relay and moves to the next one by itself when a relay stops answering.</p>${relays.map(s => { const hh = Wisp.health[s.id] || {}; const cls = AxCore.relay?.id === s.id ? "ok" : hh.streak >= 2 ? "bad" : hh.ms ? "ok" : "wait"; return `<div class="srow"><span class="dot ${cls}" data-d="${s.id}"></span><div class="k">${esc(s.name)}${AxCore.relay?.id === s.id ? " · <b style='color:var(--accent)'>in use</b>" : ""}<small>${esc(Wisp.host(s))}${hh.ms ? " · " + hh.ms + " ms" : ""}${hh.kbps != null ? " · " + (hh.kbps >= 1024 ? (hh.kbps / 1024).toFixed(1) + " MB/s" : hh.kbps + " kB/s") : ""}</small></div><button class="btn sm" data-use="${s.id}">Use</button></div>`; }).join("")}<div class="row" style="margin-top:10px;gap:8px"><button class="btn sm" data-test>Test relays</button><button class="btn sm" data-more>Add relays…</button></div></div>
           <div class="card"><h3>General</h3><div class="srow"><div class="k">Search engine</div><select class="input se" style="width:180px">${Object.entries(SEARCH_ENGINES).map(([k, v]) => `<option value="${k}"${BS().search === k ? " selected" : ""}>${v[0]}</option>`).join("")}</select></div><div class="srow"><div class="k">Home page<small>Leave as axos://newtab for the new tab page</small></div><input class="input hp" style="width:240px" value="${esc(BS().home || "axos://newtab")}"></div>
-          <div class="srow"><div class="k">Show bookmarks bar</div><span class="switch${BS().bookmarksBar ? " on" : ""}" data-sw="bookmarksBar"></span></div><div class="srow"><div class="k">Reopen my tabs next time</div><span class="switch${BS().restore !== false ? " on" : ""}" data-sw="restore"></span></div><div class="srow"><div class="k">Block ads and trackers<small>AxCore answers requests to known ad and tracking servers with nothing. Pages load faster through the relay.</small></div><span class="switch${BS().adblock !== false ? " on" : ""}" data-sw="adblock"></span></div><div class="srow"><div class="k">Save browsing history</div><span class="switch${BS().history !== false ? " on" : ""}" data-sw="history"></span></div><div class="srow"><div class="k">Run page scripts in AxProxy<small>Turn off for faster, simpler pages</small></div><span class="switch${BS().scripts !== false ? " on" : ""}" data-sw="scripts"></span></div></div>
+          <div class="srow"><div class="k">Show bookmarks bar</div><span class="switch${BS().bookmarksBar ? " on" : ""}" data-sw="bookmarksBar"></span></div><div class="srow"><div class="k">Reopen my tabs next time</div><span class="switch${BS().restore !== false ? " on" : ""}" data-sw="restore"></span></div><div class="srow"><div class="k">Block ads and trackers<small>AxCore answers requests to known ad and tracking servers with nothing. Pages load faster through the relay.</small></div><span class="switch${BS().adblock !== false ? " on" : ""}" data-sw="adblock"></span></div><div class="srow"><div class="k">Memory saver<small>Unloads tabs you haven't opened for 20 minutes, and keeps at most 8 pages loaded. They reload when you click them.</small></div><span class="switch${BS().memSaver !== false ? " on" : ""}" data-sw="memSaver"></span></div><div class="srow"><div class="k">Save browsing history</div><span class="switch${BS().history !== false ? " on" : ""}" data-sw="history"></span></div><div class="srow"><div class="k">Run page scripts in AxProxy<small>Turn off for faster, simpler pages</small></div><span class="switch${BS().scripts !== false ? " on" : ""}" data-sw="scripts"></span></div></div>
           <div class="card"><h3>Privacy</h3><div class="row" style="gap:8px"><button class="btn sm cl">Clear browsing data…</button><button class="btn sm" data-adv>More network options…</button></div></div></div>`;
         $$("[data-m]", el).forEach(o => o.onclick = () => { Settings.patch("browser", { mode: o.dataset.m }); if (o.dataset.m === "core" || o.dataset.m === "auto") AxCore.start().catch(() => { }).then(draw); draw(); });
         $$("[data-path]", el).forEach(o => o.onclick = async () => { Settings.patch("browser", { path: o.dataset.path }); if (AxCore.ready) { try { AxCore.bad.clear(); await AxCore.failover(); } catch (e) { } } draw(); });
@@ -4692,7 +4702,7 @@ try{Object.defineProperty(document,"referrer",{get:function(){return ""}})}catch
     document.addEventListener("keydown", docKey, true);
     /* ============================ lifecycle ============================ */
     const offW = Bus.on("wisp", () => AxCore.maybeSwap(coreBusy)); const offSwap = Bus.on("axcore-swap", e => { notify("Faster relay", "AxBrowser switched to " + e.to.name, "browser", { silent: true, timeout: 2200 }); });
-    win.on("close", () => { offBlk(); offW(); offSwap(); document.removeEventListener("keydown", docKey, true); queueSave(true); window.removeEventListener("message", onMsg); offBM(); offAC(); offDL(); offDLb(); tabs.forEach(destroy); closeSug(); closePop(); hideHC(); closeFind(); });
+    win.on("close", () => { clearInterval(memTimer); offBlk(); offW(); offSwap(); document.removeEventListener("keydown", docKey, true); queueSave(true); window.removeEventListener("message", onMsg); offBM(); offAC(); offDL(); offDLb(); tabs.forEach(destroy); closeSug(); closePop(); hideHC(); closeFind(); });
     win.browserOpen = a => { if (a.file) newTab("file://" + a.file); else if (a.url) newTab(a.url, { mode: a.mode || null }); else newTab(); };
     const first = args.file || args.path ? "file://" + (args.file || args.path) : args.url || null;
     const saved = BS().restore !== false && !first ? (BS().session || []) : [];

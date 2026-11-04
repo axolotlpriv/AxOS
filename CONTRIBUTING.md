@@ -176,6 +176,7 @@ No account? Choose **Pair with an ID and key** in the companion, then use **Add 
 - **Pages:** find in page with a match count, per-site zoom (remembered), a right-click menu for links, images, selected text and videos, print, save page, view source, reader mode, and developer tools (Eruda) on F12.
 - **Downloads:** files a page downloads go to `~/Downloads`, with progress in the downloads button. Nothing is downloaded by your real browser.
 - **Privacy:** ads and trackers are blocked (AxCore), pop-ups need a click, and a page can open at most 4 tabs in 10 seconds. Clear history, cookies and the cache from the menu.
+- **Memory saver:** every page runs in the same process as AxOS, so tabs you haven't opened for 20 minutes are unloaded, and at most 8 pages stay loaded (never the current tab or one playing sound). Unloaded tabs look faded and reload when you click them. Turn it off in `axos://settings`.
 - **Sessions:** your tabs (and pins) come back next time. Tabs you haven't opened yet don't load until you click them.
 - **Internal pages:** `axos://newtab`, `history`, `bookmarks`, `downloads`, `settings`, `about`.
 - **Small screens:** the toolbar and new tab page compact themselves in narrow windows and on phones.
