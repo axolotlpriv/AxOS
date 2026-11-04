@@ -7558,6 +7558,12 @@ const YTI = {
     const ch = { name, id }; const vids = [...this.walk(d, "richItemRenderer").map(r => r.content?.videoRenderer ? this.vr(r.content.videoRenderer) : this.lk(r.content?.lockupViewModel, ch)), ...this.walk(d, "gridVideoRenderer").map(v => this.vr(v))].filter(Boolean).map(s => ({ ...s, uploaderName: s.uploaderName || name, uploaderUrl: "/channel/" + id, uploaderAvatar: s.uploaderAvatar || avatar }));
     return { name, avatarUrl: avatar, subscriberCount: subs || 0, description: this.walk(d, "channelMetadataRenderer")[0]?.description || "", relatedStreams: vids };
   },
+  async playlist(id) {
+    const d = await this.call("browse", { browseId: "VL" + id }); const hv = this.walk(d, "pageHeaderViewModel")[0] || {}; const meta = this.walk(d, "playlistMetadataRenderer")[0] || {};
+    const parts = this.walk(hv.metadata, "metadataParts").flat().map(x => (x.text?.content || "").trim()).filter(Boolean);
+    const vids = this.walk(d, "lockupViewModel").map(l => this.lk(l)).filter(Boolean).concat(this.walk(d, "playlistVideoRenderer").map(v => this.vr({ ...v, ownerText: v.shortBylineText })));
+    return { name: meta.title || this.t(hv.title?.dynamicTextViewModel?.text) || "Playlist", by: parts.find(x => !/views?|videos?|updated|playlist/i.test(x)) || "", thumb: (this.walk(hv.heroImage || hv.image, "sources")[0] || [])[0]?.url || "", count: this.n(parts.find(x => /videos?/i.test(x))) || vids.length, videos: vids };
+  },
   async video(id) {
     const d = await this.call("next", { videoId: id }); const pri = this.walk(d, "videoPrimaryInfoRenderer")[0]; const sec = this.walk(d, "videoSecondaryInfoRenderer")[0]; if (!pri) throw new Error("No video details");
     const own = sec?.owner?.videoOwnerRenderer || {}; const cid = own.navigationEndpoint?.browseEndpoint?.browseId || this.walk(own, "browseId")[0] || "";
@@ -7573,6 +7579,8 @@ const YTI = {
   const base = { trending: Tube.trending, search: Tube.search, channel: Tube.channel };
   Tube.trending = async function (region) { if (YTI.ok() && !this.st().key) { try { const l = (await YTI.trending()).map(s => this.item(s)).filter(Boolean); if (l.length > 5) { l.label = "Popular this week"; return l; } } catch (e) { } } return base.trending.call(this, region); };
   Tube.search = async function (q, filter = "videos") { if (YTI.ok() && !(this.st().key && filter === "videos")) { try { const l = (await YTI.search(q, filter)).map(s => this.item(s)).filter(Boolean); if (l.length) return l; } catch (e) { } } return base.search.call(this, q, filter); };
+  const basePl = Tube.playlist;
+  Tube.playlist = async function (id) { if (YTI.ok()) { try { const d = await YTI.playlist(id); const videos = d.videos.map(x => this.item(x)).filter(x => x?.kind === "video"); if (videos.length) return { ...d, videos }; } catch (e) { } } return basePl.call(this, id); };
   Tube.channel = async function (id) { if (YTI.ok()) { try { const d = await YTI.channel(id); const videos = d.relatedStreams.map(x => this.item(x)).filter(x => x?.kind === "video"); if (videos.length) return { ...d, videos }; } catch (e) { } } return base.channel.call(this, id); };
 }
 const TUBE_CSS = `
