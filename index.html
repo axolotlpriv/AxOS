@@ -3549,7 +3549,7 @@ const AxProxy = {
   jar: (() => { try { return JSON.parse(localStorage.getItem("axos.pxCookies")) || {}; } catch (e) { return {}; } })(),
   worker() { const b = Settings.get("browser"); return b.workerUrl ? { id: "worker", name: "My AxProxy gateway", kind: "worker", base: b.workerUrl.replace(/\/?(\?.*)?$/, "/"), key: b.workerKey || "", hedge: 5000 } : null; },
   order({ binary = false, method = "GET", data = false } = {}) {
-    const B = Settings.get("browser"); const out = []; if (Wisp.enabled) out.push({ id: "wisp", name: "Wisp", kind: "wisp", get hedge() { return Wisp.lib ? 4500 : 9000; } }); const w = this.worker(); if (w) out.push(w);
+    const B = Settings.get("browser"); const out = []; if (typeof AxCore !== "undefined" && AxCore.ready && AxCore.client) out.push({ id: "core", name: "AxCore", kind: "core", hedge: 6000 }); if (Wisp.enabled) out.push({ id: "wisp", name: "Wisp", kind: "wisp", get hedge() { return Wisp.lib ? 4500 : 9000; } }); const w = this.worker(); if (w) out.push(w);
     if (B.gateway === "custom" && B.customGateway) out.push({ id: "custom", name: "Custom gateway", kind: "raw", hedge: 3000, build: u => B.customGateway.includes("{url}") ? B.customGateway.replace("{url}", encodeURIComponent(u)) : B.customGateway + encodeURIComponent(u) });
     if (method !== "GET" && method !== "HEAD") return out.length ? out : this.order({ binary, data });
     let ids = Object.keys(GATEWAYS).filter(id => !binary || GATEWAYS[id].kind !== "jina");
@@ -3568,6 +3568,16 @@ const AxProxy = {
   hostOf(u) { try { return new URL(u).hostname; } catch (e) { return ""; } },
   /* one attempt through one gateway → normalized result */
   async one(g, url, { binary, signal, method = "GET", headers = {}, body, cookies = true, data = false }) {
+    /* AxCore's network stack (the shared worker transport) when it's running: real requests, any method, no CORS */
+    if (g.kind === "core") {
+      const host = this.hostOf(url); const h = { "user-agent": navigator.userAgent.replace(/HeadlessChrome/, "Chrome"), "accept-language": navigator.language || "en-US", ...headers }; const ck = cookies ? this.cookies(host) : ""; if (ck) h.cookie = ck;
+      const r = await AxCore.client.fetch(url, { method, headers: h, body: method === "GET" || method === "HEAD" ? undefined : body, signal, redirect: "follow" });
+      const fin = r.finalURL || url; const raw = r.rawHeaders || {}; const sc = raw["set-cookie"] || raw["Set-Cookie"]; if (cookies && sc) [].concat(sc).forEach(c => this.setCookie(this.hostOf(fin), c));
+      const type = r.headers.get("content-type") || ""; const hdrs = {}; r.headers.forEach((v, k) => { if (!/^(set-cookie|content-encoding|content-length|transfer-encoding)$/.test(k)) hdrs[k] = v; });
+      const buf = await r.arrayBuffer(); const via = "AxCore · " + (AxCore.relay?.name || "relay");
+      if (binary) return { buffer: buf, type, finalUrl: fin, status: r.status, headers: hdrs, via };
+      return { text: Wisp.decode(buf, type), type, finalUrl: fin, status: r.status, headers: hdrs, via };
+    }
     if (g.kind === "wisp") {
       const r = await Wisp.fetch(url, { method, headers, body, signal, cookies }); const res = r.res; const type = res.headers.get("content-type") || "";
       const hdrs = {}; res.headers.forEach((v, k) => { if (!/^(set-cookie|content-encoding|content-length|transfer-encoding)$/.test(k)) hdrs[k] = v; });
@@ -7725,6 +7735,7 @@ window.addEventListener("unhandledrejection", e => console.warn("Unhandled:", e.
   applyTheme();
   if (!localStorage.getItem("axos.installed")) localStorage.setItem("axos.installed", String(Date.now()));
   await bootSequence();
+  setTimeout(() => { try { if (AxCore.supported && Settings.get("browser").mode !== "direct" && Settings.get("browser").mode !== "uv" && navigator.onLine) (window.requestIdleCallback || setTimeout)(() => AxCore.start().catch(() => { }), { timeout: 6000 }); } catch (e) { } }, 4000);
   if (!localStorage.getItem("axos.migr2")) { localStorage.setItem("axos.migr2", "1"); const sp = Settings.get("startPinned"); ["axplay"].forEach(a => { if (!sp.includes(a)) sp.splice(4, 0, a); }); Settings.set("startPinned", sp); const tp = Settings.get("pinned"); if (!tp.includes("axplay")) Settings.set("pinned", [...tp, "axplay"]); FS.mkdir(FS.home + "/Games", true); }
   if (!localStorage.getItem("axos.migr3")) { localStorage.setItem("axos.migr3", "1"); if (Settings.get("accent") === "#4f8cff" && Settings.get("wallpaper") === "aurora") { Settings.set("accent", "#e8679f"); Settings.set("wallpaper", "axolotl"); Settings.set("preset", "default"); } }
   if (!localStorage.getItem("axos.migr5")) { localStorage.setItem("axos.migr5", "1"); try { const d = AxPlay.get(), c = AXPLAY_CATALOG.find(x => x.id === "skyline"); if (c && !d.games.find(g => g.id === "skyline")) { d.games.push({ ...c, added: Date.now(), playtime: 0, compat: "auto", opts: "" }); AxPlay.save(d); } } catch (e) { } }
