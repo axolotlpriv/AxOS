@@ -4,8 +4,10 @@ A desktop operating system that runs in your browser from **one file**: `index.h
 
 ## Running it
 
-- **Locally:** double-click `index.html`, or drag it into Chrome, Edge or Firefox.
-- **Hosted:** put `index.html` on any static host, such as GitHub Pages.
+- **Hosted (recommended):** put `index.html`, `sw.js` and the `proxy/` folder on any static host: Cloudflare Pages, GitHub Pages, Netlify, or `localhost`. Hosted over `http(s)`, AxBrowser uses AxCore, which runs almost any website.
+- **Locally:** double-click `index.html`, or drag it into Chrome, Edge or Firefox. Everything works, but AxBrowser falls back to the simpler AxProxy engine, because browsers don't run service workers for local files.
+
+**Cloudflare Pages:** Workers & Pages → Create → Pages → Connect to Git, pick this repository, leave the build command empty and set the output directory to `/`. **GitHub Pages:** Settings → Pages → deploy from `main`, `/ (root)`. Either way, nothing else is needed.
 
 Your files and settings are saved in the browser (IndexedDB and localStorage), so they're still there after a reload. To move AxOS to another browser, use **Settings → System → Storage → Back up AxOS**.
 
@@ -166,6 +168,31 @@ No account? Choose **Pair with an ID and key** in the companion, then use **Add 
 **During a session:** a stats overlay shows resolution, frame rate, bitrate, latency and route.
 
 **How it connects:** AxOS and the PC find each other through public WebTorrent trackers, using encrypted messages, then connect directly with WebRTC.
+
+## Using AxBrowser
+
+- **Tabs:** links that open a new tab appear right after the tab that opened them and switch to it. Ctrl+click or middle-click opens a background tab. Drag tabs to reorder, double-click to pin, right-click for more (duplicate, mute, close others, reopen closed). Drop a link on the tab bar to open it. With many tabs they shrink, the current one stays readable, and the strip scrolls.
+- **Address bar:** suggestions from history, bookmarks, open tabs and the search engine, with inline completion. Shortcuts: `yt cats`, `w axolotl`, `gh scramjet`, `r askreddit`, `g`, `ddg`, `mdn`, `so`, `a`. Ctrl+Enter adds `www.` and `.com`; Alt+Enter opens in a new tab. A page that focuses its own field can't steal the address bar while you type.
+- **Pages:** find in page with a match count, per-site zoom (remembered), a right-click menu for links, images, selected text and videos, print, save page, view source, reader mode, and developer tools (Eruda) on F12.
+- **Downloads:** files a page downloads go to `~/Downloads`, with progress in the downloads button. Nothing is downloaded by your real browser.
+- **Privacy:** ads and trackers are blocked (AxCore), pop-ups need a click, and a page can open at most 4 tabs in 10 seconds. Clear history, cookies and the cache from the menu.
+- **Sessions:** your tabs (and pins) come back next time. Tabs you haven't opened yet don't load until you click them.
+- **Internal pages:** `axos://newtab`, `history`, `bookmarks`, `downloads`, `settings`, `about`.
+- **Small screens:** the toolbar and new tab page compact themselves in narrow windows and on phones.
+
+| Shortcut | Action |
+| --- | --- |
+| Ctrl+T / Ctrl+W / Ctrl+Shift+T | New tab / close tab / reopen closed tab |
+| Ctrl+L, Alt+D or F6 | Address bar |
+| Ctrl+Tab, Ctrl+PgUp/PgDn, Ctrl+1…9 | Switch tabs |
+| Alt+← / Alt+→ | Back / forward (hold the buttons for history) |
+| Ctrl+R or F5 | Reload |
+| Ctrl+F | Find in page |
+| Ctrl+D / Ctrl+J / Ctrl+H | Bookmark / downloads / history |
+| Ctrl+= / Ctrl+− / Ctrl+0, Ctrl+wheel | Zoom |
+| Ctrl+P / Ctrl+S / Ctrl+U | Print / save page / view source |
+| F12 / F11 | Developer tools / full screen |
+| Ctrl+Shift+A | Search tabs |
 
 ## How the browser loads websites
 
