@@ -31,7 +31,13 @@ const realURL = u => { try { return new URL(decodeURIComponent(u.pathname.slice(
 const report = (event, host) => { const ref = event.request.referrer; if (ref && ref.startsWith(self.location.origin)) { adChan.postMessage({ blocked: host, url: ref }); return; } self.clients.get(event.clientId || event.resultingClientId || "").then(c => { adChan.postMessage({ blocked: host, url: c ? c.url : "" }); }).catch(() => { }); };
 const adChan = new BroadcastChannel("axcore");
 let puts = 0;
-async function trim(cache) { if (++puts % 40) return; const keys = await cache.keys(); for (let i = 0; i < keys.length - MAX_ENTRIES; i++) await cache.delete(keys[i]); }
+const MAX_BYTES = 200e6;
+/* keep the cache under MAX_ENTRIES files and MAX_BYTES in total; oldest first */
+async function trim(cache) {
+  if (++puts % 40) return; const keys = await cache.keys(); let total = 0; const sizes = [];
+  for (const k of keys) { const r = await cache.match(k); const n = Number(r && r.headers.get("x-ax-size")) || 0; sizes.push(n); total += n; }
+  for (let i = 0; i < keys.length && (keys.length - i > MAX_ENTRIES || total > MAX_BYTES); i++) { await cache.delete(keys[i]); total -= sizes[i]; }
+}
 async function handle(event) {
   await scramjet.loadConfig();
   if (!scramjet.route(event)) return fetch(event.request);
@@ -51,7 +57,7 @@ async function handle(event) {
       const copy = res.clone();
       event.waitUntil((async () => {
         const body = await copy.arrayBuffer(); if (body.byteLength > MAX_BODY) return;
-        const h = new Headers(copy.headers); h.set("x-ax-at", String(Date.now())); h.set("x-ax-ttl", String(ttl));
+        const h = new Headers(copy.headers); h.set("x-ax-at", String(Date.now())); h.set("x-ax-ttl", String(ttl)); h.set("x-ax-size", String(body.byteLength));
         await cache.put(req.url, new Response(body, { status: 200, statusText: copy.statusText, headers: h })); await trim(cache);
       })().catch(() => { }));
     }

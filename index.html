@@ -3835,7 +3835,10 @@ const Wisp = {
   health: (() => { try { return JSON.parse(localStorage.getItem("axos.wispHealth")) || {}; } catch (e) { return {}; } })(),
   cfg() { const w = Settings.get("browser").wisp || {}; return { on: w.on !== false, pin: w.pin || "auto", off: w.off || [], custom: w.custom || [] }; },
   patch(p) { Settings.patch("browser", { wisp: { ...this.cfg(), ...p } }); Bus.emit("wisp"); },
-  servers() { const c = this.cfg(); return [...WISP_SERVERS, ...c.custom.map((s, i) => ({ ...s, custom: true, rank: 20 + i }))].map(s => ({ ...s, enabled: !c.off.includes(s.id) })); },
+  /* hosted AxOS: relays.json next to index.html adds relays (or hides dead built-in ones) without a rebuild */
+  remote: [], hidden: [],
+  async loadRemote() { if (this._rl || !/^https?:$/.test(location.protocol)) return; this._rl = true; try { const r = await fetch(new URL("relays.json", location.href), { cache: "no-cache" }); if (!r.ok) return; const j = await r.json(); const known = new Set(WISP_SERVERS.map(x => x.url)); (j.relays || []).forEach((x, i) => { if (!x || !/^wss?:\/\//.test(x.url || "")) return; if (x.off) { this.hidden.push(x.url); return; } if (known.has(x.url)) return; this.remote.push({ id: x.id || "r" + i, name: String(x.name || new URL(x.url).host).slice(0, 40), url: x.url, rank: 12 + i, note: String(x.note || "From relays.json").slice(0, 120), kind: x.kind }); }); Bus.emit("wisp"); } catch (e) { } },
+  servers() { const c = this.cfg(); return [...WISP_SERVERS.filter(s => !this.hidden.includes(s.url)), ...this.remote, ...c.custom.map((s, i) => ({ ...s, custom: true, rank: 20 + i }))].map(s => ({ ...s, enabled: !c.off.includes(s.id) })); },
   get enabled() { return this.cfg().on && this.servers().some(s => s.enabled); },
   host(s) { try { return new URL(s.url).host; } catch (e) { return s.url; } },
   /* lower is better: handshake time plus the measured time to move 1 MB (a slow or throttled relay loses even if it answers fast) */
@@ -3856,7 +3859,7 @@ const Wisp = {
     })().catch(e => { this.loading = null; throw e; });
   },
   /* once per session when the browser opens: fetch the engine and rank the relays by real latency */
-  warm() { if (this._warm || !this.enabled) return; this._warm = true; this.load().catch(() => { }); Promise.all(this.servers().filter(s => s.enabled).map(s => this.probe(s))).then(() => setTimeout(() => this.speedAll().catch(() => { }), 1500)); },
+  warm() { if (this._warm || !this.enabled) return; this._warm = true; this.load().catch(() => { }); this.loadRemote().then(() => this.remote.forEach(s => this.probe(s))); Promise.all(this.servers().filter(s => s.enabled).map(s => this.probe(s))).then(() => setTimeout(() => this.speedAll().catch(() => { }), 1500)); },
   activate(s) {
     if (this.active?.id === s.id && this.session) return;
     this.lib.set_websocket(s.url);

@@ -1,0 +1,68 @@
+{
+ "comment": "Extra Wisp relays for AxBrowser. AxOS reads this file when it's hosted (next to index.html), so you can add or remove relays here without rebuilding. Relays listed here are added to the built-in list; set \"off\": true to hide a built-in one.",
+ "relays": [
+  {
+   "id": "terbium",
+   "name": "Terbium",
+   "url": "wss://wisp.terbiumon.top/wisp/",
+   "note": "The relay Terbium OS ships with"
+  },
+  {
+   "id": "anura",
+   "name": "Anura",
+   "url": "wss://anura.pro/",
+   "note": "Runs alongside the Anura proxy"
+  },
+  {
+   "id": "freewisp",
+   "name": "FreeWisp",
+   "url": "wss://wisp.freewisp.org/",
+   "note": "50 GiB/day per IP, web ports only"
+  },
+  {
+   "id": "webmc",
+   "name": "WebMC",
+   "url": "wss://wisp.webmc.fun/",
+   "note": "No documented data cap"
+  },
+  {
+   "id": "pgis",
+   "name": "PGIS",
+   "url": "wss://pgis-wisp.onrender.com/",
+   "note": "Free host: the first request can take a minute to wake it"
+  },
+  {
+   "id": "reeyuki",
+   "name": "Reeyuki",
+   "url": "wss://hurt-agata-liventcord-api-7072e9a6.koyeb.app/",
+   "note": "Small community server on a free host"
+  },
+  {
+   "id": "lunaar",
+   "name": "Lunaar",
+   "url": "wss://lunaar.org/wisp/",
+   "note": "Proxy site relay",
+   "kind": "site"
+  },
+  {
+   "id": "daydreamx",
+   "name": "DaydreamX",
+   "url": "wss://daydreamx.pro/wisp/",
+   "note": "Proxy site relay",
+   "kind": "site"
+  },
+  {
+   "id": "petezah",
+   "name": "PeteZah",
+   "url": "wss://petezahgames.com/wisp/",
+   "note": "Proxy site relay",
+   "kind": "site"
+  },
+  {
+   "id": "mercury",
+   "name": "Mercury Workshop",
+   "url": "wss://wisp.mercurywork.shop/",
+   "note": "Demo server, throttled to about 100 kB/s per IP"
+  }
+ ]
+}
