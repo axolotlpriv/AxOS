@@ -5420,14 +5420,14 @@ registerApp("calculator", {
       else if (k === "C") { expr = ""; cur = "0"; fresh = true; } else if (k === "CE") { cur = "0"; fresh = true; }
       else if (k === "⌫") { if (!fresh) cur = cur.length > 1 ? cur.slice(0, -1) : "0"; }
       else if (k === "±") { cur = cur.startsWith("-") ? cur.slice(1) : cur === "0" ? "0" : "-" + cur; }
-      else if (k === "%") { unary(v => v / 100); return; } else if (k === "1/x") { unary(v => 1 / v); return; } else if (k === "x²") { unary(v => v * v); return; } else if (k === "√x") { unary(Math.sqrt); return; }
+      else if (k === "%") { /* like Windows: 200 + 10% is 200 + 20; with × or ÷ it is just 10% */ const mm = /(-?\d[\d.]*(?:e[+-]?\d+)?)\s*([+−])\s*$/.exec(expr); const v = parseFloat(cur); cur = String(mm ? parseFloat(mm[1]) * v / 100 : v / 100); fresh = true; show(); return; } else if (k === "1/x") { unary(v => 1 / v); return; } else if (k === "x²") { unary(v => v * v); return; } else if (k === "√x") { unary(Math.sqrt); return; }
       else if (k === "sin") return unary(v => Math.sin(v * Math.PI / 180)); else if (k === "cos") return unary(v => Math.cos(v * Math.PI / 180)); else if (k === "tan") return unary(v => Math.tan(v * Math.PI / 180));
       else if (k === "ln") return unary(Math.log); else if (k === "log") return unary(Math.log10); else if (k === "n!") return unary(v => { let r = 1; for (let i = 2; i <= Math.min(v, 170); i++) r *= i; return r; });
       else if (k === "π") { cur = String(Math.PI); fresh = true; } else if (k === "e") { cur = String(Math.E); fresh = true; }
       else if (k === "(") { expr += "( "; fresh = true; } else if (k === ")") { expr += cur + " ) "; fresh = true; }
       show();
     };
-    win.el.addEventListener("keydown", e => { const m = { "*": "×", "/": "÷", "-": "−", "+": "+", Enter: "=", "=": "=", Backspace: "⌫", Escape: "C", Delete: "CE", ".": ".", ",": ".", "%": "%", "^": "x^y", "(": "(", ")": ")" }; const k = /^\d$/.test(e.key) ? e.key : m[e.key]; if (k) { e.preventDefault(); press(k); const b = $(`.keys [data-k="${CSS.escape(k)}"]`, B); if (b) { b.style.filter = "brightness(1.3)"; setTimeout(() => b.style.filter = "", 100); } } });
+    win.el.addEventListener("keydown", e => { const m = { "*": "×", "/": "÷", "-": "−", "+": "+", Enter: "=", "=": "=", Backspace: "⌫", Escape: "C", Delete: "CE", ".": ".", ",": ".", "%": "%", "^": "x^y", "(": "(", ")": ")" }; const sh = e.shiftKey ? { Digit8: "×", Equal: "+", Digit5: "%", Digit9: "(", Digit0: ")", Digit6: "x^y" }[e.code] : null; const k = sh || (/^\d$/.test(e.key) ? e.key : m[e.key]); if (k) { e.preventDefault(); press(k); const b = $(`.keys [data-k="${CSS.escape(k)}"]`, B); if (b) { b.style.filter = "brightness(1.3)"; setTimeout(() => b.style.filter = "", 100); } } });
     win.el.tabIndex = -1; render(); setTimeout(() => win.el.focus(), 30);
   },
 });
