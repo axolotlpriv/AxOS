@@ -6469,7 +6469,20 @@ const AxPlay = {
           let lastR = -1, quietSince = Date.now(); const started = Date.now();
           const onMsg = e => { if (e.source !== f.contentWindow || !e.data || e.data.ax !== "alive") return; if (e.data.c || e.data.t > 30) { alive = true; $(".g-wait", win.body)?.remove(); } if ((e.data.r || 0) > lastR) { lastR = e.data.r || 0; quietSince = Date.now(); } };
           window.addEventListener("message", onMsg); off = () => window.removeEventListener("message", onMsg);
-          try { f.srcdoc = await AdFree.srcdoc(g.url); } catch (e) { off(); off = null; $(".g-wait", win.body)?.remove(); f.removeAttribute("srcdoc"); adsOn = true; adBtn(); direct(); return; }
+          try { f.srcdoc = await AdFree.srcdoc(g.url); } catch (e) {
+            off(); off = null; f.removeAttribute("srcdoc");
+            /* a game built from module scripts can still run without ads through AxCore: there its scripts load from
+               AxOS's own address and the service worker's ad blocking stops the ad network. Same locked frame: no popups, no top navigation. */
+            if (/module scripts/.test(e.message) && AxCore.supported && Settings.get("browser").adblock !== false) {
+              try {
+                await AxCore.start(); if (!win.body.contains(f)) return;
+                f.setAttribute("sandbox", BX_SB_CORE); AxCore.frame(f).go(g.url);
+                const t0 = Date.now(), seen = setInterval(() => { let ok = false; try { ok = !!f.contentDocument?.querySelector("canvas"); } catch (e2) { } if (ok || Date.now() - t0 > 60000 || !win.body.contains(f)) { clearInterval(seen); $(".g-wait", win.body)?.remove(); } }, 700);
+                return;
+              } catch (e2) { if (!win.body.contains(f)) return; }
+            }
+            $(".g-wait", win.body)?.remove(); adsOn = true; adBtn(); direct(); return;
+          }
           /* a big game can take a while to download: only decide it needs its ads once it has gone quiet for 10 s without starting (or after a minute) */
           const check = () => { if (alive || !win.body.contains(f)) return; if (Date.now() - started < 60000 && Date.now() - quietSince < 10000) { timer = setTimeout(check, 2000); return; } giveUp(); };
           const giveUp = () => { $(".g-wait", win.body)?.remove(); adsOn = true; g.ads = true; AxPlay.update(g.id, { ads: true }); notify(`${g.title} needs its ads`, "It wouldn't start without them, so ads are on for this game.", "axplay", { silent: true }); mk(); };
