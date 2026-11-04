@@ -5003,8 +5003,9 @@ class Term {
       if (line.startsWith("&&", i) || line.startsWith("||", i)) { push(); toks.push({ t: "op", v: line.slice(i, i + 2) }); i += 2; continue; }
       if (line.startsWith(">>", i) || line.startsWith("2>", i)) { push(); toks.push({ t: "op", v: line.slice(i, i + 2) }); i += 2; continue; }
       if (c === "|" || c === ";" || c === ">" || c === "<" || (c === "&" && cmd)) { push(); toks.push({ t: "op", v: c === "&" ? ";" : c }); i++; continue; }
-      if (c === "$" && line[i + 1] === "(" && !cmd) { let d = 1, j = i + 2; while (j < line.length && d) { if (line[j] === "(") d++; else if (line[j] === ")") d--; j++; } word().v += (await this.capture(line.slice(i + 2, j - 1))).replace(/\n+$/, ""); i = j; continue; }
-      if (c === "`" && !cmd) { const j = line.indexOf("`", i + 1); word().v += (await this.capture(line.slice(i + 1, j < 0 ? undefined : j))).replace(/\n+$/, ""); i = j < 0 ? line.length : j + 1; continue; }
+      if (c === "$" && line[i + 1] === "(" && line[i + 2] === "(" && !cmd) { let d = 2, j = i + 3; while (j < line.length && d) { if (line[j] === "(") d++; else if (line[j] === ")") d--; j++; } word().v += this.arith(line.slice(i + 3, j - 2)); i = j; continue; }
+      if (c === "$" && line[i + 1] === "(" && !cmd) { let d = 1, j = i + 2; while (j < line.length && d) { if (line[j] === "(") d++; else if (line[j] === ")") d--; j++; } const parts = (await this.capture(line.slice(i + 2, j - 1))).split(/\s+/).filter(Boolean); parts.forEach((pt, k) => { if (k) { push(); } word().v += pt; }); i = j; continue; }
+      if (c === "`" && !cmd) { const j = line.indexOf("`", i + 1); const parts = (await this.capture(line.slice(i + 1, j < 0 ? undefined : j))).split(/\s+/).filter(Boolean); parts.forEach((pt, k) => { if (k) { push(); } word().v += pt; }); i = j < 0 ? line.length : j + 1; continue; }
       if ((c === "$" && !cmd) || (c === "%" && cmd)) { const m = cmd ? line.slice(i).match(/^%([\w]+)%/) : line.slice(i).match(/^\$(\{[^}]+\}|\w+|\?|\$)/); if (m) { word().v += this.var(m[1].replace(/[{}]/g, "")); i += m[0].length; continue; } }
       if (c === "~" && !cur && !cmd && (line[i + 1] === undefined || /[\/\s]/.test(line[i + 1]))) { word().v += FS.home; i++; continue; }
       if ((c === "*" || c === "?") && !cmd) word().glob = true;
@@ -5012,8 +5013,31 @@ class Term {
     }
     push(); return toks;
   }
+  /* top-level ; && || (outside quotes, $( ), $(( )) and backticks) */
+  splitSeq(line) {
+    const cmd = this.mode === "cmd", out = []; let cur = "", q = null, depth = 0, i = 0;
+    while (i < line.length) {
+      const c = line[i];
+      if (q) { cur += c; if (c === "\\" && q === '"' && !cmd) { cur += line[i + 1] ?? ""; i += 2; continue; } if (c === q) q = null; i++; continue; }
+      if (c === "\\" && !cmd) { cur += c + (line[i + 1] ?? ""); i += 2; continue; }
+      if ((c === "'" && !cmd) || c === '"' || (c === "`" && !cmd)) { q = c; cur += c; i++; continue; }
+      if (c === "(") depth++; else if (c === ")") depth = Math.max(0, depth - 1);
+      if (!depth) {
+        if (line.startsWith("&&", i) || line.startsWith("||", i)) { out.push({ text: cur, next: line.slice(i, i + 2) }); cur = ""; i += 2; continue; }
+        if (c === ";" || (c === "&" && cmd)) { out.push({ text: cur, next: ";" }); cur = ""; i++; continue; }
+      }
+      cur += c; i++;
+    }
+    out.push({ text: cur, next: null }); return out;
+  }
+  /* $(( )) arithmetic: numbers, variables and operators only */
+  arith(expr) {
+    const e = expr.replace(/\$?\{?([A-Za-z_]\w*)\}?/g, (_, n) => { const v = this.var(n); return /^-?\d+(\.\d+)?$/.test(v) ? v : "0"; });
+    if (!/^[\d\s+\-*\/%()<>=!&|^~?:.]*$/.test(e)) return "0";
+    try { const r = Function('"use strict";return (' + (e.trim() || "0") + ")")(); return String(typeof r === "boolean" ? +r : Math.trunc(r)); } catch (er) { return "0"; }
+  }
   var(n) { if (n === "?") return String(this.last); if (n === "$") return String(this.win.pid); if (n === "PWD" || n === "CD") return this.mode === "cmd" ? winPath(this.cwd) : this.cwd; if (n === "RANDOM") return String(Math.floor(Math.random() * 32768)); if (n === "DATE") return new Date().toLocaleDateString(); if (n === "TIME") return new Date().toLocaleTimeString(); const k = Object.keys(this.env).find(x => x.toLowerCase() === n.toLowerCase() && this.mode === "cmd") || n; return this.env[k] ?? ""; }
-  async expand(s) { if (this.mode === "cmd") return s.replace(/%(\w+)%/g, (_, n) => this.var(n)); let out = "", i = 0; while (i < s.length) { if (s[i] === "$" && s[i + 1] === "(") { let d = 1, j = i + 2; while (j < s.length && d) { if (s[j] === "(") d++; else if (s[j] === ")") d--; j++; } out += (await this.capture(s.slice(i + 2, j - 1))).replace(/\n+$/, ""); i = j; continue; } const m = s.slice(i).match(/^\$(\{[^}]+\}|\w+|\?|\$)/); if (m) { out += this.var(m[1].replace(/[{}]/g, "")); i += m[0].length; continue; } out += s[i++]; } return out; }
+  async expand(s) { if (this.mode === "cmd") return s.replace(/%(\w+)%/g, (_, n) => this.var(n)); let out = "", i = 0; while (i < s.length) { if (s[i] === "$" && s[i + 1] === "(" && s[i + 2] === "(") { let d = 2, j = i + 3; while (j < s.length && d) { if (s[j] === "(") d++; else if (s[j] === ")") d--; j++; } out += this.arith(s.slice(i + 3, j - 2)); i = j; continue; } if (s[i] === "$" && s[i + 1] === "(") { let d = 1, j = i + 2; while (j < s.length && d) { if (s[j] === "(") d++; else if (s[j] === ")") d--; j++; } out += (await this.capture(s.slice(i + 2, j - 1))).replace(/\n+$/, ""); i = j; continue; } const m = s.slice(i).match(/^\$(\{[^}]+\}|\w+|\?|\$)/); if (m) { out += this.var(m[1].replace(/[{}]/g, "")); i += m[0].length; continue; } out += s[i++]; } return out; }
   glob(w) {
     if (!w.glob) return [w.v];
     const dirPart = w.v.includes("/") ? w.v.slice(0, w.v.lastIndexOf("/") + 1) : ""; const pat = w.v.slice(dirPart.length);
@@ -5024,14 +5048,14 @@ class Term {
   async exec(line, capture) {
     line = line.trim(); if (!line || line.startsWith("#") || (this.mode === "cmd" && /^(rem\b|::)/i.test(line))) return 0;
     if (this.mode === "cmd" && line.startsWith("@")) line = line.slice(1);
-    const toks = await this.tokenize(line);
-    /* split into && / || / ; groups */
-    let seq = [], cur = []; for (const t of toks) { if (t.t === "op" && ["&&", "||", ";"].includes(t.v)) { seq.push({ toks: cur, next: t.v }); cur = []; } else cur.push(t); } seq.push({ toks: cur, next: null });
+    /* split into ; && || segments first, and expand each one only when it runs, so `export X=1; echo $X` works */
+    const seq = this.splitSeq(line);
     let prev = ";";
     for (const s of seq) {
       if (this.abort || this.closed) break;
       if ((prev === "&&" && this.last !== 0) || (prev === "||" && this.last === 0)) { prev = s.next; continue; }
-      if (s.toks.length) this.last = await this.pipeline(s.toks, capture);
+      const toks = s.text.trim() ? await this.tokenize(s.text) : [];
+      if (toks.length) this.last = await this.pipeline(toks, capture);
       prev = s.next;
     }
     return this.last;
@@ -5162,7 +5186,7 @@ class Term {
         return code;
       },
       dir(a, io) { return this.cmds().ls(a, io); },
-      cd(a, io) { const t = a[0] === "-" ? (T.oldcwd || T.cwd) : a[0] ? P(a[0]) : FS.home; if (!FS.exists(t)) { io.err(`cd: ${a[0]}: No such file or directory`); return 1; } if (!FS.isDir(t)) { io.err(`cd: ${a[0]}: Not a directory`); return 1; } T.oldcwd = T.cwd; T.cwd = t; T.env.PWD = t; },
+      cd(a, io) { const t = a[0] === "-" ? (T.oldcwd || T.cwd) : a[0] ? P(a[0]) : FS.home; if (!FS.exists(t)) { io.err(`cd: ${a[0]}: No such file or directory`); return 1; } if (!FS.isDir(t)) { io.err(`cd: ${a[0]}: Not a directory`); return 1; } T.oldcwd = T.cwd; T.cwd = t; T.env.PWD = t; if (a[0] === "-") io.out(t + "\n"); },
       pwd(a, io) { io.out(T.cwd + "\n"); },
       cat(a, io) { const [f, r] = flags(a); try { let s = text(r, io); if (f.has("n")) s = s.split("\n").map((l, i) => String(i + 1).padStart(6) + "  " + l).join("\n"); io.out(s.endsWith("\n") || !s ? s : s + "\n"); } catch (e) { io.err("cat: " + e.message); return 1; } },
       echo(a, io) { let n = false, e = false; while (a[0] === "-n" || a[0] === "-e") { if (a[0] === "-n") n = true; else e = true; a = a.slice(1); } let s = a.join(" "); if (e) s = s.replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\e\[[\d;]*m/g, ""); io.out(s + (n ? "" : "\n")); },
@@ -5176,7 +5200,12 @@ class Term {
       clear() { T.clear(); }, reset() { T.clear(); },
       whoami(a, io) { io.out(T.env.USER + "\n"); }, hostname(a, io) { io.out(Settings.get("hostname") + "\n"); },
       uname(a, io) { io.out(a.includes("-a") ? `AxOS ${Settings.get("hostname")} ${AXOS_VERSION}-axos #1 SMP ${new Date().toDateString()} x86_64 AxOS/Browser\n` : "AxOS\n"); },
-      date(a, io) { io.out(new Date().toString() + "\n"); },
+      date(a, io) {
+        const d = new Date(), f = a.find(x => x.startsWith("+")); if (!f) { io.out(d.toString() + "\n"); return; }
+        const p = (n, w = 2) => String(n).padStart(w, "0"), wd = d.toLocaleDateString("en-US", { weekday: "long" }), mo = d.toLocaleDateString("en-US", { month: "long" }), doy = Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 864e5);
+        const M = { Y: d.getFullYear(), y: p(d.getFullYear() % 100), m: p(d.getMonth() + 1), d: p(d.getDate()), e: String(d.getDate()).padStart(2, " "), H: p(d.getHours()), I: p(d.getHours() % 12 || 12), M: p(d.getMinutes()), S: p(d.getSeconds()), p: d.getHours() < 12 ? "AM" : "PM", a: wd.slice(0, 3), A: wd, b: mo.slice(0, 3), B: mo, j: p(doy, 3), s: Math.floor(d / 1000), u: d.getDay() || 7, w: d.getDay(), Z: Intl.DateTimeFormat().resolvedOptions().timeZone, F: `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`, T: `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`, R: `${p(d.getHours())}:${p(d.getMinutes())}`, D: `${p(d.getMonth() + 1)}/${p(d.getDate())}/${p(d.getFullYear() % 100)}`, n: "\n", t: "\t", "%": "%" };
+        io.out(f.slice(1).replace(/%(.)/g, (m, k) => M[k] != null ? String(M[k]) : m) + "\n");
+      },
       uptime(a, io) { const s = Math.floor(performance.now() / 1000); io.out(` ${new Date().toTimeString().slice(0, 8)} up ${Math.floor(s / 3600)}:${String(Math.floor(s / 60) % 60).padStart(2, "0")},  1 user,  load average: 0.${Math.floor(Math.random() * 90 + 10)}, 0.21, 0.12\n`); },
       neofetch(a, io) {
         const logo = ["        <span class='c-b'>.o88o.</span>        ", "      <span class='c-b'>.d8'  '8b.</span>      ", "     <span class='c-m'>d8'      '8b</span>     ", "    <span class='c-m'>88   AxOS   88</span>    ", "    <span class='c-m'>88.        .88</span>    ", "     <span class='c-c'>'8b.____.d8'</span>     ", "    <span class='c-c'>.d8''''''''8b.</span>    ", "   <span class='c-c'>d8'          '8b</span>   ", "                      "];
@@ -5187,14 +5216,14 @@ class Term {
       history(a, io) { T.hist.forEach((c, i) => io.out(String(i + 1).padStart(5) + "  " + c + "\n")); },
       tree(a, io) { const root = P(a.find(x => !x.startsWith("-")) || "."); let d = 0, f = 0; io.html(`<span class="c-b">${esc(a[0] || ".")}</span>`, (a[0] || ".") + "\n"); const walk = (p, pre) => { const items = FS.list(p).filter(i => !i.name.startsWith(".")); items.forEach((i, k) => { const last = k === items.length - 1; io.html(`${pre}${last ? "└── " : "├── "}${i.node.type === "dir" ? `<span class="c-b">${esc(i.name)}</span>` : esc(i.name)}`, `${pre}${last ? "└── " : "├── "}${i.name}\n`); if (i.node.type === "dir") { d++; if (pre.length < 40) walk(i.path, pre + (last ? "    " : "│   ")); } else f++; }); }; walk(root, ""); io.out(`\n${d} directories, ${f} files\n`); },
       find(a, io) { const start = P(a[0] && !a[0].startsWith("-") ? a[0] : "."); const ni = a.indexOf("-name"), ti = a.indexOf("-type"); const pat = ni >= 0 ? a[ni + 1] : null; const re = pat ? new RegExp("^" + pat.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*").replace(/\?/g, ".") + "$", "i") : null; const ty = ti >= 0 ? a[ti + 1] : null; FS.walk(start, (p, n, name) => { if ((!re || re.test(name)) && (!ty || (ty === "d") === (n.type === "dir"))) io.out(p + "\n"); }); },
-      grep(a, io) { const [f, r] = flags(a); const pat = r.shift(); if (pat == null) { io.err("usage: grep [-inv] PATTERN [FILE...]"); return 2; } let re; try { re = new RegExp(pat, f.has("i") ? "i" : ""); } catch (e) { re = new RegExp(pat.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), f.has("i") ? "i" : ""); } let hit = 0; const src = r.length ? r.map(x => [x, (() => { try { return FS.readText(P(x)); } catch (e) { io.err(`grep: ${x}: No such file or directory`); return ""; } })()]) : [["", io.stdin ?? ""]]; for (const [name, s] of src) s.split("\n").forEach((l, i) => { if (re.test(l) !== f.has("v") && (l || !s.endsWith(l))) { hit++; const pre = (r.length > 1 ? name + ":" : "") + (f.has("n") ? (i + 1) + ":" : ""); if (io.buf) io.out(pre + l + "\n"); else io.html(`<span class="c-m">${esc(pre)}</span>${f.has("v") ? esc(l) : esc(l).replace(new RegExp(esc(pat).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g" + (f.has("i") ? "i" : "")), m => `<span class="c-r">${m}</span>`)}`); } }); return hit ? 0 : 1; },
+      grep(a, io) { const [f, r] = flags(a); const pat = r.shift(); if (pat == null) { io.err("usage: grep [-inv] PATTERN [FILE...]"); return 2; } let re; try { re = new RegExp(pat, f.has("i") ? "i" : ""); } catch (e) { re = new RegExp(pat.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), f.has("i") ? "i" : ""); } if (f.has("c") || f.has("l")) { let total = 0; const files = r.length ? r : [null]; for (const x of files) { let s; try { s = x == null ? (io.stdin ?? "") : FS.readText(P(x)); } catch (e) { io.err(`grep: ${x}: No such file or directory`); continue; } const n = s.split("\n").filter((l, i, arr) => (l || i < arr.length - 1) && re.test(l) !== f.has("v")).length; total += n; if (f.has("l")) { if (n) io.out((x ?? "(standard input)") + "\n"); } else io.out((files.length > 1 ? x + ":" : "") + n + "\n"); } return total ? 0 : 1; } let hit = 0; const src = r.length ? r.map(x => [x, (() => { try { return FS.readText(P(x)); } catch (e) { io.err(`grep: ${x}: No such file or directory`); return ""; } })()]) : [["", io.stdin ?? ""]]; for (const [name, s] of src) s.split("\n").forEach((l, i) => { if (re.test(l) !== f.has("v") && (l || !s.endsWith(l))) { hit++; const pre = (r.length > 1 ? name + ":" : "") + (f.has("n") ? (i + 1) + ":" : ""); if (io.buf) io.out(pre + l + "\n"); else io.html(`<span class="c-m">${esc(pre)}</span>${f.has("v") ? esc(l) : esc(l).replace(new RegExp(esc(pat).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "g" + (f.has("i") ? "i" : "")), m => `<span class="c-r">${m}</span>`)}`); } }); return hit ? 0 : 1; },
       head(a, io) { const ni = a.indexOf("-n"); const n = ni >= 0 ? +a[ni + 1] : 10; const files = a.filter((x, i) => !(i === ni || i === ni + 1) && !/^-\d+$/.test(x)); const nn = a.find(x => /^-\d+$/.test(x)); io.out(text(files, io).split("\n").slice(0, nn ? Math.abs(parseInt(nn)) : n).join("\n") + "\n"); },
-      tail(a, io) { const ni = a.indexOf("-n"); const n = ni >= 0 ? +a[ni + 1] : 10; const files = a.filter((x, i) => !(i === ni || i === ni + 1)); const lines = text(files, io).replace(/\n$/, "").split("\n"); io.out(lines.slice(-n).join("\n") + "\n"); },
+      tail(a, io) { const ni = a.indexOf("-n"); const nn = a.find(x => /^-\d+$/.test(x)); const n = ni >= 0 ? +a[ni + 1] : nn ? Math.abs(parseInt(nn)) : 10; const files = a.filter((x, i) => !(i === ni || i === ni + 1) && !/^-\d+$/.test(x)); const lines = text(files, io).replace(/\n$/, "").split("\n"); io.out(lines.slice(-n).join("\n") + "\n"); },
       wc(a, io) { const [f, r] = flags(a); const s = text(r, io); const l = (s.match(/\n/g) || []).length, w = (s.match(/\S+/g) || []).length, c = new Blob([s]).size; const all = !f.size; io.out([all || f.has("l") ? l : null, all || f.has("w") ? w : null, all || f.has("c") ? c : null].filter(x => x != null).map(x => String(x).padStart(7)).join(" ") + (r[0] ? " " + r[0] : "") + "\n"); },
       sort(a, io) { const [f, r] = flags(a); let l = text(r, io).replace(/\n$/, "").split("\n"); l.sort(f.has("n") ? (x, y) => parseFloat(x) - parseFloat(y) : (x, y) => x.localeCompare(y)); if (f.has("r")) l.reverse(); if (f.has("u")) l = [...new Set(l)]; io.out(l.join("\n") + "\n"); },
       uniq(a, io) { const l = text(a, io).replace(/\n$/, "").split("\n"); io.out(l.filter((x, i) => x !== l[i - 1]).join("\n") + "\n"); },
       rev(a, io) { io.out(text(a, io).replace(/\n$/, "").split("\n").map(l => [...l].reverse().join("")).join("\n") + "\n"); },
-      tr(a, io) { const s = io.stdin ?? ""; if (a[0] === "-d") io.out(s.split("").filter(c => !a[1].includes(c)).join("")); else { const [x, y] = a.map(v => v === "a-z" ? "abcdefghijklmnopqrstuvwxyz" : v === "A-Z" ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" : v); io.out(s.split("").map(c => { const i = (x || "").indexOf(c); return i >= 0 ? (y || "")[Math.min(i, y.length - 1)] : c; }).join("")); } },
+      tr(a, io) { const s = io.stdin ?? ""; a = a.map(v => v.replace(/\\([ntr\\])/g, (m, c) => ({ n: "\n", t: "\t", r: "\r", "\\": "\\" })[c])); if (a[0] === "-d") io.out(s.split("").filter(c => !a[1].includes(c)).join("")); else { const [x, y] = a.map(v => v === "a-z" ? "abcdefghijklmnopqrstuvwxyz" : v === "A-Z" ? "ABCDEFGHIJKLMNOPQRSTUVWXYZ" : v); io.out(s.split("").map(c => { const i = (x || "").indexOf(c); return i >= 0 ? (y || "")[Math.min(i, y.length - 1)] : c; }).join("")); } },
       du(a, io) { const p = P(a.find(x => !x.startsWith("-")) || "."); const n = FS.node(p); if (!n) { io.err("du: cannot access"); return 1; } io.out(`${a.includes("-h") ? fmtSize(FS.du(n)) : Math.ceil(FS.du(n) / 1024)}\t${a.find(x => !x.startsWith("-")) || "."}\n`); },
       async df(a, io) { const e = await navigator.storage?.estimate?.() || { usage: FS.du(), quota: 1 << 30 }; io.out(`Filesystem      Size  Used Avail Use% Mounted on\naxosfs     ${fmtSize(e.quota).padStart(9)} ${fmtSize(e.usage).padStart(6)} ${fmtSize(e.quota - e.usage).padStart(6)} ${String(Math.max(1, Math.round(e.usage / e.quota * 100))).padStart(3)}% /\n`); },
       free(a, io) { const m = performance.memory; const tot = (navigator.deviceMemory || 8) * 1024; const used = m ? Math.round(m.usedJSHeapSize / 1048576) : 300; io.out(`               total        used        free\nMem:      ${String(tot).padStart(10)}M ${String(used).padStart(10)}M ${String(tot - used).padStart(10)}M\n`); },
